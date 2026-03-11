@@ -1,7 +1,9 @@
-// src/pages/auth/register.tsx
+"use client";
+
+// src/pages/auth/register/page.tsx
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Mail, Lock, Trophy, UserPlus, AlertCircle } from "lucide-react";
 
