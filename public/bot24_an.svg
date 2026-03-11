@@ -1,0 +1,66 @@
+<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="glow_blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" />
+      <stop offset="100%" stop-color="#0057FF" />
+    </linearGradient>
+    
+    <style>
+      @keyframes cubePulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(1.03); opacity: 1; }
+      }
+
+      @keyframes lightFlow {
+        0% { stroke-dashoffset: 400; }
+        100% { stroke-dashoffset: 0; }
+      }
+
+      @keyframes corePulse {
+        0% { transform: scale(0.9); opacity: 0.6; }
+        100% { transform: scale(1.3); opacity: 1; }
+      }
+
+      .bot24-cube {
+        transform-origin: center;
+        animation: cubePulse 2s ease-in-out infinite alternate;
+      }
+
+      .neural-lines {
+        stroke-dasharray: 200;
+        stroke-dashoffset: 400;
+        animation: lightFlow 3s linear infinite;
+      }
+
+      .core-glow {
+        transform-origin: center;
+        animation: corePulse 1.5s ease-in-out infinite alternate;
+      }
+    </style>
+  </defs>
+
+  <path 
+    class="bot24-cube"
+    d="M150 40 L260 100 V200 L150 260 L40 200 V100 L150 40Z" 
+    fill="#050505" 
+    stroke="#1A1A1A" 
+    stroke-width="2"
+  />
+  
+  <path 
+    class="neural-lines"
+    d="M150 40 V150 L260 200" 
+    stroke="url(#glow_blue)" 
+    stroke-width="6" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    style="filter: drop-shadow(0 0 8px #00F0FF);"
+  />
+  
+  <path d="M40 100 L150 150 L260 100" stroke="#444" stroke-width="2" stroke-dasharray="8 8"/>
+  
+  <path d="M40 200 L150 150" stroke="white" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+  
+  <circle class="core-glow" cx="150" cy="150" r="12" fill="#00F0FF" style="filter: blur(10px);"/>
+  <circle cx="150" cy="150" r="4" fill="white" />
+</svg>
