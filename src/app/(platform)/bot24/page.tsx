@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
-import { Fire } from "lucide-react";
+import { Flame } from "lucide-react";
 
 type Bot24HistoryItem = {
   id: string;
