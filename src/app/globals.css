@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #0b0b0c;
+  --color-foreground: #ededed;
+}
+
 :root {
-  /* Alterado para o padrão ser escuro */
-  --background: #0d0d0d;
+  --background: #0b0b0c;
   --foreground: #ededed;
 }
 
-/* Removi a necessidade de media query para o fundo, 
-   forçando a identidade KwanzaTrade */
-
 body {
-  background: var(--background);
+  background-color: var(--background) !important;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   margin: 0;
+  padding: 0;
 }
 
 @keyframes float {
@@ -22,7 +24,6 @@ body {
   100% { transform: translateY(0px); }
 }
 
-/* Estilos de Menu preservados */
 .menu {
   display: flex;
   align-items: center;
@@ -30,7 +31,7 @@ body {
   padding: 12px;
   border-radius: 12px;
   color: #9ca3af;
-  transition: all .2s;
+  transition: all 0.2s;
 }
 
 .menu:hover {
