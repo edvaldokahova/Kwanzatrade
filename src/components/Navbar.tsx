@@ -56,9 +56,6 @@ export default function Navbar({
               height={32}
               className="rounded-lg"
             />
-            <span className="hidden md:block font-black text-white tracking-tighter text-lg italic">
-              KWANZA<span className="text-blue-500">TRADE</span>
-            </span>
           </Link>
         </div>
 
