@@ -1,62 +1,40 @@
-// src/lib/geminiClient.ts
-
 export async function fetchGeminiAnalysis(data: any) {
   const apiKey = process.env.GEMINI_API_KEY;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: `
-Analise o seguinte mercado Forex e retorne um sinal:
-
-Dados:
-${JSON.stringify(data)}
-
-Retorne:
-- signal (BUY ou SELL)
-- confidence (0-100)
-- suggestedTimeframe
-- tradingWindow
-- riskSuggestion
-`,
-              },
-            ],
-          },
-        ],
-      }),
-    }
-  );
-
-  const result = await response.json();
-
   try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Analise este mercado e responda em JSON estrito:
+              ${JSON.stringify(data)}
+              Campos: signal (BUY/SELL), confidence (number), entry_price, stop_loss, take_profit, suggestedTimeframe, tradingWindow, riskSuggestion.`
+            }]
+          }]
+        }),
+      }
+    );
+
+    const result = await response.json();
     const text = result.candidates[0].content.parts[0].text;
-
-    return {
-      signal: text.includes("BUY") ? "BUY" : "SELL",
-      confidence: 70,
-      suggestedTimeframe: "15m",
-      tradingWindow: "London Session",
-      riskSuggestion: "1%"
-    };
+    
+    // Tenta extrair o JSON da resposta da IA
+    return JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
   } catch (error) {
-    console.error("Gemini parsing error:", error);
-
+    console.error("Gemini Error:", error);
     return {
       signal: "NEUTRAL",
-      confidence: 0,
-      suggestedTimeframe: "-",
-      tradingWindow: "-",
-      riskSuggestion: "-"
+      confidence: 50,
+      entry_price: 0,
+      stop_loss: 0,
+      take_profit: 0,
+      suggestedTimeframe: "N/A",
+      tradingWindow: "N/A",
+      riskSuggestion: "Aguardar confirmação"
     };
   }
 }
