@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Fire, Activity, Target, Zap, BarChart3, Info } from "lucide-react";
+import { Flame, Activity, Target, Zap, BarChart3, Info } from "lucide-react";
 
 type HeatmapItem = {
   id: string;
