@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 import AppLayout from "@/components/AppLayout";
 import { LoaderProvider } from "@/context/LoaderContext";
@@ -15,10 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <html lang="pt" className="dark" style={{ colorScheme: 'dark' }}>
+    <html lang="pt" className="dark">
       <body className="bg-[#0b0b0c] text-gray-200 antialiased min-h-screen">
         <LoaderProvider>
           <AppLayout>
