@@ -8,34 +8,30 @@ import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-
   const pathname = usePathname();
   const isLanding = pathname === "/";
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
-
-      {/* Navbar + Sidebar */}
+      {/* Navbar + Sidebar: Apenas fora da Landing Page */}
       {!isLanding && (
         <>
-          {/* CORREÇÃO: Removido o 'sidebarOpen' que estava a causar o erro */}
           <Navbar setSidebarOpen={setSidebarOpen} />
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         </>
       )}
 
-      {/* Conteúdo */}
+      {/* Conteúdo Principal */}
       <main className={`flex-1 ${!isLanding ? "pt-16" : ""}`}>
-        <div className={!isLanding ? "p-4 md:p-8" : ""}>
+        <div className={!isLanding ? "w-full" : "p-4 md:p-8"}>
           {children}
         </div>
       </main>
 
+      {/* Footer Global */}
       <Footer />
-
     </div>
   );
 }
