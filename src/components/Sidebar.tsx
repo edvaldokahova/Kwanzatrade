@@ -9,7 +9,9 @@ import {
   User,
   ExternalLink,
   Download,
-  LogOut
+  LogOut,
+  TrendingUp,
+  Radio
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -68,7 +70,7 @@ export default function Sidebar({
         {/* LOGO */}
         <div className="flex justify-center mb-10">
           <Image
-            src="/bot24_an.svg"
+            src="/bot24.svg"
             alt="KwanzaTrade"
             width={50}
             height={50}
@@ -76,12 +78,13 @@ export default function Sidebar({
           />
         </div>
 
-        <nav className="flex flex-col gap-2 flex-1 text-sm">
+        <nav className="flex flex-col gap-2 flex-1 text-sm overflow-y-auto">
 
           {user ? (
             <>
               <Link
                 href="/my-account"
+                onClick={onClose}
                 className={`menu ${isActive("/my-account") ? "active" : ""}`}
               >
                 <User size={18} /> Minha Conta
@@ -89,42 +92,50 @@ export default function Sidebar({
 
               <Link
                 href="/dashboard"
+                onClick={onClose}
                 className={`menu ${isActive("/dashboard") ? "active" : ""}`}
               >
                 <LayoutDashboard size={18} /> Dashboard
               </Link>
 
               <Link
-                href="/bot24"
-                className={`menu ${isActive("/bot24") ? "active" : ""}`}
+                href="/bot24/analyze"
+                onClick={onClose}
+                className={`menu ${isActive("/bot24/analyze") ? "active" : ""}`}
               >
-                <Bot size={18} /> BOT24
+                <Bot size={18} /> BOT24 AI
               </Link>
 
               <Link
                 href="/live-signals"
+                onClick={onClose}
                 className={`menu ${isActive("/live-signals") ? "active" : ""}`}
               >
-                <Bot size={18} /> Live Signals
+                <Radio size={18} /> Live Signals
               </Link>
 
               <Link
                 href="/performance"
+                onClick={onClose}
                 className={`menu ${isActive("/performance") ? "active" : ""}`}
               >
-                <LayoutDashboard size={18} /> Performance
+                <TrendingUp size={18} /> Performance
               </Link>
 
               <Link
-                href="/history"
-                className={`menu ${isActive("/history") ? "active" : ""}`}
+                href="/bot24/history"
+                onClick={onClose}
+                className={`menu ${isActive("/bot24/history") ? "active" : ""}`}
               >
                 <History size={18} /> Histórico
               </Link>
 
+              <div className="h-px bg-gray-800 my-4" />
+
               <a
-                href="https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5781"
+                href="https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="menu"
               >
                 <ExternalLink size={18} /> Operar na XM
@@ -139,14 +150,13 @@ export default function Sidebar({
 
               <button
                 onClick={logout}
-                className="menu text-red-400 hover:text-red-500"
+                className="menu text-red-400 hover:text-red-500 mt-auto"
               >
                 <LogOut size={18} /> Logout
               </button>
             </>
           ) : (
             <>
-              {/* CORREÇÃO: Adicionado 'block' para o elemento respeitar o layout */}
               <Link
                 href="/page/auth"
                 className="xm-button block mt-4 text-white font-semibold text-center py-3 rounded-xl transition"
@@ -169,47 +179,41 @@ export default function Sidebar({
           )}
         </nav>
 
-        {/* CORREÇÃO: Adicionado o atributo 'global' para garantir aplicação da classe */}
         <style jsx global>{`
+          .menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            color: #94a3b8;
+            transition: all 0.2s;
+          }
 
-          /* BOTÃO VERMELHO XM */
-          .xm-button{
+          .menu:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+          }
+
+          .menu.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            font-weight: 700;
+          }
+
+          .xm-button {
             background: #ff0000 !important;
-            box-shadow:
-              0 0 10px rgba(255,0,0,0.6),
-              0 0 20px rgba(255,0,0,0.4),
-              0 0 40px rgba(255,0,0,0.2);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
             animation: xmGlow 2.5s ease-in-out infinite;
           }
 
-          .xm-button:hover{
-            box-shadow:
-              0 0 15px rgba(255,0,0,0.9),
-              0 0 30px rgba(255,0,0,0.6),
-              0 0 60px rgba(255,0,0,0.4);
-            transform: scale(1.02);
-          }
-
-          @keyframes xmGlow{
-            0%{
-              box-shadow:
-                0 0 8px rgba(255,0,0,0.6),
-                0 0 18px rgba(255,0,0,0.3);
-            }
-            50%{
-              box-shadow:
-                0 0 20px rgba(255,0,0,0.9),
-                0 0 40px rgba(255,0,0,0.6);
-            }
-            100%{
-              box-shadow:
-                0 0 8px rgba(255,0,0,0.6),
-                0 0 18px rgba(255,0,0,0.3);
-            }
+          @keyframes xmGlow {
+            0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); }
+            50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.9); }
           }
         `}</style>
-
       </div>
     </>
   );
 }
+  
