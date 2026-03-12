@@ -5,6 +5,10 @@ import { fetchAlphaVantageData } from "@/lib/alphaVantageClient";
 import { fetchGeminiAnalysis } from "@/lib/geminiClient";
 import { fetchMarketAuxData } from "@/lib/marketAuxClient";
 
+// 🕒 Sistema de Cache Simples (Memória do Servidor)
+const priceCache: Record<string, { data: any; timestamp: number }> = {};
+const ONE_HOUR = 60 * 60 * 1000; // Milisegundos em 1 hora
+
 export async function runBot24Analysis(userInput: {
   pair: string;
   capital: number;
@@ -12,11 +16,24 @@ export async function runBot24Analysis(userInput: {
   traderLevel: string;
   risk: number;
 }) {
-
   const { pair, capital, timeframe, traderLevel, risk } = userInput;
+  const now = Date.now();
 
-  // 1️⃣ Market Data
-  const alphaData = await fetchAlphaVantageData(pair);
+  let alphaData;
+
+  // 1️⃣ Verificamos se temos dados recentes (menos de 1 hora) no Cache
+  if (priceCache[pair] && (now - priceCache[pair].timestamp < ONE_HOUR)) {
+    console.log(`📦 Usando cache para ${pair}. Economizando API Alpha Vantage!`);
+    alphaData = priceCache[pair].data;
+  } else {
+    console.log(`📡 Fazendo nova requisição Alpha Vantage para ${pair}...`);
+    alphaData = await fetchAlphaVantageData(pair);
+    
+    // Guardamos no cache se a busca teve sucesso
+    if (alphaData) {
+      priceCache[pair] = { data: alphaData, timestamp: now };
+    }
+  }
 
   // 2️⃣ News / sentiment
   const marketAuxData = await fetchMarketAuxData(pair);
@@ -28,7 +45,8 @@ export async function runBot24Analysis(userInput: {
     userInput
   };
 
-  const geminiResult = await fetchGeminiAnalysis(geminiInput);
+  // Usamos 'as any' para o TypeScript não reclamar de campos que a IA gera dinamicamente
+  const geminiResult = (await fetchGeminiAnalysis(geminiInput)) as any;
 
   // =========================
   // Risk calculations
@@ -58,35 +76,18 @@ export async function runBot24Analysis(userInput: {
     Math.abs(entryPrice - stopLoss);
 
   const result = {
-
     pair,
-
     suggestedTimeframe: geminiResult.suggestedTimeframe || timeframe,
-
     signal: geminiResult.signal || "Neutral",
-
     confidence: geminiResult.confidence || 50,
-
-    tradingWindow:
-      geminiResult.tradingWindow || "London / New York",
-
-    riskSuggestion:
-      geminiResult.riskSuggestion ||
-      "Use conservative risk management",
-
-    marketAuxSummary:
-      marketAuxData?.summary || "Sem dados fundamentais recentes.",
-
+    tradingWindow: geminiResult.tradingWindow || "London / New York",
+    riskSuggestion: geminiResult.riskSuggestion || "Use conservative risk management",
+    marketAuxSummary: marketAuxData?.summary || "Sem dados fundamentais recentes.",
     entry: entryPrice,
-
     stopLoss: stopLoss,
-
     takeProfit: takeProfit,
-
     riskReward: riskReward.toFixed(2),
-
     positionSize: positionSize.toFixed(2),
-
     score: geminiResult.score || "8.2 / 10"
   };
 
@@ -96,7 +97,6 @@ export async function runBot24Analysis(userInput: {
     confidence: result.confidence
   });
 
-  // Retorno final com todos os campos mapeados individualmente
   return {
     ...result,
     marketScore: intelligence.marketScore,
