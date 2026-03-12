@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { 
   Target, Zap, Activity, BarChart3, TrendingUp, 
   Search, ShieldCheck, PieChart as PieIcon 
@@ -34,31 +34,40 @@ export default function PerformancePage() {
   const [history, setHistory] = useState<History[]>([]);
   const [quantData, setQuantData] = useState<QuantData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     async function loadData() {
       setLoading(true);
-      const { data: historyData } = await supabase
-        .from("bot24_history")
-        .select("*")
-        .order("created_at", { ascending: false });
+      try {
+        const { data: historyData } = await supabase
+          .from("bot24_history")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-      const { data: qData } = await supabase.from("bot24_quant").select("*");
+        const { data: qData } = await supabase.from("bot24_quant").select("*");
 
-      setHistory(historyData || []);
-      setQuantData(qData || []);
-      setLoading(false);
+        setHistory(historyData || []);
+        setQuantData(qData || []);
+      } catch (error) {
+        console.error("Erro ao carregar dados de performance:", error);
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
   }, []);
 
-  const buy = history.filter((h) => h.signal === "BUY").length;
-  const sell = history.filter((h) => h.signal === "SELL").length;
+  const buy = history.filter((h) => h.signal?.toUpperCase() === "BUY").length;
+  const sell = history.filter((h) => h.signal?.toUpperCase() === "SELL").length;
+  
   const chartData = [
-    { name: "BUY Signals", value: buy },
-    { name: "SELL Signals", value: sell },
+    { name: "BUY Signals", value: buy || 0 },
+    { name: "SELL Signals", value: sell || 0 },
   ];
 
+  // Filtros para os blocos quantitativos
   const top10 = quantData.filter(q => q.top10).slice(0, 5);
   const highProb = quantData.filter(q => q.high_probability).slice(0, 5);
   const topVolatility = quantData.filter(q => q.top_volatility).slice(0, 5);
@@ -66,19 +75,22 @@ export default function PerformancePage() {
 
   const COLORS = ["#3b82f6", "#ef4444"]; // Azul KwanzaTrade e Vermelho Alerta
 
+  const totalSignals = buy + sell;
+  const buyPercent = totalSignals > 0 ? ((buy / totalSignals) * 100).toFixed(1) : "0";
+  const sellPercent = totalSignals > 0 ? ((sell / totalSignals) * 100).toFixed(1) : "0";
+
   return (
     <div className="max-w-7xl mx-auto py-10 space-y-12 px-4 pb-20">
       
       {/* HEADER INSTITUCIONAL */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-4">
-          <Image 
-            src="/kwanzatrade-logo.svg" 
-            alt="KwanzaTrade" 
-            width={160} 
-            height={40} 
-            className="opacity-90"
-          />
+           <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-lg italic">K</span>
+              </div>
+              KWANZATRADE
+            </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">
               <TrendingUp size={14} />
@@ -95,7 +107,7 @@ export default function PerformancePage() {
         </div>
       </header>
 
-      {/* MÉTRICAS GERAIS (CARDS HIGHLANDER) */}
+      {/* MÉTRICAS GERAIS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 rounded-[2.5rem] relative overflow-hidden group">
           <p className="text-gray-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Analyses Processed</p>
@@ -116,7 +128,7 @@ export default function PerformancePage() {
         </div>
       </div>
 
-      {/* GRID DE INTELIGÊNCIA QUANT (4 COLUNAS) */}
+      {/* GRID DE INTELIGÊNCIA QUANT */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { title: "Top 10 Trades", icon: Zap, data: top10, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20" },
@@ -129,7 +141,7 @@ export default function PerformancePage() {
               <block.icon className="w-4 h-4" /> {block.title}
             </h3>
             <div className="space-y-4">
-              {block.data.map((t) => (
+              {block.data.length > 0 ? block.data.map((t) => (
                 <div key={t.id} className="flex justify-between items-center group">
                   <span className="font-black text-white text-sm italic group-hover:text-blue-400 transition cursor-default">{t.pair}</span>
                   <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border ${block.bg} ${block.border} ${block.color}`}>
@@ -138,13 +150,15 @@ export default function PerformancePage() {
                      block.title === "Top Volatility" ? t.volatility : t.momentum}
                   </span>
                 </div>
-              ))}
+              )) : (
+                <span className="text-[10px] text-gray-700 uppercase font-bold">Aguardando dados...</span>
+              )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* ANÁLISE GRÁFICA (A PEÇA CENTRAL) */}
+      {/* ANÁLISE GRÁFICA */}
       <div className="bg-gray-950/50 border border-gray-800 p-10 rounded-[3rem] relative overflow-hidden shadow-3xl">
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center lg:text-left">
@@ -159,50 +173,50 @@ export default function PerformancePage() {
             </p>
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
-                 Buy Advantage: {((buy / (buy + sell)) * 100 || 0).toFixed(1)}%
+                 Buy Advantage: {buyPercent}%
                </div>
                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
-                 Sell Pressure: {((sell / (buy + sell)) * 100 || 0).toFixed(1)}%
+                 Sell Pressure: {sellPercent}%
                </div>
             </div>
           </div>
 
           <div className="h-[400px] w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={140}
-                  innerRadius={100}
-                  paddingAngle={8}
-                  stroke="none"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={COLORS[index % COLORS.length]} 
-                      className="hover:opacity-80 transition-opacity cursor-pointer"
-                    />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#0a0a0a', 
-                    border: '1px solid #333', 
-                    borderRadius: '20px',
-                    padding: '15px',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
-                  }}
-                  itemStyle={{ fontWeight: '900', color: '#fff', textTransform: 'uppercase', fontSize: '10px' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {isMounted && (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={140}
+                    innerRadius={100}
+                    paddingAngle={8}
+                    stroke="none"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]} 
+                        className="hover:opacity-80 transition-opacity cursor-pointer"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#0a0a0a', 
+                      border: '1px solid #333', 
+                      borderRadius: '20px',
+                      padding: '15px'
+                    }}
+                    itemStyle={{ fontWeight: '900', color: '#fff', textTransform: 'uppercase', fontSize: '10px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
             
-            {/* Overlay central do Donut */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-[10px] font-black text-gray-600 tracking-[0.3em] uppercase">Engine</span>
                 <span className="text-4xl font-black text-white italic">AI 24</span>
@@ -210,11 +224,10 @@ export default function PerformancePage() {
           </div>
         </div>
 
-        {/* Decorativo de fundo */}
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px]"></div>
       </div>
       
-      {/* RODAPÉ DE SEGURANÇA */}
+      {/* RODAPÉ */}
       <div className="flex justify-center items-center gap-2 text-gray-700">
         <ShieldCheck size={14} />
         <p className="text-[10px] font-bold uppercase tracking-widest">KwanzaTrade Secure Quantitative Analysis — Confidential Data</p>
