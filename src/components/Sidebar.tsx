@@ -70,8 +70,8 @@ export default function Sidebar({
         {/* LOGO */}
         <div className="flex justify-center mb-10">
           <Image
-            src="/bot24.svg"
-            alt="KwanzaTrade"
+            src="/bot24_an.svg"
+            alt="Bot24"
             width={50}
             height={50}
             className="h-12 w-auto"
