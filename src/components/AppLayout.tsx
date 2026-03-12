@@ -9,40 +9,33 @@ import Footer from "@/components/Footer";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
 
-const pathname = usePathname();
-const isLanding = pathname === "/";
+  const pathname = usePathname();
+  const isLanding = pathname === "/";
 
-const [sidebarOpen, setSidebarOpen] = useState(false);
-const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-return (
+  return (
+    <div className="flex flex-col min-h-screen">
 
-<div className="flex flex-col min-h-screen">
+      {/* Navbar + Sidebar */}
+      {!isLanding && (
+        <>
+          {/* CORREÇÃO: Removido o 'sidebarOpen' que estava a causar o erro */}
+          <Navbar setSidebarOpen={setSidebarOpen} />
+          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        </>
+      )}
 
-{/* Navbar + Sidebar */}
-{!isLanding && (
-<>
-<Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-<Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-</>
-)}
+      {/* Conteúdo */}
+      <main className={`flex-1 ${!isLanding ? "pt-16" : ""}`}>
+        <div className={!isLanding ? "p-4 md:p-8" : ""}>
+          {children}
+        </div>
+      </main>
 
-{/* Conteúdo */}
+      <Footer />
 
-<main className={`flex-1 ${!isLanding ? "pt-16" : ""}`}>
-
-<div
-className={!isLanding ? "p-4 md:p-8" : ""}>
-{children}
-
-</div>
-
-</main>
-
-<Footer />
-
-</div>
-
-);
-
+    </div>
+  );
 }
