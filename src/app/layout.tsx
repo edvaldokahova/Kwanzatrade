@@ -1,7 +1,7 @@
+import type { Metadata } from "next";
 import "./globals.css";
 import AppLayout from "@/components/AppLayout";
 import { LoaderProvider } from "@/context/LoaderContext";
-import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "KwanzaTrade — Inteligência Artificial para o Trader Angolano",
@@ -18,10 +18,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt" className="dark">
-      <body className="bg-[#0b0b0c] text-gray-200 antialiased">
+    <html lang="pt" className="dark" style={{ colorScheme: 'dark' }}>
+      <body className="bg-[#0b0b0c] text-gray-200 antialiased min-h-screen">
         <LoaderProvider>
-          <AppLayout>{children}</AppLayout>
+          <AppLayout>
+            {children}
+          </AppLayout>
         </LoaderProvider>
       </body>
     </html>
