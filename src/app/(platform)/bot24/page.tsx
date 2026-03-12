@@ -162,7 +162,7 @@ export default function Bot24Dashboard() {
                      title={`Pair: ${item.pair}\nSignal: ${item.signal}\nConfidence: ${item.confidence}%\nTimeframe: ${item.timeframe}`}>
                   <span className="text-lg flex items-center gap-1">
                     {item.pair}
-                    {item.confidence >= 80 && <Fire className="w-4 h-4 text-yellow-400 animate-pulse" />}
+                    {item.confidence >= 80 && <Flame className="w-4 h-4 text-yellow-400 animate-pulse" />}
                   </span>
                   <span className="text-xl">{item.signal}</span>
                   <span className="text-sm opacity-80">{item.confidence}%</span>
