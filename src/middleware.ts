@@ -32,7 +32,7 @@ export async function middleware(req: NextRequest) {
   if (!session && !isPublic) {
 
     const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = "/auth/login";
+    redirectUrl.pathname = "/";
 
     return NextResponse.redirect(redirectUrl);
 
