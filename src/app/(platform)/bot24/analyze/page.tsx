@@ -154,7 +154,7 @@ export default function Bot24Analyze() {
       <div className="flex items-center gap-4">
 
         <Image
-          src="/bot24.svg"
+          src="/bot24_an.svg"
           alt="Bot24"
           width={60}
           height={60}
