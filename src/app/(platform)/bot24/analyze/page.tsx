@@ -13,6 +13,15 @@ const XM_LINKS = {
   advanced: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=1",
 };
 
+const TOP_PAIRS = [
+  "EURUSD","GBPUSD","USDJPY","USDCHF","AUDUSD",
+  "USDCAD","NZDUSD","EURGBP","EURJPY","GBPJPY",
+  "AUDJPY","AUDNZD","EURCHF","EURAUD","GBPCHF",
+  "USDSEK","USDNOK","USDTRY","USDMXN","EURCAD"
+];
+
+const TIMEFRAMES = ["M1","M2","M3","M4","M5","M15","M30","H1","H4","D1","W1"];
+
 export default function Bot24Analyze() {
 
   const { showLoader, hideLoader } = useLoader();
@@ -275,14 +284,19 @@ export default function Bot24Analyze() {
 
       <div className="grid md:grid-cols-5 gap-4 bg-gray-800 border border-gray-700 p-6 rounded-xl">
 
-        <input
-          placeholder="Pair"
+        {/* SELECT PAIR */}
+        <select
           value={pair}
-          onChange={(e) =>
-            setPair(e.target.value.toUpperCase())
-          }
+          onChange={(e) => setPair(e.target.value)}
           className="bg-gray-900 p-3 rounded"
-        />
+        >
+          <option value="">Select Pair</option>
+          {TOP_PAIRS.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
 
         <input
           type="number"
@@ -300,22 +314,11 @@ export default function Bot24Analyze() {
           }
           className="bg-gray-900 p-3 rounded"
         >
-
-          {[
-            "M5",
-            "M15",
-            "M30",
-            "H1",
-            "H4",
-            "D1"
-          ].map((tf) => (
-
-            <option key={tf}>
+          {TIMEFRAMES.map((tf) => (
+            <option key={tf} value={tf}>
               {tf}
             </option>
-
           ))}
-
         </select>
 
         <select
