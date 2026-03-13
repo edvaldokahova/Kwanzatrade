@@ -66,7 +66,7 @@ export default function Home() {
               </a>
             ) : (
               <a
-                href="/login"
+                href="/auth/login"
                 className="flex items-center gap-2 bg-white hover:bg-gray-200 text-black px-5 py-2 rounded-xl shadow-lg transition font-semibold text-sm"
               >
                 <LogIn size={18} />
