@@ -4,7 +4,7 @@ import AppLayout from "@/components/AppLayout";
 import { LoaderProvider } from "@/context/LoaderContext";
 
 export const metadata: Metadata = {
-  title: "KwanzaTrade AI",
+  title: "KwanzaTrade IA",
   description:
     "Lucre no Forex com o poder da IA. Receba insights em tempo real e notícias da Marketaux direto na plataforma feita para o Trader angolano.",
   icons: {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0b0c",
+  themeColor: "#0d0d0d",
 };
 
 export default function RootLayout({
