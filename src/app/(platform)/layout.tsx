@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar"; // ✅ já existente
+import Navbar from "@/components/Navbar";
 import { useLoader } from "@/context/LoaderContext";
 
 export default function PlatformLayout({
@@ -47,7 +47,7 @@ export default function PlatformLayout({
 
       <div className="flex-1 flex flex-col">
         
-        <Navbar /> {/* ✅ integrado, já lida com login/logout */}
+        <Navbar />
 
         <main className="flex-1 p-10 overflow-y-auto">
           {children}
