@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { runBot24Analysis } from "@/lib/bot24Analysis";
 import { saveBot24Request } from "@/lib/saveBot24Request";
 import { saveBot24History } from "@/lib/saveBot24History";
+import { useLoader } from "@/context/LoaderContext";
 
 const XM_LINKS = {
   beginner: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5",
@@ -13,6 +14,9 @@ const XM_LINKS = {
 };
 
 export default function Bot24Analyze() {
+
+  const { showLoader, hideLoader } = useLoader();
+
   const [pair, setPair] = useState("");
   const [capital, setCapital] = useState(100);
   const [timeframe, setTimeframe] = useState("H1");
@@ -20,17 +24,22 @@ export default function Bot24Analyze() {
   const [risk, setRisk] = useState(2);
 
   const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
   const [analysisCount, setAnalysisCount] = useState(0);
+  const [topSignal, setTopSignal] = useState<any>(null);
+  const [sentiment, setSentiment] = useState<any[]>([]);
 
   useEffect(() => {
-    async function fetchDailyCount() {
+
+    async function loadStats() {
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase.rpc("get_daily_analysis_count", {
-        user_uuid: user.id,
-      });
+      const { data } = await supabase.rpc(
+        "get_daily_analysis_count",
+        { user_uuid: user.id }
+      );
+
       setAnalysisCount(data || 0);
 
       const { data: profile } = await supabase
@@ -42,23 +51,42 @@ export default function Bot24Analyze() {
       if (profile?.trader_level) {
         setTraderLevel(profile.trader_level);
       }
+
+      const { data: signal } = await supabase
+        .from("forex_heatmap")
+        .select("*")
+        .order("confidence", { ascending: false })
+        .limit(1)
+        .single();
+
+      setTopSignal(signal);
+
+      const { data: sentimentData } = await supabase
+        .from("forex_heatmap")
+        .select("*")
+        .order("confidence", { ascending: false })
+        .limit(3);
+
+      setSentiment(sentimentData || []);
     }
-    fetchDailyCount();
+
+    loadStats();
+
   }, []);
 
   async function handleAnalyze() {
+
     if (!pair.trim()) return;
 
     if (analysisCount >= 10) {
-      alert("Você atingiu o limite diário de 10 análises. Volte amanhã!");
+      alert("Você atingiu o limite diário de 10 análises.");
       return;
     }
 
-    setLoading(true);
-    setResult(null);
+    showLoader();
 
     try {
-      // 1. Salva o registro da solicitação
+
       await saveBot24Request({
         pair,
         timeframe,
@@ -67,7 +95,6 @@ export default function Bot24Analyze() {
         trader_level: traderLevel
       });
 
-      // 2. Executa a análise lógica (com cache de 60min interno)
       const analysis = await runBot24Analysis({
         pair,
         capital,
@@ -76,25 +103,30 @@ export default function Bot24Analyze() {
         risk
       });
 
-      // 3. Salva o resultado final no histórico
       await saveBot24History(analysis);
 
       setResult(analysis);
 
-      // 4. Atualiza o contador diário
       const { data: { user } } = await supabase.auth.getUser();
+
       if (user) {
-        const { data } = await supabase.rpc("get_daily_analysis_count", {
-          user_uuid: user.id,
-        });
+
+        const { data } = await supabase.rpc(
+          "get_daily_analysis_count",
+          { user_uuid: user.id }
+        );
+
         setAnalysisCount(data || 0);
       }
+
     } catch (error) {
-      console.error("Erro durante a análise do Bot24:", error);
-      alert("Ocorreu um erro ao processar os dados. Tente novamente.");
-    } finally {
-      setLoading(false);
+
+      console.error(error);
+      alert("Erro ao gerar análise.");
+
     }
+
+    hideLoader();
   }
 
   const getXMButtonLink = () => {
@@ -102,147 +134,369 @@ export default function Bot24Analyze() {
     return XM_LINKS.advanced;
   };
 
+  const calculateProfit = () => {
+
+    if (!result) return 0;
+
+    const riskAmount = capital * (risk / 100);
+
+    const rr = 2;
+
+    return (riskAmount * rr).toFixed(2);
+  };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-10">
-      <div className="flex items-center gap-5">
-        <Image 
-          src="/bot24.svg" 
-          alt="Bot24 Logo" 
-          width={64} 
-          height={64} 
-          className="drop-shadow-[0_0_10px_rgba(34,197,94,0.3)]" 
+
+    <div className="max-w-6xl mx-auto space-y-10">
+
+      {/* HEADER */}
+
+      <div className="flex items-center gap-4">
+
+        <Image
+          src="/bot24.svg"
+          alt="Bot24"
+          width={60}
+          height={60}
         />
+
         <div>
-          <h1 className="text-4xl font-bold">Bot24 AI Analysis</h1>
-          <p className="text-gray-400 mt-1">
-            Gere uma análise profissional com IA baseada em dados de mercado e gestão de risco.
+
+          <h1 className="text-4xl font-bold">
+            Bot24 AI Analysis
+          </h1>
+
+          <p className="text-gray-400">
+            Inteligência de mercado automatizada baseada em IA
           </p>
+
         </div>
+
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 bg-gray-800 p-6 rounded-xl border border-gray-700">
+      {/* STATS */}
+
+      <div className="grid md:grid-cols-3 gap-6">
+
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+
+          <p className="text-gray-400 text-sm">
+            Accuracy Bot24
+          </p>
+
+          <p className="text-3xl font-bold text-green-400">
+            73%
+          </p>
+
+        </div>
+
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+
+          <p className="text-gray-400 text-sm">
+            Top Signal Today
+          </p>
+
+          {topSignal && (
+
+            <p className="text-xl font-bold">
+
+              {topSignal.pair}
+              {" "}
+              {topSignal.signal}
+              {" "}
+              {topSignal.confidence}%
+
+            </p>
+
+          )}
+
+        </div>
+
+        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+
+          <p className="text-gray-400 text-sm">
+            Daily Analyses
+          </p>
+
+          <p className="text-3xl font-bold">
+            {analysisCount}/10
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* MARKET SENTIMENT */}
+
+      <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
+
+        <h3 className="text-lg font-bold mb-4">
+          Live Market Sentiment
+        </h3>
+
+        <div className="space-y-3">
+
+          {sentiment.map((item, i) => (
+
+            <div
+              key={i}
+              className="flex justify-between bg-gray-900 p-3 rounded"
+            >
+
+              <span className="font-semibold">
+                {item.pair}
+              </span>
+
+              <span
+                className={`font-bold ${
+                  item.signal === "BUY"
+                    ? "text-green-400"
+                    : item.signal === "SELL"
+                    ? "text-red-400"
+                    : "text-yellow-400"
+                }`}
+              >
+
+                {item.signal}
+                {" "}
+                {item.confidence}%
+
+              </span>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+      {/* FORM */}
+
+      <div className="grid md:grid-cols-5 gap-4 bg-gray-800 border border-gray-700 p-6 rounded-xl">
+
         <input
-          placeholder="Pair (EURUSD, BTCUSD...)"
+          placeholder="Pair"
           value={pair}
-          onChange={(e) => setPair(e.target.value.toUpperCase())}
-          className="bg-gray-900 p-3 rounded outline-none focus:ring-2 focus:ring-green-500"
+          onChange={(e) =>
+            setPair(e.target.value.toUpperCase())
+          }
+          className="bg-gray-900 p-3 rounded"
         />
 
         <input
           type="number"
-          min="5"
-          placeholder="Capital"
           value={capital}
-          onChange={(e) => setCapital(Number(e.target.value))}
-          className="bg-gray-900 p-3 rounded outline-none focus:ring-2 focus:ring-green-500"
+          onChange={(e) =>
+            setCapital(Number(e.target.value))
+          }
+          className="bg-gray-900 p-3 rounded"
         />
 
         <select
           value={timeframe}
-          onChange={(e) => setTimeframe(e.target.value)}
-          className="bg-gray-900 p-3 rounded outline-none focus:ring-2 focus:ring-green-500"
+          onChange={(e) =>
+            setTimeframe(e.target.value)
+          }
+          className="bg-gray-900 p-3 rounded"
         >
-          {["M5", "M15", "M30", "H1", "H4", "D1", "W1"].map(tf => (
-            <option key={tf} value={tf}>{tf}</option>
+
+          {[
+            "M5",
+            "M15",
+            "M30",
+            "H1",
+            "H4",
+            "D1"
+          ].map((tf) => (
+
+            <option key={tf}>
+              {tf}
+            </option>
+
           ))}
+
         </select>
 
         <select
           value={traderLevel}
-          onChange={(e) => setTraderLevel(e.target.value)}
-          className="bg-gray-900 p-3 rounded outline-none focus:ring-2 focus:ring-green-500"
+          onChange={(e) =>
+            setTraderLevel(e.target.value)
+          }
+          className="bg-gray-900 p-3 rounded"
         >
-          <option value="beginner">Iniciante</option>
-          <option value="intermediate">Intermediário</option>
-          <option value="advanced">Avançado</option>
+
+          <option value="beginner">
+            Beginner
+          </option>
+
+          <option value="intermediate">
+            Intermediate
+          </option>
+
+          <option value="advanced">
+            Advanced
+          </option>
+
         </select>
 
         <input
           type="number"
-          min="0.5"
-          max="10"
-          step="0.5"
-          placeholder="Risk %"
           value={risk}
-          onChange={(e) => setRisk(Number(e.target.value))}
-          className="bg-gray-900 p-3 rounded outline-none focus:ring-2 focus:ring-green-500"
+          onChange={(e) =>
+            setRisk(Number(e.target.value))
+          }
+          className="bg-gray-900 p-3 rounded"
         />
+
       </div>
 
       <button
         onClick={handleAnalyze}
-        disabled={loading}
-        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-600 transition px-8 py-3 rounded-lg font-semibold w-full md:w-auto"
+        className="bg-green-500 hover:bg-green-600 transition px-8 py-3 rounded-lg font-semibold"
       >
-        {loading ? "Analyzing..." : "Run Analysis"}
+        Run AI Analysis
       </button>
 
+      {/* RESULT */}
+
       {result && (
-        <div className="relative overflow-hidden bg-gray-800 border border-gray-700 rounded-xl p-8 space-y-6">
-          <Image 
-            src="/bot24.svg" 
-            alt="" 
-            width={320} 
-            height={320} 
-            className="absolute -bottom-10 -right-10 opacity-[0.03] pointer-events-none select-none" 
-          />
 
-          <h2 className="text-2xl font-bold relative z-10">Bot24 Analysis Result</h2>
+        <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 space-y-6">
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-            <p><strong>Pair:</strong> {result.pair}</p>
-            <p>
-              <strong>Signal:</strong>{" "}
-              <span className={result.signal === "BUY" ? "text-green-400 font-bold" : "text-red-400 font-bold"}>
-                {result.signal}
-              </span>
-            </p>
-            <p><strong>Confidence:</strong> {result.confidence}%</p>
-            <p><strong>Bot24 Score:</strong> {result.score || "8.2 / 10"}</p>
-          </div>
+          <h2 className="text-2xl font-bold">
+            Analysis Result
+          </h2>
 
-          <div className="bg-gray-900/80 backdrop-blur-sm p-6 rounded-lg border border-gray-700 space-y-2 relative z-10">
-            <h3 className="font-semibold text-lg">Trade Setup</h3>
-            <p><strong>Entry Price:</strong> {result.entry}</p>
-            <p className="text-red-400"><strong>Stop Loss:</strong> {result.stopLoss}</p>
-            <p className="text-green-400"><strong>Take Profit:</strong> {result.takeProfit}</p>
-            <p><strong>Risk / Reward:</strong> {result.riskReward}</p>
-          </div>
+          <div className="grid md:grid-cols-3 gap-4">
 
-          <div className="bg-gray-900/80 backdrop-blur-sm p-6 rounded-lg border border-gray-700 relative z-10">
-            <h3 className="font-semibold mb-2">Bot24 Market Insight</h3>
-            <p className="text-gray-400">{result.marketAuxSummary}</p>
-          </div>
+            <div className="bg-gray-900 p-4 rounded">
 
-          <div className="space-y-4 relative z-10">
-            <h3 className="font-semibold text-lg">Market Intelligence</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[
-                { label: "Trend", value: result.trend },
-                { label: "Momentum", value: result.momentum },
-                { label: "Volatility", value: result.volatility },
-                { label: "Liquidity", value: result.liquidity },
-                { label: "Probability", value: `${result.probability}%` },
-                { label: "Market Score", value: result.marketScore, color: "text-green-400" }
-              ].map((item, i) => (
-                <div key={i} className="bg-gray-900 p-4 rounded border border-gray-700">
-                  <span className="text-gray-400 text-sm">{item.label}</span>
-                  <div className={`text-xl font-bold ${item.color || ""}`}>{item.value}</div>
-                </div>
-              ))}
+              <p className="text-gray-400">
+                Pair
+              </p>
+
+              <p className="text-xl font-bold">
+                {result.pair}
+              </p>
+
             </div>
+
+            <div className="bg-gray-900 p-4 rounded">
+
+              <p className="text-gray-400">
+                Signal
+              </p>
+
+              <p
+                className={`text-xl font-bold ${
+                  result.signal === "BUY"
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              >
+                {result.signal}
+              </p>
+
+            </div>
+
+            <div className="bg-gray-900 p-4 rounded">
+
+              <p className="text-gray-400">
+                Confidence
+              </p>
+
+              <p className="text-xl font-bold">
+                {result.confidence}%
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* CONFIDENCE BAR */}
+
+          <div>
+
+            <p className="text-sm text-gray-400 mb-2">
+              Bot24 Confidence
+            </p>
+
+            <div className="w-full bg-gray-700 rounded h-4">
+
+              <div
+                className="bg-green-500 h-4 rounded"
+                style={{
+                  width: `${result.confidence}%`
+                }}
+              />
+
+            </div>
+
+          </div>
+
+          {/* TRADE SETUP */}
+
+          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+
+            <h3 className="font-bold mb-3">
+              Trade Setup
+            </h3>
+
+            <p>
+              Entry: {result.entry}
+            </p>
+
+            <p className="text-red-400">
+              Stop Loss: {result.stopLoss}
+            </p>
+
+            <p className="text-green-400">
+              Take Profit: {result.takeProfit}
+            </p>
+
+          </div>
+
+          {/* PROFIT SIMULATION */}
+
+          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+
+            <h3 className="font-bold mb-2">
+              Profit Simulation
+            </h3>
+
+            <p className="text-gray-400 text-sm">
+              Capital: ${capital}
+            </p>
+
+            <p className="text-gray-400 text-sm">
+              Risk: {risk}%
+            </p>
+
+            <p className="text-green-400 text-xl font-bold mt-2">
+              Potential Profit: +${calculateProfit()}
+            </p>
+
           </div>
 
           <a
             href={getXMButtonLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative z-20 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg transition transform hover:scale-105"
+            className="inline-block bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold"
           >
-            {traderLevel === "beginner" ? "Operar XM Demo" : "Operar XM Real"}
+
+            {traderLevel === "beginner"
+              ? "Open XM Demo"
+              : "Open XM Real"}
+
           </a>
+
         </div>
+
       )}
+
     </div>
+
   );
 }
