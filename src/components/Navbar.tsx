@@ -81,7 +81,7 @@ export default function Navbar({
             </>
           ) : (
             <Link
-              href="/login"
+              href="/auth/login"
               className="flex items-center gap-2 bg-white hover:bg-gray-200 text-black px-5 py-2.5 rounded-xl shadow-lg shadow-white/5 transition font-bold"
             >
               <LogIn size={18} />
