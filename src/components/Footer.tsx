@@ -7,14 +7,16 @@ export default function Footer() {
   return (
     <footer className="relative border-t border-gray-800 py-13 px-5 bg-[#0b0b0c] overflow-hidden">
 
-      {/* background image com opacidade */}
-      <Image
-        src="/footer.png"
-        alt="footer background"
-        fill
-        className="object-cover opacity-20 pointer-events-none"
-        priority={false}
-      />
+      {/* background image apenas no mobile */}
+      <div className="md:hidden absolute inset-0 pointer-events-none">
+        <Image
+          src="/footer.png"
+          alt="footer background"
+          fill
+          className="object-cover opacity-20"
+          priority={false}
+        />
+      </div>
 
       <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center text-gray-400 z-10">
 
