@@ -158,7 +158,7 @@ export default function Sidebar({
           ) : (
             <>
               <Link
-                href="/page/auth"
+                href="/"
                 className="xm-button block mt-4 text-white font-semibold text-center py-3 rounded-xl transition"
               >
                 Operar na XM
