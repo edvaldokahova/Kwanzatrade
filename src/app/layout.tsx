@@ -4,9 +4,9 @@ import AppLayout from "@/components/AppLayout";
 import { LoaderProvider } from "@/context/LoaderContext";
 
 export const metadata: Metadata = {
-  title: "KwanzaTrade — Ferramenta Indispensável para o Trader Angolano",
+  title: "KwanzaTrade AI",
   description:
-    "Lucre no Forex com o poder da IA. Receba insights em tempo real e notícias da Marketaux direto na plataforma feita para o investidor angolano.",
+    "Lucre no Forex com o poder da IA. Receba insights em tempo real e notícias da Marketaux direto na plataforma feita para o Trader angolano.",
   icons: {
     icon: "/favicon.png",
   },
