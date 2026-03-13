@@ -1,23 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 import Sidebar from "@/components/Sidebar";
+import Navbar from "@/components/Navbar"; // ✅ já existente
+import { useLoader } from "@/context/LoaderContext";
 
 export default function PlatformLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  const { startLoading, stopLoading } = useLoader();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      startLoading();
+
+      const { data } = await supabase.auth.getSession();
+
+      if (!data.session) {
+        router.replace("/auth/login");
+      } else {
+        setReady(true);
+      }
+
+      stopLoading();
+    };
+
+    checkSession();
+  }, [router, startLoading, stopLoading]);
+
+  // evita render antes da verificação
+  if (!ready) return null;
 
   return (
-    <div className="flex bg-gray-900 text-white min-h-screen">
-      {/* Agora sincronizado: 'open' controla a visibilidade e 'onClose' reseta o estado */}
+    <div className="flex bg-[#0b0b0c] text-white min-h-screen">
+      
       <Sidebar open={open} onClose={() => setOpen(false)} />
 
-      <main className="flex-1 p-10 overflow-y-auto">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col">
+        
+        <Navbar /> {/* ✅ integrado, já lida com login/logout */}
+
+        <main className="flex-1 p-10 overflow-y-auto">
+          {children}
+        </main>
+
+      </div>
+
     </div>
   );
 }
