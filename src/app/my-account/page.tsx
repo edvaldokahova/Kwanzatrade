@@ -81,7 +81,7 @@ export default function MyAccountPage() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    window.location.href = "/auth/login";
+    window.location.href = "/";
   }
 
   return (
