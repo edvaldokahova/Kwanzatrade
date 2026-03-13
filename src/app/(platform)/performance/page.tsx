@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { 
@@ -59,21 +58,20 @@ export default function PerformancePage() {
     loadData();
   }, []);
 
-  const buy = history.filter((h) => h.signal?.toUpperCase() === "BUY").length;
-  const sell = history.filter((h) => h.signal?.toUpperCase() === "SELL").length;
-  
+  const buy = history.filter(h => h.signal?.toUpperCase() === "BUY").length;
+  const sell = history.filter(h => h.signal?.toUpperCase() === "SELL").length;
+
   const chartData = [
     { name: "BUY Signals", value: buy || 0 },
     { name: "SELL Signals", value: sell || 0 },
   ];
 
-  // Filtros para os blocos quantitativos
   const top10 = quantData.filter(q => q.top10).slice(0, 5);
   const highProb = quantData.filter(q => q.high_probability).slice(0, 5);
   const topVolatility = quantData.filter(q => q.top_volatility).slice(0, 5);
   const topMomentum = quantData.filter(q => q.top_momentum).slice(0, 5);
 
-  const COLORS = ["#3b82f6", "#ef4444"]; // Azul KwanzaTrade e Vermelho Alerta
+  const COLORS = ["#3b82f6", "#ef4444"]; // Azul e vermelho
 
   const totalSignals = buy + sell;
   const buyPercent = totalSignals > 0 ? ((buy / totalSignals) * 100).toFixed(1) : "0";
@@ -81,16 +79,16 @@ export default function PerformancePage() {
 
   return (
     <div className="max-w-7xl mx-auto py-10 space-y-12 px-4 pb-20">
-      
-      {/* HEADER INSTITUCIONAL */}
+
+      {/* HEADER */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-4">
-           <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg italic">K</span>
-              </div>
-              KWANZATRADE
+          <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white text-lg italic">K</span>
             </div>
+            KWANZATRADE
+          </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">
               <TrendingUp size={14} />
@@ -109,19 +107,19 @@ export default function PerformancePage() {
 
       {/* MÉTRICAS GERAIS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 rounded-[2.5rem] relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
           <p className="text-gray-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Analyses Processed</p>
           <div className="text-5xl font-black text-white tracking-tighter">{history.length}</div>
           <Search className="absolute -right-4 -bottom-4 text-white/5 w-24 h-24 group-hover:scale-110 transition-transform" />
         </div>
 
-        <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
           <p className="text-blue-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Bullish Momentum</p>
           <div className="text-5xl font-black text-blue-500 tracking-tighter">{buy} <span className="text-lg text-gray-600 uppercase">Buy</span></div>
           <div className="absolute top-8 right-8 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
         </div>
 
-        <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
           <p className="text-red-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Bearish Pressure</p>
           <div className="text-5xl font-black text-red-500 tracking-tighter">{sell} <span className="text-lg text-gray-600 uppercase">Sell</span></div>
           <div className="absolute top-8 right-8 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
@@ -141,7 +139,7 @@ export default function PerformancePage() {
               <block.icon className="w-4 h-4" /> {block.title}
             </h3>
             <div className="space-y-4">
-              {block.data.length > 0 ? block.data.map((t) => (
+              {block.data.length > 0 ? block.data.map(t => (
                 <div key={t.id} className="flex justify-between items-center group">
                   <span className="font-black text-white text-sm italic group-hover:text-blue-400 transition cursor-default">{t.pair}</span>
                   <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border ${block.bg} ${block.border} ${block.color}`}>
@@ -172,12 +170,12 @@ export default function PerformancePage() {
               Esta distribuição reflete o viés atual do mercado baseado em dados fundamentais e algoritmos proprietários da KwanzaTrade.
             </p>
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
-               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
-                 Buy Advantage: {buyPercent}%
-               </div>
-               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
-                 Sell Pressure: {sellPercent}%
-               </div>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
+                Buy Advantage: {buyPercent}%
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
+                Sell Pressure: {sellPercent}%
+              </div>
             </div>
           </div>
 
@@ -218,15 +216,15 @@ export default function PerformancePage() {
             )}
             
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-[10px] font-black text-gray-600 tracking-[0.3em] uppercase">Engine</span>
-                <span className="text-4xl font-black text-white italic">AI 24</span>
+              <span className="text-[10px] font-black text-gray-600 tracking-[0.3em] uppercase">Engine</span>
+              <span className="text-4xl font-black text-white italic">AI 24</span>
             </div>
           </div>
         </div>
 
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px]"></div>
       </div>
-      
+
       {/* RODAPÉ */}
       <div className="flex justify-center items-center gap-2 text-gray-700">
         <ShieldCheck size={14} />
