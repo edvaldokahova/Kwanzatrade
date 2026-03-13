@@ -69,7 +69,7 @@ export default function Register() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "https://kwanzatrade.vercel.app/auth/callback"
+        redirectTo: `${window.location.origin}/auth/callback`
       }
     });
 
@@ -94,8 +94,6 @@ export default function Register() {
 
     <main className="min-h-screen bg-[#0b0b0c] flex items-center justify-center px-6">
 
-      {/* Background */}
-
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
         <div className="absolute top-[-20%] left-[10%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full"></div>
@@ -107,8 +105,6 @@ export default function Register() {
       <div className="relative w-full max-w-lg">
 
         <div className="bg-[#111112] border border-white/10 rounded-3xl p-10 shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
-
-          {/* HEADER */}
 
           <div className="text-center mb-10">
 
@@ -122,8 +118,6 @@ export default function Register() {
 
           </div>
 
-          {/* GOOGLE BUTTON */}
-
           {!success && (
 
             <>
@@ -133,8 +127,6 @@ export default function Register() {
                 disabled={googleLoading}
                 className="w-full flex items-center justify-center gap-3 bg-white text-black font-semibold py-3 rounded-xl hover:bg-gray-200 transition"
               >
-
-                {/* Google Icon */}
 
                 <svg width="18" height="18" viewBox="0 0 48 48">
 
@@ -163,8 +155,6 @@ export default function Register() {
 
               </button>
 
-              {/* Divider */}
-
               <div className="flex items-center gap-4 my-6">
 
                 <div className="flex-1 h-[1px] bg-white/10"></div>
@@ -181,8 +171,6 @@ export default function Register() {
 
           )}
 
-          {/* SUCCESS MESSAGE */}
-
           {success ? (
 
             <div className="space-y-6">
@@ -192,10 +180,8 @@ export default function Register() {
                 <CheckCircle size={18} className="shrink-0 mt-[2px]" />
 
                 <span>
-
                   Conta criada com sucesso.  
                   Verifique o seu email para confirmar o cadastro antes de fazer login.
-
                 </span>
 
               </div>
@@ -236,8 +222,6 @@ export default function Register() {
 
             <div className="space-y-5">
 
-              {/* Nome */}
-
               <div className="relative">
 
                 <User className="absolute left-4 top-3.5 text-gray-500 w-5 h-5"/>
@@ -250,8 +234,6 @@ export default function Register() {
                 />
 
               </div>
-
-              {/* Email */}
 
               <div className="relative">
 
@@ -266,8 +248,6 @@ export default function Register() {
 
               </div>
 
-              {/* Senha */}
-
               <div className="relative">
 
                 <Lock className="absolute left-4 top-3.5 text-gray-500 w-5 h-5"/>
@@ -281,8 +261,6 @@ export default function Register() {
                 />
 
               </div>
-
-              {/* Nível */}
 
               <div className="relative">
 
