@@ -15,6 +15,7 @@ export default function Login() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const handleLogin = async () => {
 
@@ -28,7 +29,7 @@ export default function Login() {
 
     if (error) {
 
-      setError("Credenciais inválidas ou erro de conexão.");
+      setError(error.message);
       setLoading(false);
 
     } else {
@@ -36,14 +37,17 @@ export default function Login() {
       router.push("/dashboard");
 
     }
+
   };
 
   const handleGoogleLogin = async () => {
 
+    setGoogleLoading(true);
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`
+        redirectTo: `${window.location.origin}/auth/callback`
       }
     });
 
@@ -53,7 +57,7 @@ export default function Login() {
 
     <main className="min-h-screen bg-[#0b0b0c] flex items-center justify-center px-6">
 
-      {/* Background Light Effect */}
+      {/* Background */}
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
@@ -63,15 +67,11 @@ export default function Login() {
 
       </div>
 
-      {/* Container */}
-
       <div className="relative w-full max-w-lg">
-
-        {/* Card */}
 
         <div className="bg-[#111112] border border-white/10 rounded-3xl p-10 shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
 
-          {/* Header */}
+          {/* HEADER */}
 
           <div className="text-center mb-10">
 
@@ -172,6 +172,7 @@ export default function Login() {
 
             <button
               onClick={handleGoogleLogin}
+              disabled={googleLoading}
               className="w-full bg-[#0b0b0c] border border-white/10 hover:border-white/30 text-white font-semibold py-3 rounded-xl transition flex items-center justify-center gap-3"
             >
 
@@ -187,13 +188,13 @@ export default function Login() {
 
               </svg>
 
-              Entrar com Google
+              {googleLoading ? "A redirecionar..." : "Entrar com Google"}
 
             </button>
 
           </div>
 
-          {/* FOOTER LINKS */}
+          {/* FOOTER */}
 
           <div className="mt-10 pt-6 border-t border-white/10 text-center text-sm text-gray-400">
 
@@ -207,7 +208,7 @@ export default function Login() {
             <span className="mx-3">•</span>
 
             <Link
-              href="/login"
+              href="/auth/register"
               className="hover:text-white transition font-semibold"
             >
               Criar conta
