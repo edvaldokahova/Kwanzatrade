@@ -41,7 +41,7 @@ export default function PlatformLayout({
   if (!ready) return null;
 
   return (
-    <div className="flex bg-[#0b0b0c] text-white min-h-screen">
+    <div className="flex bg-[#0d0d0d] text-white min-h-screen">
       
       <Sidebar open={open} onClose={() => setOpen(false)} />
 
