@@ -24,7 +24,7 @@ const TIMEFRAMES = ["M1","M2","M3","M4","M5","M15","M30","H1","H4","D1","W1"];
 
 export default function Bot24Analyze() {
 
-  const { showLoader, hideLoader } = useLoader();
+  const { startLoading, stopLoading } = useLoader();
 
   const [pair, setPair] = useState("");
   const [capital, setCapital] = useState(100);
@@ -92,7 +92,7 @@ export default function Bot24Analyze() {
       return;
     }
 
-    showLoader();
+    startLoading();
 
     try {
 
@@ -135,7 +135,7 @@ export default function Bot24Analyze() {
 
     }
 
-    hideLoader();
+    stopLoading();
   }
 
   const getXMButtonLink = () => {
@@ -157,8 +157,6 @@ export default function Bot24Analyze() {
   return (
 
     <div className="max-w-6xl mx-auto space-y-10">
-
-      {/* HEADER */}
 
       <div className="flex items-center gap-4">
 
@@ -183,8 +181,6 @@ export default function Bot24Analyze() {
 
       </div>
 
-      {/* STATS */}
-
       <div className="grid md:grid-cols-3 gap-6">
 
         <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
@@ -208,13 +204,7 @@ export default function Bot24Analyze() {
           {topSignal && (
 
             <p className="text-xl font-bold">
-
-              {topSignal.pair}
-              {" "}
-              {topSignal.signal}
-              {" "}
-              {topSignal.confidence}%
-
+              {topSignal.pair} {topSignal.signal} {topSignal.confidence}%
             </p>
 
           )}
@@ -234,8 +224,6 @@ export default function Bot24Analyze() {
         </div>
 
       </div>
-
-      {/* MARKET SENTIMENT */}
 
       <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
 
@@ -266,9 +254,7 @@ export default function Bot24Analyze() {
                 }`}
               >
 
-                {item.signal}
-                {" "}
-                {item.confidence}%
+                {item.signal} {item.confidence}%
 
               </span>
 
@@ -280,11 +266,8 @@ export default function Bot24Analyze() {
 
       </div>
 
-      {/* FORM */}
-
       <div className="grid md:grid-cols-5 gap-4 bg-gray-800 border border-gray-700 p-6 rounded-xl">
 
-        {/* SELECT PAIR */}
         <select
           value={pair}
           onChange={(e) => setPair(e.target.value)}
@@ -328,19 +311,9 @@ export default function Bot24Analyze() {
           }
           className="bg-gray-900 p-3 rounded"
         >
-
-          <option value="beginner">
-            Beginner
-          </option>
-
-          <option value="intermediate">
-            Intermediate
-          </option>
-
-          <option value="advanced">
-            Advanced
-          </option>
-
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
         </select>
 
         <input
@@ -361,8 +334,6 @@ export default function Bot24Analyze() {
         Run AI Analysis
       </button>
 
-      {/* RESULT */}
-
       {result && (
 
         <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 space-y-6">
@@ -374,112 +345,44 @@ export default function Bot24Analyze() {
           <div className="grid md:grid-cols-3 gap-4">
 
             <div className="bg-gray-900 p-4 rounded">
-
-              <p className="text-gray-400">
-                Pair
-              </p>
-
-              <p className="text-xl font-bold">
-                {result.pair}
-              </p>
-
+              <p className="text-gray-400">Pair</p>
+              <p className="text-xl font-bold">{result.pair}</p>
             </div>
 
             <div className="bg-gray-900 p-4 rounded">
-
-              <p className="text-gray-400">
-                Signal
-              </p>
-
-              <p
-                className={`text-xl font-bold ${
-                  result.signal === "BUY"
-                    ? "text-green-400"
-                    : "text-red-400"
-                }`}
-              >
+              <p className="text-gray-400">Signal</p>
+              <p className={`text-xl font-bold ${
+                result.signal === "BUY"
+                  ? "text-green-400"
+                  : "text-red-400"
+              }`}>
                 {result.signal}
               </p>
-
             </div>
 
             <div className="bg-gray-900 p-4 rounded">
-
-              <p className="text-gray-400">
-                Confidence
-              </p>
-
+              <p className="text-gray-400">Confidence</p>
               <p className="text-xl font-bold">
                 {result.confidence}%
               </p>
-
             </div>
 
           </div>
 
-          {/* CONFIDENCE BAR */}
-
-          <div>
-
-            <p className="text-sm text-gray-400 mb-2">
-              Bot24 Confidence
-            </p>
-
-            <div className="w-full bg-gray-700 rounded h-4">
-
-              <div
-                className="bg-green-500 h-4 rounded"
-                style={{
-                  width: `${result.confidence}%`
-                }}
-              />
-
-            </div>
-
+          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+            <h3 className="font-bold mb-3">Trade Setup</h3>
+            <p>Entry: {result.entry}</p>
+            <p className="text-red-400">Stop Loss: {result.stopLoss}</p>
+            <p className="text-green-400">Take Profit: {result.takeProfit}</p>
           </div>
 
-          {/* TRADE SETUP */}
-
           <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
-
-            <h3 className="font-bold mb-3">
-              Trade Setup
-            </h3>
-
-            <p>
-              Entry: {result.entry}
-            </p>
-
-            <p className="text-red-400">
-              Stop Loss: {result.stopLoss}
-            </p>
-
-            <p className="text-green-400">
-              Take Profit: {result.takeProfit}
-            </p>
-
-          </div>
-
-          {/* PROFIT SIMULATION */}
-
-          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
-
-            <h3 className="font-bold mb-2">
-              Profit Simulation
-            </h3>
-
-            <p className="text-gray-400 text-sm">
-              Capital: ${capital}
-            </p>
-
-            <p className="text-gray-400 text-sm">
-              Risk: {risk}%
-            </p>
-
+            <h3 className="font-bold mb-2">Profit Simulation</h3>
+            <p className="text-gray-400 text-sm">Capital: ${capital}</p>
+            <p className="text-gray-400 text-sm">Risk: {risk}%</p>
             <p className="text-green-400 text-xl font-bold mt-2">
               Potential Profit: +${calculateProfit()}
             </p>
-
           </div>
 
           <a
@@ -488,11 +391,9 @@ export default function Bot24Analyze() {
             rel="noopener noreferrer"
             className="inline-block bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold"
           >
-
             {traderLevel === "beginner"
-              ? "Open XM Demo"
-              : "Open XM Real"}
-
+              ? "Criar ordem"
+              : "Criar ordem"}
           </a>
 
         </div>
