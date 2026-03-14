@@ -67,7 +67,7 @@ export default function Sidebar({
         className={`fixed top-0 left-0 h-screen w-72 bg-[#0b0b0c] border-r border-gray-800 p-6 flex flex-col z-[60] transform transition-transform duration-300
         ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
-        {/* LOGO */}
+        {/* LOGOTIPO */}
         <div className="flex justify-center mb-10">
           <Image
             src="/bot24_an.svg"
