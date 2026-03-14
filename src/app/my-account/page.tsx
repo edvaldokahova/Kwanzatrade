@@ -138,7 +138,7 @@ export default function MyAccountPage() {
               </div>
             </div>
 
-            {/* CONFIGURAÇÕES DE TRADING */}
+            {/* CONFIGURAÇÕES De TRADING */}
             <div className="bg-gray-950/50 border border-gray-800 p-8 rounded-[2.5rem] shadow-xl space-y-6">
               <div className="flex items-center gap-2 text-lg font-bold text-white">
                 <Trophy className="w-5 h-5 text-yellow-500" />
