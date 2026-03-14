@@ -86,8 +86,8 @@ export default function Register() {
 
   return (
 
-    <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
-
+    <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6 pt-17">
+      
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
         <div className="absolute top-[-20%] left-[10%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full"></div>
@@ -100,7 +100,7 @@ export default function Register() {
 
         <img
           src="/Gift.png"
-          alt="BOT24"
+          alt="Gift"
           className="w-40 mb-6 opacity-95"
         />
 
