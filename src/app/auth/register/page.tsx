@@ -75,7 +75,7 @@ export default function Register() {
 
   };
 
-  /* RESEND EMAIL */
+  /* RESEND eMAIL */
 
   const resendEmail = async () => {
 
