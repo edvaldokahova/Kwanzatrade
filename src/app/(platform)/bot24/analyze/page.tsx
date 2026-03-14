@@ -170,7 +170,7 @@ export default function Bot24Analyze() {
         <div>
 
           <h1 className="text-4xl font-bold">
-            Bot24 AI Analysis
+            Bot24 Analysis
           </h1>
 
           <p className="text-gray-400">
