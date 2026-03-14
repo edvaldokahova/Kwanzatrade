@@ -67,7 +67,7 @@ export default function ResetPassword() {
 
       <div className="relative w-full max-w-lg">
 
-        {/* Card */}
+        {/* Cards */}
 
         <div className="bg-[#111112] border border-white/10 rounded-3xl p-10 backdrop-blur-xl
         transition-all duration-300
