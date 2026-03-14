@@ -6,7 +6,7 @@ import { LoaderProvider } from "@/context/LoaderContext";
 export const metadata: Metadata = {
   title: "KwanzaTrade IA",
   description:
-    "Lucre no Forex com o poder da IA. Receba insights em tempo real e notícias da Marketaux direto na plataforma feita para o Trader angolano.",
+    "Lucre no Forex com o poder da IA. Receba insights em tempo real direto da plataforma feita para o Trader angolano.",
   icons: {
     icon: "/favicon.png",
   },
