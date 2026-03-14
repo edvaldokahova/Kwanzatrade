@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Send, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -34,25 +33,21 @@ export default function ForgotPassword() {
 
     <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
 
-      {/* Background Light Effects */}
-
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
-        <div className="absolute top-[-20%] left-[10%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.08),transparent_40%)]"></div>
 
-        <div className="absolute bottom-[-20%] right-[5%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.06),transparent_40%)]"></div>
 
       </div>
 
-      {/* Container */}
-
       <div className="relative w-full max-w-lg">
 
-        {/* Card */}
-
-        <div className="bg-[#111112] border border-white/10 rounded-3xl p-10 shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
-
-          {/* Header */}
+        <div className="bg-[#0d0d0d] border border-blue-400/20 rounded-3xl p-10 backdrop-blur-xl
+        transition-all duration-300
+        hover:border-blue-400/40
+        hover:-translate-y-1
+        shadow-[0_0_35px_rgba(59,130,246,0.25)]">
 
           <div className="text-center mb-10">
 
@@ -67,8 +62,6 @@ export default function ForgotPassword() {
 
           </div>
 
-          {/* Input */}
-
           <div className="space-y-5">
 
             <div className="relative">
@@ -80,12 +73,10 @@ export default function ForgotPassword() {
                 placeholder="Seu email cadastrado"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#0b0b0c] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 outline-none focus:border-white/30 focus:ring-0 transition"
+                className="w-full bg-[#0b0b0c] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 outline-none focus:border-blue-400/40 transition"
               />
 
             </div>
-
-            {/* Message */}
 
             {message && (
 
@@ -104,8 +95,6 @@ export default function ForgotPassword() {
               </div>
 
             )}
-
-            {/* Button */}
 
             <button
               onClick={handleReset}
@@ -126,8 +115,6 @@ export default function ForgotPassword() {
 
           </div>
 
-          {/* Divider */}
-
           <div className="mt-10 pt-6 border-t border-white/10 text-center">
 
             <Link
@@ -144,8 +131,6 @@ export default function ForgotPassword() {
           </div>
 
         </div>
-
-        {/* Footer */}
 
         <p className="text-center mt-8 text-xs text-gray-600 tracking-[0.25em] uppercase">
           KwanzaTrade Security System
