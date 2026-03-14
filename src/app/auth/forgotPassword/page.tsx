@@ -34,7 +34,7 @@ export default function ForgotPassword() {
 
     <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
 
-      {/* Background Light Effect */}
+      {/* Background Light Effects */}
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
