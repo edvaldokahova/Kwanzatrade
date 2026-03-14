@@ -55,8 +55,8 @@ export default function Login() {
 
   return (
 
-    <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
-
+    <main className="min-h-screen bg-[#0d0d0d] flex items-start justify-center px-6 pt-16">
+      
       {/* Background */}
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
