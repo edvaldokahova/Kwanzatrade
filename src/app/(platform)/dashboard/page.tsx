@@ -138,7 +138,7 @@ className="lg:col-span-2 group"
 <div className="bg-gradient-to-br from-green-900/20 to-[#0d0d0d] p-8 rounded-[2.5rem] border border-green-500/30 hover:border-green-400 hover:shadow-[0_0_50px_rgba(34,197,94,0.25)] transition-all hover:scale-[1.02]">
 
 <Image
-src="/bot24.svg"
+src="/bot24_an.svg"
 alt="Bot24"
 width={120}
 height={120}
