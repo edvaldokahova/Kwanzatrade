@@ -87,7 +87,7 @@ export default function PerformancePage() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white text-lg italic">K</span>
             </div>
-            KWANZATRADE
+            KwanzaTrade
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">
