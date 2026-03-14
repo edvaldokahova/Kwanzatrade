@@ -5,11 +5,12 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // Se houver um "next", ele redireciona para lá, senão vai para o dashboard
   const next = searchParams.get('next') ?? '/dashboard'
 
   if (code) {
-    const cookieStore = cookies()
+    // CORREÇÃO: No Next.js 15+, cookies() precisa de await
+    const cookieStore = await cookies()
+    
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -35,6 +36,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // Em caso de erro ou sem código, volta para o login
-  return NextResponse.redirect(`${origin}/auth/login`)
+  // Se houver erro ou link inválido
+  return NextResponse.redirect(`${origin}/auth/login?error=auth-callback-failed`)
 }
