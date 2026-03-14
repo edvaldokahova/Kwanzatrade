@@ -153,7 +153,7 @@ export default function Home() {
     <p className="mt-6 text-gray-400 text-lg">
       A KwanzaTrade é uma ferramenta que reúne dados de mercado, sinais estruturados
       e análise assistida por inteligência artificial para ajudar
-      traders a interpretar o mercado Forex com mais clareza e felicidade.
+      traders a interpretar o mercado Forex com mais clareza e facilidade.
     </p>
   </div>
 </section>
