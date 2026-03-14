@@ -67,9 +67,17 @@ export default function Login() {
 
       </div>
 
-      <div className="relative w-full max-w-lg">
+      <div className="relative w-full max-w-lg flex flex-col items-center">
 
-        <div className="bg-[#111112] border border-white/10 rounded-3xl p-10 shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+        {/* BOT24 IMAGE */}
+
+        <img
+          src="/bot24_an.svg"
+          alt="BOT24"
+          className="w-40 mb-6 opacity-95"
+        />
+
+        <div className="bg-[#0d0d0d] border border-blue-400/20 rounded-3xl p-10 shadow-[0_0_35px_rgba(59,130,246,0.25)] backdrop-blur-xl">
 
           {/* HEADER */}
 
@@ -87,7 +95,7 @@ export default function Login() {
 
           <div className="space-y-5">
 
-            {/* eMAIL */}
+            {/* EMAIL */}
 
             <div className="relative">
 
@@ -161,7 +169,7 @@ export default function Login() {
               </div>
 
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#111112] px-3 text-gray-500 tracking-widest">
+                <span className="bg-[#0d0d0d] px-3 text-gray-500 tracking-widest">
                   ou continue com
                 </span>
               </div>
