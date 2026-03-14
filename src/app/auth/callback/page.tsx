@@ -23,7 +23,7 @@ export default function AuthCallback() {
         // Se for link de reset de senha, vai para a página de reset
         router.push("/auth/resetPassword");
       } else {
-        // Para todos os outros casos (signup ou erro), vai para login
+        // Para todos os outros casos (signup ou erro), vai para a login
         router.push("/auth/login");
       }
     };
