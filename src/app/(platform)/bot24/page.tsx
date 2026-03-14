@@ -109,7 +109,7 @@ export default function Bot24Dashboard() {
 
             <p className="text-gray-500 text-sm">
 
-              Sistema de análise algorítmica para Forex e Crypto.
+              Sistema de análise algorítmica de Forex e Crypto.
 
             </p>
 
