@@ -13,7 +13,7 @@ const PAIRS = [
 ]; // Coloque todos os pares que você quer analisar automaticamente
 
 const TRADER_LEVEL = "beginner";
-const CAPITAL = 1000; // Valor base para cálculos
+const CAPITAL = 1000; // Valor base para os cálculos
 const RISK = 1; // Percentual de risco default
 
 export async function runGeminiScheduler() {
