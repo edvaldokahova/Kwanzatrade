@@ -87,7 +87,7 @@ export default function Login() {
 
           <div className="space-y-5">
 
-            {/* EMAIL */}
+            {/* eMAIL */}
 
             <div className="relative">
 
