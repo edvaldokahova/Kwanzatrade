@@ -98,7 +98,7 @@ export default function LiveSignals() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-6">
         <div className="space-y-4">
           <div className="text-xl font-black text-white tracking-tighter">
-            KWANZATRADE <span className="text-blue-500 italic">LIVE</span>
+            KwanzaTrade <span className="text-blue-500 italic">LIVE</span>
           </div>
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-black text-white tracking-tighter uppercase">AI Live Signals</h1>
