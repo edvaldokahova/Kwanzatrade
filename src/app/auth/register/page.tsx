@@ -99,7 +99,7 @@ export default function Register() {
       <div className="relative w-full max-w-lg flex flex-col items-center">
 
         <img
-          src="/bot24_an.svg"
+          src="/Gift.png"
           alt="BOT24"
           className="w-40 mb-6 opacity-95"
         />
@@ -109,7 +109,7 @@ export default function Register() {
           <div className="text-center mb-10">
 
             <h1 className="text-4xl font-black tracking-tight text-white mb-3">
-              Criar conta Gratuita
+              Abrir conta Gratuita
             </h1>
 
             <p className="text-gray-400 text-sm max-w-sm mx-auto">
