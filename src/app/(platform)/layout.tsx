@@ -14,7 +14,7 @@ export default function PlatformLayout({
 }) {
 
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // <-- renomeei para clareza
   const [ready, setReady] = useState(false);
 
   const { startLoading, stopLoading } = useLoader();
@@ -43,11 +43,12 @@ export default function PlatformLayout({
   return (
     <div className="flex bg-[#0d0d0d] text-white min-h-screen">
       
-      <Sidebar open={open} onClose={() => setOpen(false)} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex-1 flex flex-col">
         
-        <Navbar />
+        {/* Passando a função necessária para Navbar */}
+        <Navbar setSidebarOpen={setSidebarOpen} />
 
         <main className="flex-1 p-10 overflow-y-auto">
           {children}
