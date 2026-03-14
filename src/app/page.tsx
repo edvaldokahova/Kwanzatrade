@@ -37,7 +37,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#0b0b0c] text-gray-200 overflow-hidden">
       
-      {/* NAVBAR DINÂMICA */}
+      {/* NAVBAR DINAMICA */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 bg-[#0b0b0c]/80 backdrop-blur-xl border-b border-gray-800 transition-all duration-500 transform ${
           showNavbar ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
