@@ -13,7 +13,6 @@ export default function ResetPassword() {
 
   const router = useRouter();
 
-  // validações de senha
   const hasMinLength = password.length >= 8;
   const hasUppercase = /[A-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
@@ -53,8 +52,6 @@ export default function ResetPassword() {
 
     <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
 
-      {/* Fundo limpo sem falhas */}
-
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.08),transparent_40%)]"></div>
@@ -63,20 +60,13 @@ export default function ResetPassword() {
 
       </div>
 
-      {/* Container */}
-
       <div className="relative w-full max-w-lg">
 
-        {/* Cards */}
-
-        <div className="bg-[#111112] border border-white/10 rounded-3xl p-10 backdrop-blur-xl
+        <div className="bg-[#0d0d0d] border border-blue-400/20 rounded-3xl p-10 backdrop-blur-xl
         transition-all duration-300
         hover:border-blue-400/40
         hover:-translate-y-1
-        shadow-[0_0_25px_rgba(59,130,246,0.12)]
-        hover:shadow-[0_0_40px_rgba(59,130,246,0.25)]">
-
-          {/* Header */}
+        shadow-[0_0_35px_rgba(59,130,246,0.25)]">
 
           <div className="text-center mb-10">
 
@@ -100,11 +90,7 @@ export default function ResetPassword() {
 
           </div>
 
-          {/* Form */}
-
           <div className="space-y-5">
-
-            {/* Password Input */}
 
             <div className="relative">
 
@@ -119,8 +105,6 @@ export default function ResetPassword() {
               />
 
             </div>
-
-            {/* Password Requirements */}
 
             <div className="text-xs space-y-1 text-gray-500">
 
@@ -141,8 +125,6 @@ export default function ResetPassword() {
               </p>
 
             </div>
-
-            {/* Message */}
 
             {message && (
 
@@ -170,8 +152,6 @@ export default function ResetPassword() {
 
             )}
 
-            {/* Button */}
-
             <button
               onClick={handleReset}
               disabled={!passwordValid || status === "loading" || status === "success"}
@@ -185,8 +165,6 @@ export default function ResetPassword() {
             </button>
 
           </div>
-
-          {/* Back to login */}
 
           <div className="mt-10 pt-6 border-t border-white/10 text-center">
 
@@ -202,8 +180,6 @@ export default function ResetPassword() {
           </div>
 
         </div>
-
-        {/* Footer */}
 
         <p className="text-center mt-8 text-xs text-gray-600 tracking-[0.25em] uppercase">
           KwanzaTrade Security System
