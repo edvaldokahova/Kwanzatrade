@@ -55,7 +55,7 @@ export default function Login() {
 
   return (
 
-    <main className="min-h-screen bg-[#0d0d0d] flex items-start justify-center px-6 pt-16">
+    <main className="min-h-screen bg-[#0d0d0d] flex items-start justify-center px-6 py-16">
       
       {/* Background */}
 
