@@ -59,7 +59,7 @@ export default function Navbar({
           </Link>
         </div>
 
-        {/* LADO DIREITO */}
+        {/* LADO DIREITo */}
         <div className="flex items-center gap-4 text-sm">
           {user ? (
             <>
