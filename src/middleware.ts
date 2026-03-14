@@ -38,7 +38,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/live-signals") ||
     pathname.startsWith("/performance");
 
-  // Usuário não logado tentando acessar área protegida
+  // Usuário não logado tentando acessar a área protegida
   if (!session && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
