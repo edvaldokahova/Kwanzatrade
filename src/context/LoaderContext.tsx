@@ -6,7 +6,7 @@ import Bot24Loader from "@/components/Bot24Loader";
 const LoaderContext = createContext({
   startLoading: () => {},
   stopLoading: () => {},
-});
+}); //ok
 
 export function LoaderProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
