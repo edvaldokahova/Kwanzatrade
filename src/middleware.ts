@@ -4,7 +4,11 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
 
-  const res = NextResponse.next();
+  let res = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,10 +19,18 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          res.cookies.set({ name, value, ...options });
+          res.cookies.set({
+            name,
+            value,
+            ...options,
+          });
         },
         remove(name: string, options: any) {
-          res.cookies.set({ name, value: "", ...options });
+          res.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
         },
       },
     }
@@ -38,7 +50,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/live-signals") ||
     pathname.startsWith("/performance");
 
-  // Usuário não logado tentando acessar a área protegida
+  // Usuário não logado tentando acessar área protegida
   if (!session && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
@@ -57,6 +69,6 @@ export const config = {
     "/bot24/:path*",
     "/live-signals/:path*",
     "/performance/:path*",
-    "/auth/:path*"
+    "/auth/:path*",
   ],
 };
