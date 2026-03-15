@@ -25,7 +25,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Conteúdo Principal */}
       <main className={`flex-1 ${!isLanding ? "pt-16" : ""}`}>
-        <div className={!isLanding ? "w-full" : "p-4 md:p-8"}>
+        {/* CORREÇÃO AQUI: Se for Landing, usamos w-full (sem margens). 
+            Se não for (Dashboard), usamos o padding p-4/md:p-8 */}
+        <div className={isLanding ? "w-full" : "p-4 md:p-8"}>
           {children}
         </div>
       </main>
