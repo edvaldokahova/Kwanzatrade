@@ -117,7 +117,7 @@ export default function Login() {
               <span className="w-full border-t border-white/10"></span>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="bg-[#0d0d0d] px-4 text-gray-500 tracking-[0.2em] font-medium">
+              <span className="bg-[#3b3b3c] px-4 text-gray-500 tracking-[0.2em] font-medium">
                 ou continue com
               </span>
             </div>
