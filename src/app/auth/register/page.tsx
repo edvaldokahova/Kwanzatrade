@@ -98,12 +98,6 @@ export default function Register() {
 
       <div className="relative w-full max-w-lg flex flex-col items-center">
 
-        <img
-          src="/Gift.png"
-          alt="Gift"
-          className="w-40 mb-6 opacity-95"
-        />
-
         <div className="bg-[#0d0d0d] border border-blue-400/20 rounded-3xl p-10 shadow-[0_0_35px_rgba(59,130,246,0.25)] backdrop-blur-xl">
 
           <div className="text-center mb-10">
