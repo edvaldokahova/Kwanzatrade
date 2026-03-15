@@ -124,7 +124,7 @@ export default function Home() {
 
       <div className="flex gap-4 mt-8">
         <a 
-          href="/login"
+          href="/auth/login"
           className="bg-white text-black px-6 py-3 rounded-lg font-medium transition hover:scale-105 hover:shadow-xl inline-block text-center"
         >
           Começar gratuitamente
