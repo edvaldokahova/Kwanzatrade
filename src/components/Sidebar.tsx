@@ -11,7 +11,8 @@ import {
   Download,
   LogOut,
   TrendingUp,
-  Radio
+  Radio,
+  X // Importação do ícone de fechar
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -67,6 +68,14 @@ export default function Sidebar({
         className={`fixed top-0 left-0 h-screen w-72 bg-[#0b0b0c] border-r border-gray-800 p-6 flex flex-col z-[60] transform transition-transform duration-300
         ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
+        {/* BOTÃO FECHAR (X) */}
+        <button 
+          onClick={onClose}
+          className="absolute top-5 right-5 text-gray-500 hover:text-white transition-colors"
+        >
+          <X size={24} />
+        </button>
+
         {/* LOGOTIPO */}
         <div className="flex justify-center mb-10">
           <Image
@@ -188,6 +197,7 @@ export default function Sidebar({
             border-radius: 12px;
             color: #94a3b8;
             transition: all 0.2s;
+            border: 1px solid transparent; /* Base para o brilho */
           }
 
           .menu:hover {
@@ -195,10 +205,13 @@ export default function Sidebar({
             color: white;
           }
 
+          /* EFEITO DE LUZ ACESSA APRIMORADO */
           .menu.active {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(59, 130, 246, 0.15);
             color: #3b82f6;
             font-weight: 700;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); /* Brilho em todos os lados */
           }
 
           .xm-button {
@@ -208,12 +221,11 @@ export default function Sidebar({
           }
 
           @keyframes xmGlow {
-            0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.6); }
-            50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.9); }
+            0%, 100% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(255, 0, 0, 0.8); }
           }
         `}</style>
       </div>
     </>
   );
 }
-  
