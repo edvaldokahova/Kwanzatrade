@@ -3,12 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-
-  let res = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  });
+  let res = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,6 +14,12 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          res = NextResponse.next();
           res.cookies.set({
             name,
             value,
@@ -26,6 +27,12 @@ export async function middleware(req: NextRequest) {
           });
         },
         remove(name: string, options: any) {
+          req.cookies.set({
+            name,
+            value: "",
+            ...options,
+          });
+          res = NextResponse.next();
           res.cookies.set({
             name,
             value: "",
@@ -48,7 +55,8 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/bot24") ||
     pathname.startsWith("/live-signals") ||
-    pathname.startsWith("/performance");
+    pathname.startsWith("/performance") ||
+    pathname.startsWith("/my-account");
 
   // Usuário não logado tentando acessar área protegida
   if (!session && isProtectedRoute) {
@@ -69,6 +77,7 @@ export const config = {
     "/bot24/:path*",
     "/live-signals/:path*",
     "/performance/:path*",
+    "/my-account/:path*",
     "/auth/:path*",
   ],
 };
