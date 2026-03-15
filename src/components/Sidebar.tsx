@@ -12,7 +12,7 @@ import {
   LogOut,
   TrendingUp,
   Radio,
-  X // Importação do ícone de fechar
+  X 
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
@@ -79,8 +79,8 @@ export default function Sidebar({
         {/* LOGOTIPO */}
         <div className="flex justify-center mb-10">
           <Image
-            src="/bot24_an.svg"
-            alt="Bot24"
+            src="/kt-icon.png"
+            alt="kwanzaTrade"
             width={50}
             height={50}
             className="h-12 w-auto"
@@ -197,7 +197,7 @@ export default function Sidebar({
             border-radius: 12px;
             color: #94a3b8;
             transition: all 0.2s;
-            border: 1px solid transparent; /* Base para o brilho */
+            border: 1px solid transparent;
           }
 
           .menu:hover {
@@ -205,24 +205,22 @@ export default function Sidebar({
             color: white;
           }
 
-          /* EFEITO DE LUZ ACESSA APRIMORADO */
           .menu.active {
             background: rgba(59, 130, 246, 0.15);
             color: #3b82f6;
             font-weight: 700;
             border: 1px solid rgba(59, 130, 246, 0.3);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); /* Brilho em todos os lados */
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
           }
 
+          /* BOTÃO VERMELHO SEM BRILHO E SEM ANIMAÇÃO */
           .xm-button {
             background: #ff0000 !important;
-            box-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
-            animation: xmGlow 2.5s ease-in-out infinite;
+            transition: background 0.2s ease;
           }
 
-          @keyframes xmGlow {
-            0%, 100% { box-shadow: 0 0 12px rgba(255, 0, 0, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(255, 0, 0, 0.8); }
+          .xm-button:hover {
+            background: #cc0000 !important; /* Escurece um pouco ao passar o rato */
           }
         `}</style>
       </div>
