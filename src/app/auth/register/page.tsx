@@ -86,7 +86,7 @@ export default function Register() {
 
   return (
 
-    <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6 py-17">
+    <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6 py-16">
       
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
 
