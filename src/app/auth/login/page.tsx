@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // 🔹 novo client
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, LogIn, AlertCircle } from "lucide-react";
@@ -15,31 +15,44 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const supabase = createClient(); // 🔹 instância client-side
+
   const handleLogin = async () => {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      console.error("Erro ao fazer login:", err);
+      setError("Erro ao fazer login");
       setLoading(false);
-    } else {
-      router.push("/dashboard");
     }
   };
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+    } catch (err) {
+      console.error("Erro no login com Google:", err);
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -111,7 +124,7 @@ export default function Login() {
             )}
           </button>
 
-          {/* Divider - CORRIGIDO */}
+          {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-white/10"></span>
