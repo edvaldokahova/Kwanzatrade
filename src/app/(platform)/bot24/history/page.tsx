@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // ✅ novo client
 import { runBot24Analysis } from "@/lib/bot24Analysis";
 import { saveBot24History } from "@/lib/saveBot24History";
 
@@ -29,6 +29,8 @@ export default function Bot24HistoryPage() {
   const [sortField, setSortField] = useState<keyof Bot24HistoryItem>("created_at");
   const [sortAsc, setSortAsc] = useState(false);
   const [dailyCount, setDailyCount] = useState(0);
+
+  const supabase = createClient();
 
   useEffect(() => {
     async function fetchData() {
@@ -95,7 +97,7 @@ export default function Bot24HistoryPage() {
   }
 
   return (
-    <div className="relative max-w-7xl mx-auto py-10 px-4 space-y-6">
+    <div className="relative max-w-7xl mx-auto py-10 px-4 space-y-6 bg-[url('/hero-b.webp')] bg-cover bg-center">
 
       {/* HERO / HEADER */}
       <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight flex items-center gap-2">
