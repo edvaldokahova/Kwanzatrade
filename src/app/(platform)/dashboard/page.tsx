@@ -173,14 +173,14 @@ export default function Dashboard() {
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50"
       >
-        <div className="w-16 h-16 bg-[#0d0d0d] border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(200,200,200,0.35)] hover:scale-110 transition-all overflow-hidden p-2">
-          {/* O SVG FOI SUBSTITUÍDO PELA IMAGEM ABAIXO */}
+        <div className="w-16 h-16 bg-[#0d0d0d] border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(200,200,200,0.35)] hover:scale-110 transition-all relative">
           <Image 
-            src="/W-icon.png" // Certifique-se de que o arquivo está na pasta /public
+            src="/W-icon.png" 
             alt="WhatsApp"
-            width={40} // Ajuste o tamanho conforme necessário (aprox. 3/4 do tamanho do contêiner)
-            height={40}
-            className="object-contain" // Garante que a imagem não seja cortada
+            width={32} 
+            height={32}
+            // Adicionamos essas classes para garantir o centro real
+            className="object-contain block" 
           />
         </div>
       </a>
