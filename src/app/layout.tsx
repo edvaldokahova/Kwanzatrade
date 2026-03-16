@@ -23,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt" className="dark">
-      <body className="antialiased bg-[#0b0b0c]">
+      <body className="antialiased bg-[#0d0d0d]">
         <LoaderProvider>
           <AppLayout>
             {children}
