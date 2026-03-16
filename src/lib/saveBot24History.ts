@@ -1,7 +1,11 @@
 import { createClient } from "@/utils/supabase/client";
 
 export async function saveBot24History(result: any) {
+
+  const supabase = createClient();
+
   const { data: userData } = await supabase.auth.getUser();
+
   if (!userData?.user) return;
 
   await supabase.from("bot24_history").insert({
@@ -24,4 +28,5 @@ export async function saveBot24History(result: any) {
     liquidity: result.liquidity,
     probability: result.probability
   });
-}
+
+    }
