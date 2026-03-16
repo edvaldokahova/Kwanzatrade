@@ -17,7 +17,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 
 export default function Sidebar({
   open,
@@ -28,6 +28,8 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
+
+  const supabase = createClient(); // 🔹 instância atualizada
 
   const isActive = (path: string) => pathname === path;
 
@@ -46,7 +48,7 @@ export default function Sidebar({
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -88,7 +90,6 @@ export default function Sidebar({
         </div>
 
         <nav className="flex flex-col gap-2 flex-1 text-sm overflow-y-auto">
-
           {user ? (
             <>
               <Link
@@ -213,17 +214,17 @@ export default function Sidebar({
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
           }
 
-          /* BOTÃO VERMELHO SEM BRILHO E SEM ANIMAÇÃO */
           .xm-button {
             background: #ff0000 !important;
             transition: background 0.2s ease;
           }
 
           .xm-button:hover {
-            background: #cc0000 !important; /* Escurece um pouco ao passar o rato */
+            background: #cc0000 !important;
           }
         `}</style>
       </div>
     </>
   );
+    
 }
