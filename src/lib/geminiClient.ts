@@ -112,7 +112,7 @@ function parseGeminiJSON(
     }
   }
 
-  // ✅ 2. Tenta encontrar objeto JSON bruto
+  // ✅ 2. Tenta encontrar o objeto JSON bruto
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start !== -1 && end !== -1 && end > start) {
