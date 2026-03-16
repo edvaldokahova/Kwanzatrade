@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/utils/supabase/client"; // 🔹 novo client
+import { useState, useMemo } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, LogIn, AlertCircle } from "lucide-react";
@@ -9,33 +9,37 @@ import { Mail, Lock, LogIn, AlertCircle } from "lucide-react";
 export default function Login() {
   const router = useRouter();
 
+  // ✅ Instância estável
+  const supabase = useMemo(() => createClient(), []);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const supabase = createClient(); // 🔹 instância client-side
-
   const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Preencha email e senha.");
+      return;
+    }
     setLoading(true);
     setError("");
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setError(error.message);
-        setLoading(false);
+        setError(
+          error.message === "Invalid login credentials"
+            ? "Email ou senha incorretos."
+            : error.message
+        );
       } else {
         router.push("/dashboard");
       }
-    } catch (err) {
-      console.error("Erro ao fazer login:", err);
-      setError("Erro ao fazer login");
+    } catch {
+      setError("Erro ao fazer login. Tente novamente.");
+    } finally {
       setLoading(false);
     }
   };
@@ -45,40 +49,31 @@ export default function Login() {
     try {
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       });
-    } catch (err) {
-      console.error("Erro no login com Google:", err);
+    } catch {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#0d0d0d] flex items-start justify-center px-6 py-16">
-      
-      {/* Background */}
+    <main className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6 py-16">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[10%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full"></div>
-        <div className="absolute bottom-[-20%] right-[5%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full"></div>
+        <div className="absolute top-[-20%] left-[10%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full" />
+        <div className="absolute bottom-[-20%] right-[5%] w-[600px] h-[600px] bg-white/5 blur-[160px] rounded-full" />
       </div>
 
       <div className="relative w-full max-w-lg flex flex-col items-center">
-
-        {/* HEADER */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-black tracking-tight text-white mb-3">
             Bem-vindo de volta
           </h1>
-          <p className="text-gray-400 text-sm max-w-sm mx-auto">
+          <p className="text-gray-400 text-sm">
             Opere Forex com inteligência quantitativa
           </p>
         </div>
 
         <div className="space-y-5 w-full">
-
-          {/* EMAIL */}
           <div className="relative">
             <Mail className="absolute left-4 top-3.5 text-gray-500 w-5 h-5" />
             <input
@@ -86,11 +81,11 @@ export default function Login() {
               placeholder="Seu email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               className="w-full bg-[#0b0b0c] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 outline-none focus:border-white/30 transition"
             />
           </div>
 
-          {/* PASSWORD */}
           <div className="relative">
             <Lock className="absolute left-4 top-3.5 text-gray-500 w-5 h-5" />
             <input
@@ -98,25 +93,32 @@ export default function Login() {
               placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               className="w-full bg-[#0b0b0c] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 outline-none focus:border-white/30 transition"
             />
           </div>
 
-          {/* ERROR */}
           {error && (
             <div className="flex items-center gap-3 text-red-400 text-sm bg-red-500/10 p-4 rounded-xl border border-red-500/20">
-              <AlertCircle size={18} />
+              <AlertCircle size={18} className="shrink-0" />
               {error}
             </div>
           )}
 
-          {/* LOGIN BUTTON */}
           <button
-            className="w-full flex items-center justify-center gap-3 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition disabled:opacity-50 shadow-[0_10px_40px_rgba(255,255,255,0.15)]"
             onClick={handleLogin}
             disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition disabled:opacity-50 shadow-[0_10px_40px_rgba(255,255,255,0.15)]"
           >
-            {loading ? "Quase lá..." : (
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                A entrar...
+              </span>
+            ) : (
               <>
                 Entrar
                 <LogIn size={18} />
@@ -124,19 +126,17 @@ export default function Login() {
             )}
           </button>
 
-          {/* Divider */}
-          <div className="relative my-8">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/10"></span>
+              <span className="w-full border-t border-white/10" />
             </div>
             <div className="relative flex justify-center text-[10px] uppercase">
-              <span className="bg-[#171717] px-4 text-gray-500 tracking-[0.2em] font-medium">
+              <span className="bg-[#0d0d0d] px-4 text-gray-500 tracking-[0.2em]">
                 ou continue com
               </span>
             </div>
           </div>
 
-          {/* GOOGLE LOGIN */}
           <button
             onClick={handleGoogleLogin}
             disabled={googleLoading}
@@ -150,20 +150,17 @@ export default function Login() {
             </svg>
             {googleLoading ? "A redirecionar..." : "Entrar com Google"}
           </button>
-
         </div>
 
-        {/* FOOTER */}
         <div className="mt-10 pt-6 border-t border-white/10 text-center text-sm text-gray-400 w-full">
           <Link href="/auth/forgotPassword" className="hover:text-white transition">
             Esqueceu a senha?
           </Link>
-          <span className="mx-3">•</span>
+          <span className="mx-3 text-gray-700">•</span>
           <Link href="/auth/register" className="hover:text-white transition font-semibold">
             Criar conta
           </Link>
         </div>
-
       </div>
     </main>
   );
