@@ -4,12 +4,10 @@ import AppLayout from "@/components/AppLayout";
 import { LoaderProvider } from "@/context/LoaderContext";
 
 export const metadata: Metadata = {
-  title: "KwanzaTrade IA",
+  title: "KwanzaTrade",
   description:
     "Lucre no Forex com o poder da IA. Receba insights em tempo real direto da plataforma feita para o Trader angolano.",
-  icons: {
-    icon: "/favicon.png",
-  },
+  icons: { icon: "/favicon.png" },
 };
 
 export const viewport: Viewport = {
@@ -25,9 +23,7 @@ export default function RootLayout({
     <html lang="pt" className="dark">
       <body className="antialiased bg-[#0d0d0d]">
         <LoaderProvider>
-          <AppLayout>
-            {children}
-          </AppLayout>
+          <AppLayout>{children}</AppLayout>
         </LoaderProvider>
       </body>
     </html>
