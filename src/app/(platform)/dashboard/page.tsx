@@ -173,10 +173,15 @@ export default function Dashboard() {
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50"
       >
-        <div className="w-14 h-14 bg-[#0d0d0d] border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(200,200,200,0.35)] hover:scale-110 transition-all">
-          <svg viewBox="0 0 32 32" className="w-7 h-7 fill-white">
-            <path d="M16 .4C7.3.4.3 7.3.3 16c0 2.8.7 5.5 2.1 7.9L.1 31.6l7.9-2.2c2.3 1.3 4.9 2 7.6 2 8.7 0 15.7-7 15.7-15.6C31.7 7.3 24.7.4 16 .4z" />
-          </svg>
+        <div className="w-16 h-16 bg-[#0d0d0d] border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(200,200,200,0.35)] hover:scale-110 transition-all overflow-hidden p-2">
+          {/* O SVG FOI SUBSTITUÍDO PELA IMAGEM ABAIXO */}
+          <Image 
+            src="/W-icon.png" // Certifique-se de que o arquivo está na pasta /public
+            alt="WhatsApp"
+            width={48} // Ajuste o tamanho conforme necessário (aprox. 3/4 do tamanho do contêiner)
+            height={48}
+            className="object-contain" // Garante que a imagem não seja cortada
+          />
         </div>
       </a>
     </div>
