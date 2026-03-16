@@ -2,349 +2,351 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // ✅ novo client
 import NextLink from "next/link";
 
 import {
-Activity,
-ArrowUpRight,
-LayoutDashboard
+  Activity,
+  ArrowUpRight,
+  LayoutDashboard
 } from "lucide-react";
 
 export default function Dashboard() {
 
-const [analysesLeft, setAnalysesLeft] = useState<number | null>(null);
+  const [analysesLeft, setAnalysesLeft] = useState<number | null>(null);
 
-const MAX_ANALYSES = 10;
+  const MAX_ANALYSES = 10;
 
-useEffect(() => {
+  const supabase = createClient();
 
-async function fetchDailyAnalyses() {
+  useEffect(() => {
 
-try {
+    async function fetchDailyAnalyses() {
 
-const { data: userData } = await supabase.auth.getUser();
+      try {
 
-if (!userData?.user) return;
+        const { data: userData } = await supabase.auth.getUser();
 
-const { data } = await supabase.rpc(
-"get_daily_analysis_count",
-{ user_uuid: userData.user.id }
-);
+        if (!userData?.user) return;
 
-const count = Number(data) || 0;
+        const { data } = await supabase.rpc(
+          "get_daily_analysis_count",
+          { user_uuid: userData.user.id }
+        );
 
-setAnalysesLeft(Math.max(0, MAX_ANALYSES - count));
+        const count = Number(data) || 0;
 
-} catch (err) {
+        setAnalysesLeft(Math.max(0, MAX_ANALYSES - count));
 
-console.error(err);
+      } catch (err) {
 
-}
+        console.error(err);
 
-}
+      }
 
-fetchDailyAnalyses();
+    }
 
-}, []);
+    fetchDailyAnalyses();
 
-const bot24Disabled = analysesLeft !== null && analysesLeft <= 0;
+  }, []);
 
-return (
+  const bot24Disabled = analysesLeft !== null && analysesLeft <= 0;
 
-<div className="space-y-12 pb-24 max-w-7xl mx-auto">
+  return (
 
-{/* HEADER */}
+    <div className="space-y-12 pb-24 max-w-7xl mx-auto">
 
-<header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      {/* HEADER */}
 
-<div className="space-y-6">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
 
-<Image
-src="/kwanzatrade-logo.svg"
-alt="KwanzaTrade"
-width={180}
-height={50}
-priority
-/>
+        <div className="space-y-6">
 
-<div className="space-y-2">
+          <Image
+            src="/kwanzatrade-logo.svg"
+            alt="KwanzaTrade"
+            width={180}
+            height={50}
+            priority
+          />
 
-<div className="flex items-center gap-2 text-gray-500 font-black text-[10px] uppercase tracking-[0.35em]">
+          <div className="space-y-2">
 
-<LayoutDashboard size={14} />
+            <div className="flex items-center gap-2 text-gray-500 font-black text-[10px] uppercase tracking-[0.35em]">
 
-Command Center
+              <LayoutDashboard size={14} />
 
-</div>
+              Command Center
 
-<h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white">
+            </div>
 
-Painel <span className="text-gray-500">KwanzaTrade</span>
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white">
 
-</h1>
+              Painel <span className="text-gray-500">KwanzaTrade</span>
 
-<p className="text-gray-500 text-sm">
+            </h1>
 
-Bem-vindo à vanguarda do trading algorítmico.
+            <p className="text-gray-500 text-sm">
 
-</p>
+              Bem-vindo à vanguarda do trading algorítmico.
 
-</div>
+            </p>
 
-</div>
+          </div>
 
-<div className="bg-[#111] border border-green-500/20 p-4 rounded-2xl flex items-center gap-4 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
+        </div>
 
-<div className="relative">
+        <div className="bg-[#111] border border-green-500/20 p-4 rounded-2xl flex items-center gap-4 shadow-[0_0_20px_rgba(34,197,94,0.1)]">
 
-<div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+          <div className="relative">
 
-<div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full blur-sm opacity-50"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
 
-</div>
+            <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full blur-sm opacity-50"></div>
 
-<div>
+          </div>
 
-<p className="text-[10px] text-gray-500 font-bold uppercase">
+          <div>
 
-Status do Bot24
+            <p className="text-[10px] text-gray-500 font-bold uppercase">
 
-</p>
+              Status do Bot24
 
-<p className="text-xs text-white font-black tracking-widest">
+            </p>
 
-SISTEMA ONLINE
+            <p className="text-xs text-white font-black tracking-widest">
 
-</p>
+              SISTEMA ONLINE
 
-</div>
+            </p>
 
-</div>
+          </div>
 
-</header>
+        </div>
 
-{/* GRID */}
+      </header>
 
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* GRID */}
 
-{/* BOT24 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-<NextLink
-href={bot24Disabled ? "#" : "/bot24/analyze"}
-className="lg:col-span-2 group"
->
+        {/* BOT24 */}
 
-<div className="bg-gradient-to-br from-green-900/20 to-[#0d0d0d] p-8 rounded-[2.5rem] border border-green-500/30 hover:border-green-400 hover:shadow-[0_0_50px_rgba(34,197,94,0.25)] transition-all hover:scale-[1.02]">
+        <NextLink
+          href={bot24Disabled ? "#" : "/bot24/analyze"}
+          className="lg:col-span-2 group"
+        >
 
-<Image
-src="/bot24_an.svg"
-alt="Bot24"
-width={120}
-height={120}
-className="mb-6 opacity-90"
-/>
+          <div className="bg-gradient-to-br from-green-900/20 to-[#0d0d0d] p-8 rounded-[2.5rem] border border-green-500/30 hover:border-green-400 hover:shadow-[0_0_50px_rgba(34,197,94,0.25)] transition-all hover:scale-[1.02]">
 
-<h2 className="text-3xl font-black text-white mb-3 uppercase">
+            <Image
+              src="/bot24_an.svg"
+              alt="Bot24"
+              width={120}
+              height={120}
+              className="mb-6 opacity-90"
+            />
 
-Bot24 AI Analysis
+            <h2 className="text-3xl font-black text-white mb-3 uppercase">
 
-</h2>
+              Bot24 AI Analysis
 
-<p className="text-gray-400 text-sm">
+            </h2>
 
-Analise qualquer ativo usando redes neurais e sentimento institucional.
+            <p className="text-gray-400 text-sm">
 
-</p>
+              Analise qualquer ativo usando redes neurais e sentimento institucional.
 
-<div className="mt-8">
+            </p>
 
-{analysesLeft !== null ? (
+            <div className="mt-8">
 
-<div className="px-4 py-2 rounded-xl text-xs font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
+              {analysesLeft !== null ? (
 
-{analysesLeft} análises restantes hoje
+                <div className="px-4 py-2 rounded-xl text-xs font-black uppercase bg-green-500/10 text-green-400 border border-green-500/20">
 
-</div>
+                  {analysesLeft} análises restantes hoje
 
-) : (
+                </div>
 
-<div className="px-4 py-2 rounded-xl text-xs font-black bg-gray-800 text-gray-500 border border-gray-700 animate-pulse">
+              ) : (
 
-Verificando...
+                <div className="px-4 py-2 rounded-xl text-xs font-black bg-gray-800 text-gray-500 border border-gray-700 animate-pulse">
 
-</div>
+                  Verificando...
 
-)}
+                </div>
 
-</div>
+              )}
 
-</div>
+            </div>
 
-</NextLink>
+          </div>
 
-{/* HEATMAP */}
+        </NextLink>
 
-<NextLink href="/bot24/heatmap" className="group">
+        {/* HEATMAP */}
 
-<div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/40 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all hover:scale-[1.02]">
+        <NextLink href="/bot24/heatmap" className="group">
 
-<Image
-src="/heatmap.svg"
-alt="Heatmap"
-width={100}
-height={100}
-className="mb-6 opacity-90"
-/>
+          <div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/40 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all hover:scale-[1.02]">
 
-<h2 className="text-xl font-black text-white mb-2 uppercase">
+            <Image
+              src="/heatmap.svg"
+              alt="Heatmap"
+              width={100}
+              height={100}
+              className="mb-6 opacity-90"
+            />
 
-Market Heatmap
+            <h2 className="text-xl font-black text-white mb-2 uppercase">
 
-</h2>
+              Market Heatmap
 
-<p className="text-gray-500 text-sm mb-6">
+            </h2>
 
-Veja os pares com maior força relativa.
+            <p className="text-gray-500 text-sm mb-6">
 
-</p>
+              Veja os pares com maior força relativa.
 
-<div className="flex items-center gap-2 text-[10px] font-black text-green-500 tracking-[0.2em]">
+            </p>
 
-Ver mapa <ArrowUpRight size={14} />
+            <div className="flex items-center gap-2 text-[10px] font-black text-green-500 tracking-[0.2em]">
 
-</div>
+              Ver mapa <ArrowUpRight size={14} />
 
-</div>
+            </div>
 
-</NextLink>
+          </div>
 
-{/* LIVE SIGNALS */}
+        </NextLink>
 
-<div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all hover:scale-[1.02]">
+        {/* LIVE SIGNALS */}
 
-<Image
-src="/live-signals.svg"
-alt="Signals"
-width={100}
-height={100}
-className="mb-6 opacity-90"
-/>
+        <div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all hover:scale-[1.02]">
 
-<h2 className="text-xl font-black text-white mb-2 uppercase">
+          <Image
+            src="/live-signals.svg"
+            alt="Signals"
+            width={100}
+            height={100}
+            className="mb-6 opacity-90"
+          />
 
-Live AI Signals
+          <h2 className="text-xl font-black text-white mb-2 uppercase">
 
-</h2>
+            Live AI Signals
 
-<p className="text-gray-500 text-sm">
+          </h2>
 
-Sinais institucionais gerados por IA.
+          <p className="text-gray-500 text-sm">
 
-</p>
+            Sinais institucionais gerados por IA.
 
-</div>
+          </p>
 
-{/* EDUCATION */}
+        </div>
 
-<div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-gray-500/30 transition-all hover:scale-[1.02]">
+        {/* EDUCATION */}
 
-<Image
-src="/education.svg"
-alt="Education"
-width={100}
-height={100}
-className="mb-6 opacity-90"
-/>
+        <div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-gray-500/30 transition-all hover:scale-[1.02]">
 
-<h2 className="text-xl font-black text-white mb-3 uppercase">
+          <Image
+            src="/education.svg"
+            alt="Education"
+            width={100}
+            height={100}
+            className="mb-6 opacity-90"
+          />
 
-Education Hub
+          <h2 className="text-xl font-black text-white mb-3 uppercase">
 
-</h2>
+            Education Hub
 
-<p className="text-gray-500 text-sm mb-6">
+          </h2>
 
-Aprenda trading com um dos maiores brokers do mundo.
+          <p className="text-gray-500 text-sm mb-6">
 
-</p>
+            Aprenda trading com um dos maiores brokers do mundo.
 
-<Image
-src="/xm-logo.png"
-alt="XM"
-width={120}
-height={40}
-className="mb-6"
-/>
+          </p>
 
-<a
-href="https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=29"
-target="_blank"
-className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition"
->
+          <Image
+            src="/xm-logo.png"
+            alt="XM"
+            width={120}
+            height={40}
+            className="mb-6"
+          />
 
-Começar treinamento
+          <a
+            href="https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=29"
+            target="_blank"
+            className="inline-flex items-center gap-2 bg-white text-black font-bold px-6 py-3 rounded-xl hover:bg-gray-200 transition"
+          >
 
-<ArrowUpRight size={16} />
+            Começar treinamento
 
-</a>
+            <ArrowUpRight size={16} />
 
-</div>
+          </a>
 
-{/* HISTORY */}
+        </div>
 
-<NextLink href="/bot24/history" className="group">
+        {/* HISTORY */}
 
-<div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all hover:scale-[1.02]">
+        <NextLink href="/bot24/history" className="group">
 
-<Image
-src="/history.svg"
-alt="History"
-width={100}
-height={100}
-className="mb-6 opacity-90"
-/>
+          <div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all hover:scale-[1.02]">
 
-<h2 className="text-xl font-black text-white mb-2 uppercase">
+            <Image
+              src="/history.svg"
+              alt="History"
+              width={100}
+              height={100}
+              className="mb-6 opacity-90"
+            />
 
-Trade History
+            <h2 className="text-xl font-black text-white mb-2 uppercase">
 
-</h2>
+              Trade History
 
-<p className="text-gray-500 text-sm">
+            </h2>
 
-Veja todas as análises feitas pelo Bot24.
+            <p className="text-gray-500 text-sm">
 
-</p>
+              Veja todas as análises feitas pelo Bot24.
 
-</div>
+            </p>
 
-</NextLink>
+          </div>
 
-</div>
+        </NextLink>
 
-{/* WHATSAPP FLOAT */}
+      </div>
 
-<a
-href="https://wa.me/244955968159"
-target="_blank"
-className="fixed bottom-6 right-6 z-50"
->
+      {/* WHATSAPP FLOAT */}
 
-<div className="w-14 h-14 bg-[#0d0d0d] border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(200,200,200,0.35)] hover:scale-110 transition-all">
+      <a
+        href="https://wa.me/244955968159"
+        target="_blank"
+        className="fixed bottom-6 right-6 z-50"
+      >
 
-<svg viewBox="0 0 32 32" className="w-7 h-7 fill-white">
+        <div className="w-14 h-14 bg-[#0d0d0d] border border-white/10 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(200,200,200,0.35)] hover:scale-110 transition-all">
 
-<path d="M16 .4C7.3.4.3 7.3.3 16c0 2.8.7 5.5 2.1 7.9L.1 31.6l7.9-2.2c2.3 1.3 4.9 2 7.6 2 8.7 0 15.7-7 15.7-15.6C31.7 7.3 24.7.4 16 .4z"/>
+          <svg viewBox="0 0 32 32" className="w-7 h-7 fill-white">
 
-</svg>
+            <path d="M16 .4C7.3.4.3 7.3.3 16c0 2.8.7 5.5 2.1 7.9L.1 31.6l7.9-2.2c2.3 1.3 4.9 2 7.6 2 8.7 0 15.7-7 15.7-15.6C31.7 7.3 24.7.4 16 .4z"/>
 
-</div>
+          </svg>
 
-</a>
+        </div>
 
-</div>
+      </a>
 
-);
+    </div>
+
+  );
 
 }
