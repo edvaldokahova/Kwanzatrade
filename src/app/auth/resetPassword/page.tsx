@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // 🔹 novo client
 import { useRouter } from "next/navigation";
 import { Lock, RefreshCcw, CheckCircle, AlertCircle } from "lucide-react";
 
@@ -12,6 +12,8 @@ export default function ResetPassword() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   const router = useRouter();
+
+  const supabase = createClient(); // 🔹 instância client-side
 
   const hasMinLength = password.length >= 8;
   const hasUppercase = /[A-Z]/.test(password);
@@ -28,23 +30,24 @@ export default function ResetPassword() {
     setStatus("loading");
     setMessage("");
 
-    const { error } = await supabase.auth.updateUser({ password });
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
 
-    if (error) {
+      if (error) {
+        setMessage(`Erro: ${error.message}`);
+        setStatus("error");
+      } else {
+        setMessage("Senha redefinida com sucesso!");
+        setStatus("success");
 
-      setMessage(`Erro: ${error.message}`);
+        setTimeout(() => {
+          router.push("/auth/login");
+        }, 2500);
+      }
+    } catch (err) {
+      console.error("Erro ao redefinir senha:", err);
+      setMessage("Erro ao redefinir senha");
       setStatus("error");
-
-    } else {
-
-      setMessage("Senha redefinida com sucesso!");
-      setStatus("success");
-
-      setTimeout(() => {
-
-        router.push("/auth/login");
-
-      }, 2500);
     }
   };
 
