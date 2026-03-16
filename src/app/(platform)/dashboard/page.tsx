@@ -178,8 +178,8 @@ export default function Dashboard() {
           <Image 
             src="/W-icon.png" // Certifique-se de que o arquivo está na pasta /public
             alt="WhatsApp"
-            width={48} // Ajuste o tamanho conforme necessário (aprox. 3/4 do tamanho do contêiner)
-            height={48}
+            width={40} // Ajuste o tamanho conforme necessário (aprox. 3/4 do tamanho do contêiner)
+            height={40}
             className="object-contain" // Garante que a imagem não seja cortada
           />
         </div>
