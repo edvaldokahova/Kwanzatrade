@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client"; // Mudado de @/ para ./ para evitar erro de resolução
+import { createClient } from "@/utils/supabase/client";
 
 export async function saveBot24Request(data: {
   pair: string;
@@ -7,6 +7,9 @@ export async function saveBot24Request(data: {
   risk_percent: number;
   trader_level?: string;
 }) {
+
+  const supabase = createClient();
+
   try {
     const { data: userData } = await supabase.auth.getUser();
     const user = userData?.user;
@@ -21,13 +24,15 @@ export async function saveBot24Request(data: {
         timeframe: data.timeframe,
         capital: data.capital,
         risk_percent: data.risk_percent,
-        trader_level: data.trader_level || "beginner"
+        trader_level: data.trader_level || "beginner",
       })
       .select()
       .single();
 
     if (error) throw error;
+
     return result;
+
   } catch (error) {
     console.error("Erro ao salvar request:", error);
     return null;
