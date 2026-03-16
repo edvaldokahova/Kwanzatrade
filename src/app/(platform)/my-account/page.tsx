@@ -22,7 +22,7 @@ export default function MyAccountPage() {
 
   const levels = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
-  const supabase = createClient(); // 🔹 instância client-side
+  const supabase = createClient(); // 🔹 instancia client-side
 
   useEffect(() => {
     async function fetchProfile() {
