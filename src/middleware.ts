@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
+
   let res = NextResponse.next();
 
   const supabase = createServerClient(
@@ -14,12 +15,6 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          req.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-          res = NextResponse.next();
           res.cookies.set({
             name,
             value,
@@ -27,12 +22,6 @@ export async function middleware(req: NextRequest) {
           });
         },
         remove(name: string, options: any) {
-          req.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
-          res = NextResponse.next();
           res.cookies.set({
             name,
             value: "",
@@ -44,8 +33,8 @@ export async function middleware(req: NextRequest) {
   );
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { pathname } = req.nextUrl;
 
@@ -59,12 +48,12 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/my-account");
 
   // Usuário não logado tentando acessar área protegida
-  if (!session && isProtectedRoute) {
+  if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
   // Usuário logado tentando acessar login/register
-  if (session && isAuthPage) {
+  if (user && isAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
