@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 import { runBot24Analysis } from "@/lib/bot24Analysis";
 import { saveBot24Request } from "@/lib/saveBot24Request";
 import { saveBot24History } from "@/lib/saveBot24History";
 import { useLoader } from "@/context/LoaderContext";
+
+const supabase = createClient();
 
 const XM_LINKS = {
   beginner: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5",
@@ -36,6 +38,8 @@ export default function Bot24Analyze() {
   const [analysisCount, setAnalysisCount] = useState(0);
   const [topSignal, setTopSignal] = useState<any>(null);
   const [sentiment, setSentiment] = useState<any[]>([]);
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
 
@@ -87,10 +91,14 @@ export default function Bot24Analyze() {
 
     if (!pair.trim()) return;
 
+    if (isAnalyzing) return;
+
     if (analysisCount >= 10) {
       alert("Você atingiu o limite diário de 10 análises.");
       return;
     }
+
+    setIsAnalyzing(true);
 
     startLoading();
 
@@ -136,11 +144,19 @@ export default function Bot24Analyze() {
     }
 
     stopLoading();
+    setIsAnalyzing(false);
   }
 
   const getXMButtonLink = () => {
-    if (traderLevel === "beginner") return XM_LINKS.beginner;
-    return XM_LINKS.advanced;
+
+    const base =
+      traderLevel === "beginner"
+        ? XM_LINKS.beginner
+        : XM_LINKS.advanced;
+
+    if (!result?.pair) return base;
+
+    return `${base}&symbol=${result.pair}`;
   };
 
   const calculateProfit = () => {
@@ -148,7 +164,6 @@ export default function Bot24Analyze() {
     if (!result) return 0;
 
     const riskAmount = capital * (risk / 100);
-
     const rr = 2;
 
     return (riskAmount * rr).toFixed(2);
@@ -156,251 +171,162 @@ export default function Bot24Analyze() {
 
   return (
 
-    <div className="max-w-6xl mx-auto space-y-10">
+    <div className="relative min-h-screen">
 
-      <div className="flex items-center gap-4">
+      <Image
+        src="/hero-b.webp"
+        alt="Background"
+        fill
+        priority
+        className="object-cover opacity-10"
+      />
 
-        <Image
-          src="/bot24_an.svg"
-          alt="Bot24"
-          width={60}
-          height={60}
-        />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black"></div>
 
-        <div>
+      <div className="relative max-w-6xl mx-auto space-y-10 py-10 px-4">
 
-          <h1 className="text-4xl font-bold">
-            Bot24 Analysis
-          </h1>
+        <div className="flex items-center gap-4">
 
-          <p className="text-gray-400">
-            Inteligência de mercado automatizada baseada em IA
-          </p>
+          <Image
+            src="/bot24_an.svg"
+            alt="Bot24"
+            width={60}
+            height={60}
+          />
 
-        </div>
+          <div>
 
-      </div>
+            <h1 className="text-4xl font-bold">
+              Bot24 Analysis
+            </h1>
 
-      <div className="grid md:grid-cols-3 gap-6">
-
-        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
-
-          <p className="text-gray-400 text-sm">
-            Accuracy Bot24
-          </p>
-
-          <p className="text-3xl font-bold text-green-400">
-            73%
-          </p>
-
-        </div>
-
-        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
-
-          <p className="text-gray-400 text-sm">
-            Top Signal Today
-          </p>
-
-          {topSignal && (
-
-            <p className="text-xl font-bold">
-              {topSignal.pair} {topSignal.signal} {topSignal.confidence}%
+            <p className="text-gray-400">
+              Inteligência de mercado automatizada baseada em IA
             </p>
 
-          )}
+          </div>
 
         </div>
 
-        <div className="bg-gray-800 border border-gray-700 p-6 rounded-xl">
+        <div className="grid md:grid-cols-4 gap-4">
 
-          <p className="text-gray-400 text-sm">
-            Daily Analyses
-          </p>
-
-          <p className="text-3xl font-bold">
-            {analysisCount}/10
-          </p>
-
-        </div>
-
-      </div>
-
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-6">
-
-        <h3 className="text-lg font-bold mb-4">
-          Live Market Sentiment
-        </h3>
-
-        <div className="space-y-3">
-
-          {sentiment.map((item, i) => (
-
-            <div
-              key={i}
-              className="flex justify-between bg-gray-900 p-3 rounded"
-            >
-
-              <span className="font-semibold">
-                {item.pair}
-              </span>
-
-              <span
-                className={`font-bold ${
-                  item.signal === "BUY"
-                    ? "text-green-400"
-                    : item.signal === "SELL"
-                    ? "text-red-400"
-                    : "text-yellow-400"
-                }`}
-              >
-
-                {item.signal} {item.confidence}%
-
-              </span>
-
-            </div>
-
-          ))}
-
-        </div>
-
-      </div>
-
-      <div className="grid md:grid-cols-5 gap-4 bg-gray-800 border border-gray-700 p-6 rounded-xl">
-
-        <select
-          value={pair}
-          onChange={(e) => setPair(e.target.value)}
-          className="bg-gray-900 p-3 rounded"
-        >
-          <option value="">Select Pair</option>
-          {TOP_PAIRS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          value={capital}
-          onChange={(e) =>
-            setCapital(Number(e.target.value))
-          }
-          className="bg-gray-900 p-3 rounded"
-        />
-
-        <select
-          value={timeframe}
-          onChange={(e) =>
-            setTimeframe(e.target.value)
-          }
-          className="bg-gray-900 p-3 rounded"
-        >
-          {TIMEFRAMES.map((tf) => (
-            <option key={tf} value={tf}>
-              {tf}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={traderLevel}
-          onChange={(e) =>
-            setTraderLevel(e.target.value)
-          }
-          className="bg-gray-900 p-3 rounded"
-        >
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
-        </select>
-
-        <input
-          type="number"
-          value={risk}
-          onChange={(e) =>
-            setRisk(Number(e.target.value))
-          }
-          className="bg-gray-900 p-3 rounded"
-        />
-
-      </div>
-
-      <button
-        onClick={handleAnalyze}
-        className="bg-green-500 hover:bg-green-600 transition px-8 py-3 rounded-lg font-semibold"
-      >
-        Run AI Analysis
-      </button>
-
-      {result && (
-
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 space-y-6">
-
-          <h2 className="text-2xl font-bold">
-            Analysis Result
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-4">
-
-            <div className="bg-gray-900 p-4 rounded">
-              <p className="text-gray-400">Pair</p>
-              <p className="text-xl font-bold">{result.pair}</p>
-            </div>
-
-            <div className="bg-gray-900 p-4 rounded">
-              <p className="text-gray-400">Signal</p>
-              <p className={`text-xl font-bold ${
-                result.signal === "BUY"
-                  ? "text-green-400"
-                  : "text-red-400"
-              }`}>
-                {result.signal}
-              </p>
-            </div>
-
-            <div className="bg-gray-900 p-4 rounded">
-              <p className="text-gray-400">Confidence</p>
-              <p className="text-xl font-bold">
-                {result.confidence}%
-              </p>
-            </div>
-
-          </div>
-
-          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
-            <h3 className="font-bold mb-3">Trade Setup</h3>
-            <p>Entry: {result.entry}</p>
-            <p className="text-red-400">Stop Loss: {result.stopLoss}</p>
-            <p className="text-green-400">Take Profit: {result.takeProfit}</p>
-          </div>
-
-          <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
-            <h3 className="font-bold mb-2">Profit Simulation</h3>
-            <p className="text-gray-400 text-sm">Capital: ${capital}</p>
-            <p className="text-gray-400 text-sm">Risk: {risk}%</p>
-            <p className="text-green-400 text-xl font-bold mt-2">
-              Potential Profit: +${calculateProfit()}
-            </p>
-          </div>
-
-          <a
-            href={getXMButtonLink()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold"
+          <select
+            value={pair}
+            onChange={(e)=>setPair(e.target.value)}
+            className="bg-gray-900 border border-gray-700 rounded p-3"
           >
-            {traderLevel === "beginner"
-              ? "Criar ordem"
-              : "Criar ordem"}
-          </a>
+            <option value="">Select Pair</option>
+            {TOP_PAIRS.map(p=>(
+              <option key={p}>{p}</option>
+            ))}
+          </select>
+
+          <select
+            value={timeframe}
+            onChange={(e)=>setTimeframe(e.target.value)}
+            className="bg-gray-900 border border-gray-700 rounded p-3"
+          >
+            {TIMEFRAMES.map(t=>(
+              <option key={t}>{t}</option>
+            ))}
+          </select>
+
+          <input
+            type="number"
+            value={capital}
+            onChange={(e)=>setCapital(Number(e.target.value))}
+            className="bg-gray-900 border border-gray-700 rounded p-3"
+            placeholder="Capital"
+          />
+
+          <input
+            type="number"
+            value={risk}
+            onChange={(e)=>setRisk(Number(e.target.value))}
+            className="bg-gray-900 border border-gray-700 rounded p-3"
+            placeholder="Risk %"
+          />
 
         </div>
 
-      )}
+        <button
+          onClick={handleAnalyze}
+          disabled={isAnalyzing}
+          className={`px-8 py-3 rounded-lg font-semibold transition ${
+            isAnalyzing
+              ? "bg-gray-600 cursor-not-allowed"
+              : "bg-green-500 hover:bg-green-600"
+          }`}
+        >
+          {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
+        </button>
+
+        {result && (
+
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-8 space-y-6">
+
+            <h2 className="text-2xl font-bold">
+              Analysis Result
+            </h2>
+
+            <div className="grid md:grid-cols-3 gap-4">
+
+              <div className="bg-gray-900 p-4 rounded">
+                <p className="text-gray-400">Pair</p>
+                <p className="text-xl font-bold">{result.pair}</p>
+              </div>
+
+              <div className="bg-gray-900 p-4 rounded">
+                <p className="text-gray-400">Signal</p>
+                <p className={`text-xl font-bold ${
+                  result.signal === "BUY"
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}>
+                  {result.signal}
+                </p>
+              </div>
+
+              <div className="bg-gray-900 p-4 rounded">
+                <p className="text-gray-400">Confidence</p>
+                <p className="text-xl font-bold">
+                  {result.confidence}%
+                </p>
+              </div>
+
+            </div>
+
+            <div className="bg-gray-900 p-4 rounded-lg border border-gray-700">
+
+              <p className="text-gray-400 text-sm">
+                Potential Profit (RR 1:2)
+              </p>
+
+              <p className="text-2xl font-bold text-green-400">
+                ${calculateProfit()}
+              </p>
+
+            </div>
+
+            <a
+              href={getXMButtonLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-block px-6 py-3 rounded-lg font-bold ${
+                result.signal === "BUY"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              Criar ordem {result.signal} na XM
+            </a>
+
+          </div>
+
+        )}
+
+      </div>
 
     </div>
-
   );
 }
