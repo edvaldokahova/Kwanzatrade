@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client"; // ✅ novo client
+import { useEffect, useState, useMemo } from "react";
+import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { 
-  Target, Zap, Activity, BarChart3, TrendingUp, 
-  Search, ShieldCheck, PieChart as PieIcon 
+import {
+  Target, Zap, Activity, BarChart3,
+  TrendingUp, Search, ShieldCheck, PieChart as PieIcon,
 } from "lucide-react";
 
 type History = {
@@ -29,16 +30,20 @@ type QuantData = {
   top_momentum: boolean;
 };
 
+const COLORS = ["#3b82f6", "#ef4444"];
+
 export default function PerformancePage() {
+  // ✅ Instância estável
+  const supabase = useMemo(() => createClient(), []);
+
   const [history, setHistory] = useState<History[]>([]);
   const [quantData, setQuantData] = useState<QuantData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
-  const supabase = createClient();
-
   useEffect(() => {
     setIsMounted(true);
+
     async function loadData() {
       setLoading(true);
       try {
@@ -52,195 +57,249 @@ export default function PerformancePage() {
         setHistory(historyData || []);
         setQuantData(qData || []);
       } catch (error) {
-        console.error("Erro ao carregar dados de performance:", error);
+        console.error("Performance load error:", error);
       } finally {
         setLoading(false);
       }
     }
+
     loadData();
   }, [supabase]);
 
-  const buy = history.filter(h => h.signal?.toUpperCase() === "BUY").length;
-  const sell = history.filter(h => h.signal?.toUpperCase() === "SELL").length;
+  const buy = history.filter((h) => h.signal?.toUpperCase() === "BUY").length;
+  const sell = history.filter((h) => h.signal?.toUpperCase() === "SELL").length;
+  const totalSignals = buy + sell;
 
   const chartData = [
     { name: "BUY Signals", value: buy || 0 },
     { name: "SELL Signals", value: sell || 0 },
   ];
 
-  const top10 = quantData.filter(q => q.top10).slice(0, 5);
-  const highProb = quantData.filter(q => q.high_probability).slice(0, 5);
-  const topVolatility = quantData.filter(q => q.top_volatility).slice(0, 5);
-  const topMomentum = quantData.filter(q => q.top_momentum).slice(0, 5);
-
-  const COLORS = ["#3b82f6", "#ef4444"]; // Azul e vermelho
-
-  const totalSignals = buy + sell;
   const buyPercent = totalSignals > 0 ? ((buy / totalSignals) * 100).toFixed(1) : "0";
   const sellPercent = totalSignals > 0 ? ((sell / totalSignals) * 100).toFixed(1) : "0";
 
+  const top10 = quantData.filter((q) => q.top10).slice(0, 5);
+  const highProb = quantData.filter((q) => q.high_probability).slice(0, 5);
+  const topVolatility = quantData.filter((q) => q.top_volatility).slice(0, 5);
+  const topMomentum = quantData.filter((q) => q.top_momentum).slice(0, 5);
+
   return (
-    <div 
-      className="max-w-7xl mx-auto py-10 space-y-12 px-4 pb-20 relative"
-      style={{
-        backgroundColor: "#0d0d0d",
-        backgroundImage: "url('/hero-b.webp')",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        opacity: 0.1 // 🔹 opacidade baixa para combinar com o fundo preto
-      }}
-    >
+    // ✅ CRÍTICO: sem opacity no container — background separado com Image
+    <div className="relative min-h-screen">
+      <Image
+        src="/hero-b.webp"
+        alt="Background"
+        fill
+        priority
+        className="object-cover opacity-10"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
-        <div className="space-y-4">
-          <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg italic">K</span>
+      <div className="relative max-w-7xl mx-auto py-10 px-4 space-y-12 pb-20">
+
+        {/* HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+          <div className="space-y-4">
+            <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-lg italic font-black">K</span>
+              </div>
+              KwanzaTrade
             </div>
-            KwanzaTrade
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">
-              <TrendingUp size={14} />
-              Market Intelligence
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">
+                <TrendingUp size={14} /> Market Intelligence
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase leading-none">
+                Performance{" "}
+                <span className="text-blue-600 italic">Report</span>
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase leading-none">
-              Performance <span className="text-blue-600 italic">Report</span>
-            </h1>
           </div>
-        </div>
-        <div className="bg-gray-900/50 border border-gray-800 px-4 py-2 rounded-xl backdrop-blur-md">
-          <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Last Engine Update: </span>
-          <span className="text-xs text-white font-mono">{new Date().toLocaleTimeString()}</span>
-        </div>
-      </header>
+          <div className="bg-gray-900/60 border border-gray-800 px-4 py-2 rounded-xl backdrop-blur-md">
+            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+              Last Engine Update:{" "}
+            </span>
+            <span className="text-xs text-white font-mono">
+              {new Date().toLocaleTimeString("pt-BR")}
+            </span>
+          </div>
+        </header>
 
-      {/* MÉTRICAS GERAIS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
-          <p className="text-gray-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Analyses Processed</p>
-          <div className="text-5xl font-black text-white tracking-tighter">{history.length}</div>
-          <Search className="absolute -right-4 -bottom-4 text-white/5 w-24 h-24 group-hover:scale-110 transition-transform" />
-        </div>
+        {/* MÉTRICAS GERAIS */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-900/50 animate-pulse rounded-[2.5rem]" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
+              <p className="text-gray-500 text-xs font-black uppercase tracking-[0.2em] mb-2">
+                Analyses Processed
+              </p>
+              <div className="text-5xl font-black text-white tracking-tighter">
+                {history.length}
+              </div>
+              <Search className="absolute -right-4 -bottom-4 text-white/5 w-24 h-24" />
+            </div>
 
-        <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
-          <p className="text-blue-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Bullish Momentum</p>
-          <div className="text-5xl font-black text-blue-500 tracking-tighter">{buy} <span className="text-lg text-gray-600 uppercase">Buy</span></div>
-          <div className="absolute top-8 right-8 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
-        </div>
+            <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
+              <p className="text-blue-500 text-xs font-black uppercase tracking-[0.2em] mb-2">
+                Bullish Momentum
+              </p>
+              <div className="text-5xl font-black text-blue-500 tracking-tighter">
+                {buy}{" "}
+                <span className="text-lg text-gray-600 uppercase">Buy</span>
+              </div>
+              <div className="absolute top-8 right-8 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+            </div>
 
-        <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
-          <p className="text-red-500 text-xs font-black uppercase tracking-[0.2em] mb-2">Bearish Pressure</p>
-          <div className="text-5xl font-black text-red-500 tracking-tighter">{sell} <span className="text-lg text-gray-600 uppercase">Sell</span></div>
-          <div className="absolute top-8 right-8 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
-        </div>
-      </div>
+            <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
+              <p className="text-red-500 text-xs font-black uppercase tracking-[0.2em] mb-2">
+                Bearish Pressure
+              </p>
+              <div className="text-5xl font-black text-red-500 tracking-tighter">
+                {sell}{" "}
+                <span className="text-lg text-gray-600 uppercase">Sell</span>
+              </div>
+              <div className="absolute top-8 right-8 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+            </div>
+          </div>
+        )}
 
-      {/* GRID DE INTELIGÊNCIA QUANT */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { title: "Top 10 Trades", icon: Zap, data: top10, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20" },
-          { title: "High Probability", icon: Target, data: highProb, color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/20" },
-          { title: "Top Volatility", icon: Activity, data: topVolatility, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
-          { title: "Top Momentum", icon: BarChart3, data: topMomentum, color: "text-blue-500", bg: "bg-blue-600/10", border: "border-blue-500/20" }
-        ].map((block, i) => (
-          <div key={i} className="bg-gray-950/50 border border-gray-800 p-6 rounded-[2rem] hover:border-gray-700 transition-all">
-            <h3 className={`font-black flex items-center gap-2 mb-6 text-[10px] uppercase tracking-widest ${block.color}`}>
-              <block.icon className="w-4 h-4" /> {block.title}
-            </h3>
-            <div className="space-y-4">
-              {block.data.length > 0 ? block.data.map(t => (
-                <div key={t.id} className="flex justify-between items-center group">
-                  <span className="font-black text-white text-sm italic group-hover:text-blue-400 transition cursor-default">{t.pair}</span>
-                  <span className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border ${block.bg} ${block.border} ${block.color}`}>
-                    {block.title === "High Probability" ? `${t.probability}%` : 
-                     block.title === "Top 10 Trades" ? t.market_score : 
-                     block.title === "Top Volatility" ? t.volatility : t.momentum}
+        {/* QUANT INTELLIGENCE GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { title: "Top 10 Trades", icon: Zap, data: top10, color: "text-green-500", bg: "bg-green-500/10", border: "border-green-500/20" },
+            { title: "High Probability", icon: Target, data: highProb, color: "text-yellow-400", bg: "bg-yellow-400/10", border: "border-yellow-400/20" },
+            { title: "Top Volatility", icon: Activity, data: topVolatility, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
+            { title: "Top Momentum", icon: BarChart3, data: topMomentum, color: "text-blue-500", bg: "bg-blue-600/10", border: "border-blue-500/20" },
+          ].map((block, i) => (
+            <div
+              key={i}
+              className="bg-gray-950/60 border border-gray-800 p-6 rounded-[2rem] hover:border-gray-700 transition-all"
+            >
+              <h3
+                className={`font-black flex items-center gap-2 mb-6 text-[10px] uppercase tracking-widest ${block.color}`}
+              >
+                <block.icon className="w-4 h-4" /> {block.title}
+              </h3>
+              <div className="space-y-4">
+                {block.data.length > 0 ? (
+                  block.data.map((t) => (
+                    <div key={t.id} className="flex justify-between items-center group">
+                      <span className="font-black text-white text-sm italic group-hover:text-blue-400 transition cursor-default">
+                        {t.pair}
+                      </span>
+                      <span
+                        className={`text-[10px] font-mono font-bold px-2 py-1 rounded-lg border ${block.bg} ${block.border} ${block.color}`}
+                      >
+                        {block.title === "High Probability"
+                          ? `${t.probability}%`
+                          : block.title === "Top 10 Trades"
+                          ? t.market_score
+                          : block.title === "Top Volatility"
+                          ? t.volatility
+                          : t.momentum}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-[10px] text-gray-700 uppercase font-bold">
+                    Aguardando dados...
                   </span>
-                </div>
-              )) : (
-                <span className="text-[10px] text-gray-700 uppercase font-bold">Aguardando dados...</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ANÁLISE GRÁFICA */}
-      <div className="bg-gray-950/50 border border-gray-800 p-10 rounded-[3rem] relative overflow-hidden shadow-3xl">
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6 text-center lg:text-left">
-            <div className="inline-flex p-3 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-blue-500 mb-2">
-              <PieIcon size={24} />
-            </div>
-            <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">
-              Signal Distribution <br/><span className="text-gray-600 italic text-2xl">Visual Analysis</span>
-            </h2>
-            <p className="text-gray-500 text-sm max-w-sm mx-auto lg:mx-0 leading-relaxed font-medium">
-              Esta distribuição reflete o viés atual do mercado baseado em dados fundamentais e algoritmos proprietários da KwanzaTrade.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
-                Buy Advantage: {buyPercent}%
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
-                Sell Pressure: {sellPercent}%
+                )}
               </div>
             </div>
-          </div>
-
-          <div className="h-[400px] w-full relative">
-            {isMounted && (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={140}
-                    innerRadius={100}
-                    paddingAngle={8}
-                    stroke="none"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={COLORS[index % COLORS.length]} 
-                        className="hover:opacity-80 transition-opacity cursor-pointer"
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#0a0a0a', 
-                      border: '1px solid #333', 
-                      borderRadius: '20px',
-                      padding: '15px'
-                    }}
-                    itemStyle={{ fontWeight: '900', color: '#fff', textTransform: 'uppercase', fontSize: '10px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-            
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[10px] font-black text-gray-600 tracking-[0.3em] uppercase">Engine</span>
-              <span className="text-4xl font-black text-white italic">AI 24</span>
-            </div>
-          </div>
+          ))}
         </div>
 
-        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px]"></div>
-      </div>
+        {/* ANÁLISE GRÁFICA */}
+        <div className="bg-gray-950/60 border border-gray-800 p-10 rounded-[3rem] relative overflow-hidden">
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6 text-center lg:text-left">
+              <div className="inline-flex p-3 bg-blue-600/10 border border-blue-500/20 rounded-2xl text-blue-500 mb-2">
+                <PieIcon size={24} />
+              </div>
+              <h2 className="text-3xl font-black text-white tracking-tighter uppercase leading-none">
+                Signal Distribution{" "}
+                <br />
+                <span className="text-gray-600 italic text-2xl">Visual Analysis</span>
+              </h2>
+              <p className="text-gray-500 text-sm max-w-sm mx-auto lg:mx-0 leading-relaxed font-medium">
+                Esta distribuição reflete o viés atual do mercado baseado em dados
+                fundamentais e algoritmos proprietários da KwanzaTrade.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20">
+                  Buy Advantage: {buyPercent}%
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20">
+                  Sell Pressure: {sellPercent}%
+                </div>
+              </div>
+            </div>
 
-      {/* RODAPÉ */}
-      <div className="flex justify-center items-center gap-2 text-gray-700">
-        <ShieldCheck size={14} />
-        <p className="text-[10px] font-bold uppercase tracking-widest">KwanzaTrade Secure Quantitative Analysis — Confidential Data</p>
+            <div className="h-[400px] w-full relative">
+              {isMounted && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={140}
+                      innerRadius={100}
+                      paddingAngle={8}
+                      stroke="none"
+                    >
+                      {chartData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          className="hover:opacity-80 transition-opacity cursor-pointer"
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0a0a0a",
+                        border: "1px solid #333",
+                        borderRadius: "20px",
+                        padding: "15px",
+                      }}
+                      itemStyle={{
+                        fontWeight: "900",
+                        color: "#fff",
+                        textTransform: "uppercase",
+                        fontSize: "10px",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-black text-gray-600 tracking-[0.3em] uppercase">
+                  Engine
+                </span>
+                <span className="text-4xl font-black text-white italic">AI 24</span>
+              </div>
+            </div>
+          </div>
+          <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-600/5 rounded-full blur-[100px]" />
+        </div>
+
+        {/* FOOTER */}
+        <div className="flex justify-center items-center gap-2 text-gray-700">
+          <ShieldCheck size={14} />
+          <p className="text-[10px] font-bold uppercase tracking-widest">
+            KwanzaTrade Secure Quantitative Analysis — Confidential Data
+          </p>
+        </div>
       </div>
     </div>
   );
