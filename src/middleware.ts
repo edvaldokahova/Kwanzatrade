@@ -1,38 +1,22 @@
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-
   const res = NextResponse.next();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          req.cookies.set(name, value);
-          res.cookies.set(name, value, options);
-        },
-        remove(name: string, options: any) {
-          req.cookies.set(name, "");
-          res.cookies.set(name, "", options);
-        },
-      },
-    }
-  );
+  // Cria o Supabase client usando o server.ts (cookies centralizados)
+  const supabase = await createClient();
 
-  const { data } = await supabase.auth.getUser();
-  const user = data.user;
+  // Pega o usuário logado
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname } = req.nextUrl;
 
+  // Define se é página de login
   const isAuthPage = pathname.startsWith("/auth");
 
+  // Define rotas protegidas
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/bot24") ||
@@ -40,10 +24,12 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/performance") ||
     pathname.startsWith("/my-account");
 
+  // Se não estiver logado e tentar acessar rota protegida, redireciona para login
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
+  // Se estiver logado e acessar página de login, redireciona para dashboard
   if (user && isAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
@@ -51,6 +37,7 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
+// Configuração das rotas que o middleware deve observar
 export const config = {
   matcher: [
     "/dashboard/:path*",
