@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
 
-  let res = NextResponse.next();
+  const res = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,26 +15,19 @@ export async function middleware(req: NextRequest) {
           return req.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          res.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+          req.cookies.set(name, value);
+          res.cookies.set(name, value, options);
         },
         remove(name: string, options: any) {
-          res.cookies.set({
-            name,
-            value: "",
-            ...options,
-          });
+          req.cookies.set(name, "");
+          res.cookies.set(name, "", options);
         },
       },
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
 
   const { pathname } = req.nextUrl;
 
@@ -47,12 +40,10 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/performance") ||
     pathname.startsWith("/my-account");
 
-  // Usuário não logado tentando acessar área protegida
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  // Usuário logado tentando acessar login/register
   if (user && isAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
