@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 type Bot24HistoryItem = {
   id: string;
@@ -8,68 +8,86 @@ type Bot24HistoryItem = {
   momentum: number;
   volatility: number;
   probability: number;
-  marketScore: number;
+  market_score: number;
   created_at: string;
 };
 
+/**
+ * Server-side only — usa Admin Client para bypassar RLS.
+ * Chamada por API routes (cron, run-quant).
+ */
 export async function runQuantEngine() {
-
-  const supabase = createClient();
+  // ✅ Admin client — funciona em contexto server sem sessão de utilizador
+  const supabase = createAdminClient();
 
   try {
-    // 1️⃣ Puxar histórico das últimas 24h
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
     const { data: history, error } = await supabase
       .from("bot24_history")
       .select("*")
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .gte("created_at", since)
       .order("created_at", { ascending: false })
       .returns<Bot24HistoryItem[]>();
 
-    // Se houver erro ou não houver dados
     if (error || !history || history.length === 0) {
       console.log("ℹ️ QuantEngine: Sem dados históricos para processar.");
       return null;
     }
 
-    // 2️⃣ Limpar rankings antigos
+    // Limpar rankings anteriores
     await supabase
       .from("bot24_quant")
       .delete()
       .neq("id", "00000000-0000-0000-0000-000000000000");
 
-    // 3️⃣ Cálculos de Ranking
+    // ✅ Rankings calculados com top_volatility e top_momentum correctos
     const top10 = [...history]
-      .sort((a, b) => (b.marketScore + b.confidence) - (a.marketScore + a.confidence))
+      .sort(
+        (a, b) =>
+          b.market_score + b.confidence - (a.market_score + a.confidence)
+      )
       .slice(0, 10);
 
-    const highProb = history
-      .filter(h => h.probability >= 80)
+    const highProb = [...history]
+      .filter((h) => h.probability >= 80)
       .sort((a, b) => b.probability - a.probability)
       .slice(0, 5);
 
-    // 4️⃣ Preparar inserção
-    const insertData = history.map(h => ({
+    const topVol = [...history]
+      .sort((a, b) => b.volatility - a.volatility)
+      .slice(0, 5);
+
+    const topMomentum = [...history]
+      .sort((a, b) => b.momentum - a.momentum)
+      .slice(0, 5);
+
+    const top10Ids = new Set(top10.map((t) => t.id));
+    const highProbIds = new Set(highProb.map((t) => t.id));
+    const topVolIds = new Set(topVol.map((t) => t.id));
+    const topMomentumIds = new Set(topMomentum.map((t) => t.id));
+
+    const insertData = history.map((h) => ({
       history_id: h.id,
-      top10: top10.some(t => t.id === h.id),
-      high_probability: highProb.some(t => t.id === h.id),
-      top_volatility: false,
-      top_momentum: false
+      pair: h.pair,
+      top10: top10Ids.has(h.id),
+      high_probability: highProbIds.has(h.id),
+      top_volatility: topVolIds.has(h.id),
+      top_momentum: topMomentumIds.has(h.id),
     }));
 
     if (insertData.length > 0) {
       const { error: insertError } = await supabase
         .from("bot24_quant")
         .insert(insertData);
-
       if (insertError) throw insertError;
     }
 
     return {
       processed: history.length,
       topTrades: top10.length,
-      highProbability: highProb.length
+      highProbability: highProb.length,
     };
-
   } catch (err) {
     console.error("❌ Erro crítico no QuantEngine:", err);
     return null;
