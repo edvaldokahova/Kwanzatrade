@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // 🔹 novo client
 import Link from "next/link";
 import {
   User,
@@ -27,47 +27,65 @@ export default function Register() {
   const [resending, setResending] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  const supabase = createClient(); // 🔹 instância client-side
+
   const handleRegister = async () => {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: fullName,
-          trader_level: traderLevel
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: fullName,
+            trader_level: traderLevel
+          }
         }
-      }
-    });
+      });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      setSuccess(true);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        setSuccess(true);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Erro ao criar conta:", err);
+      setError("Erro ao criar conta");
       setLoading(false);
     }
   };
 
   const handleGoogleRegister = async () => {
     setGoogleLoading(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    });
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+    } catch (err) {
+      console.error("Erro no login com Google:", err);
+      setGoogleLoading(false);
+    }
   };
 
   const resendEmail = async () => {
     setResending(true);
-    await supabase.auth.resend({
-      type: "signup",
-      email: email
-    });
-    setResending(false);
+    try {
+      await supabase.auth.resend({
+        type: "signup",
+        email: email
+      });
+    } catch (err) {
+      console.error("Erro ao reenviar email:", err);
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
