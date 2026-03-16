@@ -1,22 +1,25 @@
-import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createMiddlewareClient } from "@/utils/supabase/middleware";
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+  // ✅ response mutável — o middleware client pode atualizar cookies
+  let res = NextResponse.next({
+    request: { headers: req.headers },
+  });
 
-  // Cria o Supabase client usando o server.ts (cookies centralizados)
-  const supabase = await createClient();
+  // ✅ usa o client correto para middleware (não server.ts)
+  const supabase = createMiddlewareClient(req, res);
 
-  // Pega o usuário logado
-  const { data: { user } } = await supabase.auth.getUser();
+  // Renova a sessão se expirada (não usar getSession — usa getUser para validar server-side)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { pathname } = req.nextUrl;
 
-  // Define se é página de login
   const isAuthPage = pathname.startsWith("/auth");
 
-  // Define rotas protegidas
   const isProtectedRoute =
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/bot24") ||
@@ -24,12 +27,10 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/performance") ||
     pathname.startsWith("/my-account");
 
-  // Se não estiver logado e tentar acessar rota protegida, redireciona para login
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  // Se estiver logado e acessar página de login, redireciona para dashboard
   if (user && isAuthPage) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
@@ -37,7 +38,6 @@ export async function middleware(req: NextRequest) {
   return res;
 }
 
-// Configuração das rotas que o middleware deve observar
 export const config = {
   matcher: [
     "/dashboard/:path*",
