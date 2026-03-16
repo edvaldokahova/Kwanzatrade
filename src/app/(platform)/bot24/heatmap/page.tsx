@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 import { Activity, Target, Zap, Info } from "lucide-react";
 
 type HeatmapItem = {
@@ -24,6 +24,8 @@ const XM_LINKS = {
 
 export default function ForexHeatmapPremium() {
 
+  const supabase = createClient();
+
   const [data, setData] = useState<HeatmapItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeframeFilter, setTimeframeFilter] = useState("All");
@@ -34,21 +36,14 @@ export default function ForexHeatmapPremium() {
 
   const DAILY_LIMIT = 10;
 
-  /* MARKET SESSION TRACKER */
-
   function getMarketSessions() {
-
     const hour = new Date().getUTCHours();
 
     const tokyo = hour >= 0 && hour < 9;
     const london = hour >= 7 && hour < 16;
     const newYork = hour >= 12 && hour < 21;
 
-    return {
-      tokyo,
-      london,
-      newYork
-    };
+    return { tokyo, london, newYork };
   }
 
   const sessions = getMarketSessions();
@@ -157,8 +152,6 @@ export default function ForexHeatmapPremium() {
 
     <div className="relative min-h-screen">
 
-      {/* HERO BACKGROUND */}
-
       <Image
         src="/hero-b.webp"
         alt="Forex Background"
@@ -170,8 +163,6 @@ export default function ForexHeatmapPremium() {
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
       <div className="relative max-w-6xl mx-auto py-10 space-y-8 px-4 pb-32">
-
-        {/* HEADER */}
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 
@@ -192,8 +183,7 @@ export default function ForexHeatmapPremium() {
 
           <div className="bg-gray-900/60 backdrop-blur-xl p-3 rounded-lg border border-gray-800 text-sm">
 
-            Análises restantes hoje:
-            {" "}
+            Análises restantes hoje{" "}
             <span className="text-green-400 font-bold">
               {Math.max(0, DAILY_LIMIT - analysisCount)}
             </span>
@@ -201,8 +191,6 @@ export default function ForexHeatmapPremium() {
           </div>
 
         </div>
-
-        {/* MARKET SESSIONS */}
 
         <div className="grid grid-cols-3 gap-4">
 
@@ -229,8 +217,6 @@ export default function ForexHeatmapPremium() {
 
         </div>
 
-        {/* FILTERS */}
-
         <div className="flex flex-wrap gap-4 items-center bg-gray-900/40 p-4 rounded-xl border border-gray-800 backdrop-blur">
 
           <div className="flex flex-col gap-1">
@@ -246,11 +232,7 @@ export default function ForexHeatmapPremium() {
             >
 
               {["All","M1","M5","M15","M30","H1","H4","D1","W1"].map((tf) => (
-
-                <option key={tf}>
-                  {tf}
-                </option>
-
+                <option key={tf}>{tf}</option>
               ))}
 
             </select>
@@ -275,8 +257,6 @@ export default function ForexHeatmapPremium() {
           </div>
 
         </div>
-
-        {/* GRID */}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
 
@@ -362,8 +342,6 @@ export default function ForexHeatmapPremium() {
 
         </div>
 
-        {/* LEGEND */}
-
         {showLegend && (
 
           <div className="fixed bottom-6 right-6 z-50">
@@ -391,42 +369,18 @@ export default function ForexHeatmapPremium() {
               <div className="grid gap-3 text-[10px] text-gray-300">
 
                 <div className="flex items-center gap-3">
-
                   <div className="w-4 h-4 bg-yellow-400 rounded-sm"/>
-
-                  <span>
-                    <span className="text-yellow-400 font-bold">
-                      Alta Probabilidade:
-                    </span>
-                    {" "}Precisão +85%.
-                  </span>
-
+                  <span><b className="text-yellow-400">Alta Probabilidade:</b> Precisão +85%</span>
                 </div>
 
                 <div className="flex items-center gap-3">
-
                   <div className="w-4 h-4 bg-green-400 rounded-sm"/>
-
-                  <span>
-                    <span className="text-green-400 font-bold">
-                      Top 10 Força:
-                    </span>
-                    {" "}Volume e tendência.
-                  </span>
-
+                  <span><b className="text-green-400">Top 10 Força:</b> Volume e tendência</span>
                 </div>
 
                 <div className="flex items-center gap-3">
-
                   <div className="w-4 h-4 bg-red-500 rounded-sm"/>
-
-                  <span>
-                    <span className="text-red-400 font-bold">
-                      Alta Volatilidade:
-                    </span>
-                    {" "}Ideal para scalping.
-                  </span>
-
+                  <span><b className="text-red-400">Alta Volatilidade:</b> Ideal para scalping</span>
                 </div>
 
               </div>
