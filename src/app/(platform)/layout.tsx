@@ -37,19 +37,31 @@ export default function PlatformLayout({
       } catch {
         if (!cancelled) router.replace("/auth/login");
       } finally {
-        // ✅ stopLoading sempre chamado, mesmo em erro
+        // ✅ Sempre executado, mesmo em caso de erro
         if (!cancelled) stopLoading();
       }
     };
 
     checkSession();
 
+    // ✅ Listener de mudança de sessão — logout automático se sessão expirar
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (cancelled) return;
+        if (!session) {
+          router.replace("/auth/login");
+        }
+      }
+    );
+
     return () => {
       cancelled = true;
+      subscription.unsubscribe();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Enquanto a sessão não é confirmada, não renderiza nada
   if (!ready) return null;
 
   return (
@@ -57,7 +69,8 @@ export default function PlatformLayout({
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-h-screen">
         <Navbar setSidebarOpen={setSidebarOpen} />
-        <main className="flex-1 p-6 md:p-10 overflow-y-auto">
+        {/* ✅ pt-16 para compensar a Navbar fixed */}
+        <main className="flex-1 pt-16 p-6 md:p-10 overflow-y-auto">
           {children}
         </main>
       </div>
