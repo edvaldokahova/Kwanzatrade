@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client"; // 🔹 novo client
+import { supabase } from "@/utils/supabase/client"; // ✅ instância pronta
 import Sidebar from "@/components/Sidebar";
 import Navbar from "@/components/Navbar";
 import { useLoader } from "@/context/LoaderContext";
@@ -16,12 +16,6 @@ export default function PlatformLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const { startLoading, stopLoading } = useLoader();
-
-  // Cria client Supabase direto
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   useEffect(() => {
     const checkSession = async () => {
