@@ -124,8 +124,8 @@ export default function Bot24Analyze() {
       <Image src="/hero-b.webp" alt="Background" fill priority className="object-cover opacity-10" />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      <div className="relative w-full space-y-8 py-6 px-3">
-
+      <div className="relative max-w-6xl mx-auto space-y-10 py-10 px-4">
+        
         {/* Header */}
         <div className="flex items-center gap-4">
           <Image src="/bot24_an.svg" alt="Bot24" width={60} height={60} />
