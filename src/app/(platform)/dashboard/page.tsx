@@ -38,7 +38,8 @@ export default function Dashboard() {
   return (
     <div className="pt-4 space-y-8 pb-24 max-w-7xl mx-auto">
       {/* HEADER */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      {/* Adicionei mt-20 logo abaixo para empurrar tudo para baixo */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mt-20">
         <div className="space-y-4">
           
           <div className="space-y-2">
