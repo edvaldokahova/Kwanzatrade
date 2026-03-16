@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient"; // Mudado de @/ para ./ para evitar erro de resolução
+import { createClient } from "@/utils/supabase/client"; // Mudado de @/ para ./ para evitar erro de resolução
 
 export async function saveBot24Request(data: {
   pair: string;
