@@ -150,7 +150,7 @@ export default function LiveSignals() {
         </div>
       </div>
 
-      {/* LISTA DE SINAIS */}
+      {/* LISTA De SINAIS */}
       <div className="bg-gray-950/50 backdrop-blur-md rounded-[2.5rem] border border-gray-800/50 overflow-hidden relative z-10">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
