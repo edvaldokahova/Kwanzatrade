@@ -26,7 +26,7 @@ export default function LiveSignals() {
   const lastSignalIdRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const timeframes = ["All", "M1", "M5", "M15", "M30", "H1", "H4", "D1"];
+  const timeframes = ["All", "M1", "M5", "M15", "M30", "H1", "H4", "D1","W1"];
 
   const supabase = createClient();
 
