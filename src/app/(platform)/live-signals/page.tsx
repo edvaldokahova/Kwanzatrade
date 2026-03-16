@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // ✅ novo client
 import { Target, Zap, Activity, BarChart3, Clock, Volume2, VolumeX } from "lucide-react";
 
 type Signal = {
@@ -27,6 +27,8 @@ export default function LiveSignals() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const timeframes = ["All", "M1", "M5", "M15", "M30", "H1", "H4", "D1"];
+
+  const supabase = createClient();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -93,9 +95,19 @@ export default function LiveSignals() {
   }, [timeframeFilter, isMuted]);
 
   return (
-    <div className="max-w-6xl mx-auto py-10 px-4 space-y-10">
+    <div
+      className="max-w-6xl mx-auto py-10 px-4 space-y-10 relative"
+      style={{
+        backgroundColor: "#0d0d0d",
+        backgroundImage: "url('/hero-b.webp')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        opacity: 0.1, // 🔹 opacidade baixa
+      }}
+    >
       {/* HEADER */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
         <div className="space-y-4">
           <div className="text-xl font-black text-white tracking-tighter">
             KwanzaTrade <span className="text-blue-500 italic">LIVE</span>
@@ -139,7 +151,7 @@ export default function LiveSignals() {
       </div>
 
       {/* LISTA DE SINAIS */}
-      <div className="bg-gray-950/50 backdrop-blur-md rounded-[2.5rem] border border-gray-800/50 overflow-hidden">
+      <div className="bg-gray-950/50 backdrop-blur-md rounded-[2.5rem] border border-gray-800/50 overflow-hidden relative z-10">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-900/80 border-b border-gray-800 text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
@@ -242,7 +254,7 @@ export default function LiveSignals() {
       </div>
 
       {/* FOOTER / LEGENDA */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
         {[
           { icon: Target, label: "Alta Probabilidade (+85%)", color: "text-yellow-400", bg: "bg-yellow-400/5" },
           { icon: Zap, label: "Top 10 Força", color: "text-green-500", bg: "bg-green-500/5" },
