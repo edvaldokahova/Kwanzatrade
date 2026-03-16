@@ -57,7 +57,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* Educação */}
+          {/* Educaçao */}
           <div className="space-y-4">
             <BookOpen className="w-6 h-6 text-white" />
             <h3 className="text-lg font-bold text-white">Kwanza Academy</h3>
