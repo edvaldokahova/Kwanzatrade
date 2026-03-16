@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { AlignLeft, LogOut, User, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // 🔹 novo caminho
 import Link from "next/link";
 
 export default function Navbar({
@@ -13,10 +13,12 @@ export default function Navbar({
 }) {
   const [user, setUser] = useState<any>(null);
 
+  const supabase = createClient(); // 🔹 instância client-side
+
   useEffect(() => {
     async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user ?? null);
     }
 
     fetchUser();
@@ -28,7 +30,7 @@ export default function Navbar({
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -59,7 +61,7 @@ export default function Navbar({
           </Link>
         </div>
 
-        {/* LADO DIREITo */}
+        {/* LADO DIREITO */}
         <div className="flex items-center gap-4 text-sm">
           {user ? (
             <>
