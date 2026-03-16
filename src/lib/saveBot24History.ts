@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client";
 
 export async function saveBot24History(result: any) {
   const { data: userData } = await supabase.auth.getUser();
