@@ -24,7 +24,7 @@ export async function saveBot24Request(data: {
         timeframe: data.timeframe,
         capital: data.capital,
         risk_percent: data.risk_percent,
-        trader_level: data.trader_level || "beginnner",
+        trader_level: data.trader_level || "beginner",
       })
       .select()
       .single();
