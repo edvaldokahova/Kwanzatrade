@@ -1,39 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import { usePathname } from "next/navigation";
-
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
 
+// ✅ AppLayout NÃO renderiza Navbar/Sidebar — isso é responsabilidade do PlatformLayout.
+// AppLayout serve apenas como wrapper global (Footer para páginas públicas).
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLanding = pathname === "/";
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Plataforma tem o próprio layout com Navbar+Sidebar
+  const isPlatform =
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/bot24") ||
+    pathname?.startsWith("/live-signals") ||
+    pathname?.startsWith("/performance") ||
+    pathname?.startsWith("/my-account");
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar + Sidebar: Apenas fora da Landing Page */}
-      {!isLanding && (
-        <>
-          <Navbar setSidebarOpen={setSidebarOpen} />
-          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        </>
-      )}
-
-      {/* Conteúdo Principal */}
-      <main className={`flex-1 ${!isLanding ? "pt-16" : ""}`}>
-        {/* CORREÇÃO AQUI: Se for Landing, usamos w-full (sem margens). 
-            Se não for (Dashboard), usamos o padding p-4/md:p-8 */}
-        <div className={isLanding ? "w-full" : "p-4 md:p-8"}>
-          {children}
-        </div>
-      </main>
-
-      {/* Footer Global */}
-      <Footer />
+      <main className="flex-1">{children}</main>
+      {/* Footer apenas fora da plataforma (landing, auth) */}
+      {!isPlatform && <Footer />}
     </div>
   );
 }
