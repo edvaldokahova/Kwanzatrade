@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // ✅ novo client
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { 
   Target, Zap, Activity, BarChart3, TrendingUp, 
@@ -35,6 +35,8 @@ export default function PerformancePage() {
   const [loading, setLoading] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
+  const supabase = createClient();
+
   useEffect(() => {
     setIsMounted(true);
     async function loadData() {
@@ -56,7 +58,7 @@ export default function PerformancePage() {
       }
     }
     loadData();
-  }, []);
+  }, [supabase]);
 
   const buy = history.filter(h => h.signal?.toUpperCase() === "BUY").length;
   const sell = history.filter(h => h.signal?.toUpperCase() === "SELL").length;
@@ -78,10 +80,20 @@ export default function PerformancePage() {
   const sellPercent = totalSignals > 0 ? ((sell / totalSignals) * 100).toFixed(1) : "0";
 
   return (
-    <div className="max-w-7xl mx-auto py-10 space-y-12 px-4 pb-20">
+    <div 
+      className="max-w-7xl mx-auto py-10 space-y-12 px-4 pb-20 relative"
+      style={{
+        backgroundColor: "#0d0d0d",
+        backgroundImage: "url('/hero-b.webp')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        opacity: 0.1 // 🔹 opacidade baixa para combinar com o fundo preto
+      }}
+    >
 
       {/* HEADER */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
         <div className="space-y-4">
           <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
