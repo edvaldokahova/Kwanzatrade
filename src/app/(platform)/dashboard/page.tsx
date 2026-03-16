@@ -40,13 +40,7 @@ export default function Dashboard() {
       {/* HEADER */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-6">
-          <Image
-            src="/kwanzatrade-logo.svg"
-            alt="KwanzaTrade"
-            width={180}
-            height={50}
-            priority
-          />
+          
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-gray-500 font-black text-[10px] uppercase tracking-[0.35em]">
               <LayoutDashboard size={14} />
