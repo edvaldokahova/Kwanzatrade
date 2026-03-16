@@ -48,7 +48,7 @@ export default function TermsPage() {
 
         </section>
 
-        {/* PRINCÍPIOS */}
+        {/* PRINCÍPIO */}
         <section className="grid md:grid-cols-3 gap-10">
 
           <div className="space-y-4">
