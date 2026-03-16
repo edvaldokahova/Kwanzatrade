@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/utils/supabase/client"; // 🔹 novo client
 import { 
   User, Wallet, ShieldAlert, Trophy, Key, Mail, Settings, 
   RefreshCw, LogOut 
@@ -22,14 +22,15 @@ export default function MyAccountPage() {
 
   const levels = ["Beginner", "Intermediate", "Advanced", "Expert"];
 
+  const supabase = createClient(); // 🔹 instância client-side
+
   useEffect(() => {
     async function fetchProfile() {
       setLoading(true);
       try {
-        const { data: userData } = await supabase.auth.getUser();
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData.user) throw new Error("Usuário não autenticado");
         const user = userData.user;
-
-        if (!user) throw new Error("Usuário não autenticado");
         setEmail(user.email || "");
 
         const { data, error } = await supabase
@@ -43,33 +44,40 @@ export default function MyAccountPage() {
           setNewLevel(data.trader_level);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao buscar perfil:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
 
     fetchProfile();
-  }, []);
+  }, [supabase]);
 
   async function updateTraderLevel() {
     if (!profile) return;
     setUpdating(true);
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      if (!userId) return;
 
-    const { error } = await supabase
-      .from("trading_profiles")
-      .update({ trader_level: newLevel })
-      .eq("user_id", userId);
+      const { error } = await supabase
+        .from("trading_profiles")
+        .update({ trader_level: newLevel })
+        .eq("user_id", userId);
 
-    if (error) {
+      if (error) {
+        alert("Erro ao atualizar nível");
+      } else {
+        setProfile(prev => prev ? { ...prev, trader_level: newLevel } : null);
+        alert("Nível de experiência atualizado!");
+      }
+    } catch (err) {
+      console.error("Erro ao atualizar nível:", err);
       alert("Erro ao atualizar nível");
-    } else {
-      setProfile(prev => prev ? { ...prev, trader_level: newLevel } : null);
-      alert("Nível de experiência atualizado!");
+    } finally {
+      setUpdating(false);
     }
-    setUpdating(false);
   }
 
   async function changePassword() {
@@ -138,7 +146,7 @@ export default function MyAccountPage() {
               </div>
             </div>
 
-            {/* CONFIGURAÇÕES De TRADING */}
+            {/* CONFIGURAÇÕES DE TRADING */}
             <div className="bg-gray-950/50 border border-gray-800 p-8 rounded-[2.5rem] shadow-xl space-y-6">
               <div className="flex items-center gap-2 text-lg font-bold text-white">
                 <Trophy className="w-5 h-5 text-yellow-500" />
