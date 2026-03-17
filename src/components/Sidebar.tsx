@@ -27,7 +27,6 @@ const NAV_ITEMS = [
   { href: "/live-signals", label: "Live Signals", icon: Radio },
   { href: "/performance", label: "Performance", icon: TrendingUp },
   { href: "/bot24/heatmap", label: "Heatmap", icon: Activity },
-  { href: "/bot24/history", label: "Histórico", icon: History },
 ];
 
 export default function Sidebar({
