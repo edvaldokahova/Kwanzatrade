@@ -142,8 +142,8 @@ export default function PerformancePage() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
-              <p className="text-blue-500 text-xs font-black uppercase tracking-[0.2em] mb-2">
+            <div className="bg-gradient-to-br from-green-900/20 to-black border border-green-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
+              <p className="text-green-500 text-xs font-black uppercase tracking-[0.2em] mb-2">
                 Bullish Momentum
               </p>
               <div className="text-5xl font-black text-blue-500 tracking-tighter">
