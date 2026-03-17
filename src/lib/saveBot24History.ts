@@ -18,11 +18,11 @@ export interface Bot24AnalysisResult {
   volatility?: number | string;
   liquidity?: number | string;
   probability?: number;
+  // ✅ capital e risk passados para atualizar o perfil
+  _capital?: number;
+  _risk?: number;
 }
 
-/**
- * Client-side: salva o histórico para o utilizador autenticado na sessão atual.
- */
 export async function saveBot24History(
   result: Bot24AnalysisResult
 ): Promise<{ success: boolean; error?: string }> {
@@ -37,30 +37,50 @@ export async function saveBot24History(
       return { success: false, error: "Utilizador não autenticado" };
     }
 
-    const { error } = await supabase.from("bot24_history").insert({
-      user_id: user.id,
-      pair: result.pair,
-      timeframe: result.suggestedTimeframe ?? "H1",
-      signal: result.signal,
-      confidence: Number(result.confidence) || 0,
-      trading_window: result.tradingWindow ?? null,
-      risk_suggestion: result.riskSuggestion ?? null,
-      entry_price: parseFloat(String(result.entry)) || 0,
-      stop_loss: parseFloat(String(result.stopLoss)) || 0,
-      take_profit: parseFloat(String(result.takeProfit)) || 0,
-      risk_reward: parseFloat(String(result.riskReward)) || 0,
-      position_size: parseFloat(String(result.positionSize ?? 0)) || 0,
-      market_score: Number(result.marketScore) || 0,
-      trend: result.trend ?? null,
-      momentum: Number(result.momentum) || 0,
-      volatility: Number(result.volatility) || 0,
-      liquidity: Number(result.liquidity) || 0,
-      probability: Number(result.probability) || 0,
+    // 1. Salva análise no histórico
+    const { error: histError } = await supabase.from("bot24_history").insert({
+      user_id:         user.id,
+      pair:            result.pair,
+      timeframe:       result.suggestedTimeframe ?? "H1",
+      signal:          result.signal,
+      confidence:      Number(result.confidence)  || 0,
+      trading_window:  result.tradingWindow        ?? null,
+      risk_suggestion: result.riskSuggestion       ?? null,
+      entry_price:     parseFloat(String(result.entry))       || 0,
+      stop_loss:       parseFloat(String(result.stopLoss))    || 0,
+      take_profit:     parseFloat(String(result.takeProfit))  || 0,
+      risk_reward:     parseFloat(String(result.riskReward))  || 0,
+      position_size:   parseFloat(String(result.positionSize ?? 0)) || 0,
+      market_score:    Number(result.marketScore) || 0,
+      trend:           result.trend      ?? null,
+      momentum:        Number(result.momentum)   || 0,
+      volatility:      Number(result.volatility) || 0,
+      liquidity:       Number(result.liquidity)  || 0,
+      probability:     Number(result.probability) || 0,
     });
 
-    if (error) {
-      console.error("saveBot24History error:", error);
-      return { success: false, error: error.message };
+    if (histError) {
+      console.error("saveBot24History error:", histError);
+      return { success: false, error: histError.message };
+    }
+
+    // ✅ 2. Atualiza trading_profiles com o capital e risco da análise
+    if (result._capital != null && result._risk != null) {
+      const { error: profileError } = await supabase
+        .from("trading_profiles")
+        .upsert(
+          {
+            user_id:      user.id,
+            capital:      Number(result._capital),
+            risk_percent: Number(result._risk),
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (profileError) {
+        // Não é crítico — log apenas, não falha o fluxo
+        console.warn("Aviso: trading_profiles não atualizado:", profileError.message);
+      }
     }
 
     return { success: true };
