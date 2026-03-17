@@ -101,9 +101,6 @@ export default function PerformancePage() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="space-y-4">
             <div className="text-2xl font-black tracking-tighter text-white flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg italic font-black">K</span>
-              </div>
               KwanzaTrade
             </div>
             <div className="space-y-1">
@@ -112,7 +109,7 @@ export default function PerformancePage() {
               </div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase leading-none">
                 Performance{" "}
-                <span className="text-blue-600 italic">Report</span>
+                <span className="text-blue-600">Report</span>
               </h1>
             </div>
           </div>
