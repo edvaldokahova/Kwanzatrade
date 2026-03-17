@@ -138,10 +138,7 @@ export default function ForexHeatmapPremium() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2 text-white">
-              Forex Heatmap Premium
-              <Activity className="w-6 h-6 text-green-400" />
-            </h1>
+            
             <p className="text-gray-400">
               Análise quantitativa e força de mercado em tempo real
             </p>
@@ -159,7 +156,11 @@ export default function ForexHeatmapPremium() {
         <div className="grid grid-cols-3 gap-4">
           {[
             { label: "London", open: sessions.london },
-            { label: "New York", open: sessions.newYork },
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            FOREX <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              HEATMAP
+            </span>
+           </h1>          { label: "New York", open: sessions.newYork },
             { label: "Tokyo", open: sessions.tokyo },
           ].map(({ label, open }) => (
             <div
