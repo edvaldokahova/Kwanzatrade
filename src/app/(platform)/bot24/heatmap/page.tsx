@@ -138,7 +138,11 @@ export default function ForexHeatmapPremium() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            
+             <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            FOREX <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              HEATMAP
+            </span>
+           </h1>
             <p className="text-gray-400">
               Análise quantitativa e força de mercado em tempo real
             </p>
