@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Parâmetros em falta" }, { status: 400 });
     }
 
-    // ✅ Análise completa server-side — chaves API nunca expostas ao cliente
+    // ✅ Análise completa server-side — chaves API nunca expostas aos clientes
     const result = await runBot24Analysis({
       pair:        String(pair),
       capital:     Number(capital),
