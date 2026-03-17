@@ -1,14 +1,71 @@
-<svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <defs>
-    <linearGradient id="glow_blue" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00F0FF" />
-      <stop offset="100%" stop-color="#0057FF" />
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FFB2"/>
+      <stop offset="100%" stop-color="#00C2FF"/>
     </linearGradient>
+    <linearGradient id="hexFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A1628"/>
+      <stop offset="100%" stop-color="#0D2040"/>
+    </linearGradient>
+    <linearGradient id="bullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00FFB2"/>
+      <stop offset="100%" stop-color="#00C28A"/>
+    </linearGradient>
+    <linearGradient id="bearGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B81"/>
+      <stop offset="100%" stop-color="#FF2D4A"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowStrong">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  <path d="M150 40 L260 100 V200 L150 260 L40 200 V100 L150 40Z" fill="#050505" stroke="#1A1A1A" stroke-width="2"/>
-  <path d="M150 40 V150 L260 200" stroke="url(#glow_blue)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px #00F0FF);"/>
-  <path d="M40 100 L150 150 L260 100" stroke="#444" stroke-width="2" stroke-dasharray="8 8"/>
-  <path d="M40 200 L150 150" stroke="white" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
-  <circle cx="150" cy="150" r="12" fill="#00F0FF" style="filter: blur(10px);"/>
-  <circle cx="150" cy="150" r="4" fill="white" />
+
+  <!-- Hexagon -->
+  <polygon points="50,5 82,22 82,58 50,75 18,58 18,22"
+    fill="url(#hexFill)"
+    stroke="url(#neonGrad)"
+    stroke-width="2"
+    filter="url(#glow)"/>
+
+  <!-- Inner hex ring -->
+  <polygon points="50,12 76,27 76,53 50,68 24,53 24,27"
+    fill="none"
+    stroke="url(#neonGrad)"
+    stroke-width="0.5"
+    opacity="0.25"/>
+
+  <!-- CANDLE 1 — Bearish (red) | x=35 -->
+  <rect x="34.2" y="21" width="1.6" height="8" rx="0.8" fill="#FF4C6A"/>
+  <rect x="31" y="29" width="8" height="18" rx="1" fill="url(#bearGrad)" filter="url(#glow)" opacity="0.95"/>
+  <rect x="31" y="29" width="8" height="18" rx="1" fill="none" stroke="#FF2D4A" stroke-width="0.5" opacity="0.6"/>
+  <rect x="34.2" y="47" width="1.6" height="10" rx="0.8" fill="#FF4C6A"/>
+
+  <!-- CANDLE 2 — Bullish small (green) | x=50 -->
+  <rect x="49.2" y="23" width="1.6" height="9" rx="0.8" fill="#00FFB2"/>
+  <rect x="46" y="32" width="8" height="14" rx="1" fill="url(#bullGrad)" filter="url(#glow)" opacity="0.95"/>
+  <rect x="46" y="32" width="8" height="14" rx="1" fill="none" stroke="#00FFB2" stroke-width="0.5" opacity="0.5"/>
+  <rect x="49.2" y="46" width="1.6" height="10" rx="0.8" fill="#00FFB2"/>
+
+  <!-- CANDLE 3 — Bullish strong (green) | x=65 -->
+  <rect x="64.2" y="18" width="1.6" height="8" rx="0.8" fill="#00FFB2"/>
+  <rect x="61" y="26" width="8" height="22" rx="1" fill="url(#bullGrad)" filter="url(#glow)" opacity="0.95"/>
+  <rect x="61" y="26" width="8" height="22" rx="1" fill="none" stroke="#00FFB2" stroke-width="0.5" opacity="0.5"/>
+  <rect x="64.2" y="48" width="1.6" height="9" rx="0.8" fill="#00FFB2"/>
+
+  <!-- Live signal dot bottom -->
+  <circle cx="50" cy="86" r="4" fill="#00FFB2" opacity="0.9" filter="url(#glowStrong)"/>
+  <circle cx="50" cy="86" r="7" fill="none" stroke="#00FFB2" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="50" cy="86" r="10" fill="none" stroke="#00FFB2" stroke-width="0.4" opacity="0.2"/>
 </svg>
