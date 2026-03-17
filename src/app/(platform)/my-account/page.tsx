@@ -367,3 +367,5 @@ export default function MyAccountPage() {
         </div>
       ) : null}
     </div>
+  );
+}
