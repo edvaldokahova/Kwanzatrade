@@ -40,7 +40,7 @@ export default function Dashboard() {
       
       {/* HEADER */}
       {/* Adicionei mt-20 logo abaixo para empurrar tudo para baixo */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mt-20">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mt-15">
         <div className="space-y-4">
           
           <div className="space-y-2">
