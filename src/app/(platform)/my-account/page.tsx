@@ -255,7 +255,7 @@ export default function MyAccountPage() {
                   <select
                     value={newLevel}
                     onChange={(e) => setNewLevel(e.target.value)}
-                    className="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 outline-none focus:ring-2 focus:ring-blue-500 transition appearance-none"
+                    className="w-full bg-gray-800 text-white p-3 rounded-xl border border-gray-700 outline-none focus:ring-2 focus:ring-white transition appearance-none"
                   >
                     {LEVELS.map((l) => (
                       <option key={l} value={l} className="bg-gray-800">
@@ -306,7 +306,7 @@ export default function MyAccountPage() {
               </button>
             </div>
 
-            <div className="p-6 bg-gray-500/5 border border-gray-500/5/10 rounded-[2.5rem] text-center">
+            <div className="p-6 bg-gray-500/5 border-gray-500/5/10 rounded-[2.5rem] text-center">
               <p className="text-xs text-white leading-relaxed italic">
                 "O gerenciamento de risco é a única coisa que separa um trader de um apostador."
               </p>
