@@ -36,7 +36,7 @@ export default function Dashboard() {
   const bot24Disabled = analysesLeft !== null && analysesLeft <= 0;
 
   return (
-    <div className="pt-4 px-6 md:px-0 space-y-8 pb-24 max-w-7xl mx-auto">
+    <div className="pt-4 px-6 md:px-10 space-y-8 pb-24 max-w-7xl mx-auto">
       
       {/* HEADER */}
       {/* Adicionei mt-20 logo abaixo para empurrar tudo para baixo */}
@@ -181,7 +181,6 @@ export default function Dashboard() {
             alt="WhatsApp"
             width={32} 
             height={32}
-            // Adicionamos essas classes para garantir o centro real
             className="object-contain block" 
           />
         </div>
