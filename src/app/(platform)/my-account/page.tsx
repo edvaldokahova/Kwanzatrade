@@ -211,7 +211,7 @@ export default function MyAccountPage() {
                     <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <p className="text-white font-bold truncate">{email}</p>
                   </div>
-                  <p className="text-gray-500 text-sm mt-0.5">Membro Bot24 Premium</p>
+                  <p className="text-gray-500 text-sm mt-0.5">Membro Livre</p>
                 </div>
               </div>
 
