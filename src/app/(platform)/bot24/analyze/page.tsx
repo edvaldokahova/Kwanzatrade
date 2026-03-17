@@ -8,7 +8,6 @@ import { saveBot24History } from "@/lib/saveBot24History";
 import { useLoader } from "@/context/LoaderContext";
 import { Brain, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 
-// ✅ EUR/USD é o único par — sem lista de par
 const FIXED_PAIR = "EURUSD";
 const TIMEFRAMES  = ["M1", "M5", "M15", "M30", "H1", "H4", "D1"];
 
@@ -16,8 +15,6 @@ const XM_LINKS = {
   beginner: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5",
   advanced: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=1",
 };
-
-// ─── Sub-componente: Card de resultado ────────────────────────────────────────
 
 function ResultCard({
   data,
@@ -33,7 +30,6 @@ function ResultCard({
   isAI?: boolean;
 }) {
   if (!data) return null;
-
   const isBuy = data.signal === "BUY";
 
   return (
@@ -44,12 +40,10 @@ function ResultCard({
           : "bg-gray-900/70 border border-gray-700"
       }`}
     >
-      {/* Glow de fundo para AI card */}
       {isAI && (
         <div className="absolute inset-0 bg-gradient-to-br from-[#00FFB2]/5 via-transparent to-[#00C2FF]/5 pointer-events-none" />
       )}
 
-      {/* Header */}
       <div className="relative flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           {isAI ? (
@@ -72,7 +66,6 @@ function ResultCard({
           </h2>
         </div>
 
-        {/* Timeframe badge */}
         <span
           className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
             isAI
@@ -85,19 +78,15 @@ function ResultCard({
         </span>
       </div>
 
-      {/* Reasoning (apenas AI) */}
       {isAI && data.reasoning && (
         <div className="relative bg-[#00FFB2]/5 border border-[#00FFB2]/20 p-4 rounded-xl">
           <p className="text-[10px] text-[#00FFB2]/80 uppercase tracking-wider mb-1 font-bold">
             Raciocínio da IA
           </p>
-          <p className="text-sm text-gray-300 italic leading-relaxed">
-            {data.reasoning}
-          </p>
+          <p className="text-sm text-gray-300 italic leading-relaxed">{data.reasoning}</p>
         </div>
       )}
 
-      {/* Grid de métricas */}
       <div className="relative grid sm:grid-cols-2 md:grid-cols-3 gap-4">
         {[
           { label: "Par",         value: data.pair,       color: "text-white" },
@@ -121,16 +110,13 @@ function ResultCard({
         ))}
       </div>
 
-      {/* Barra de confiança (apenas AI) */}
       {isAI && (
         <div className="relative">
           <div className="flex justify-between mb-2">
             <span className="text-xs text-gray-500 uppercase tracking-wider font-bold">
               Nível de Confiança
             </span>
-            <span className="text-sm font-black text-[#00FFB2]">
-              {data.confidence}%
-            </span>
+            <span className="text-sm font-black text-[#00FFB2]">{data.confidence}%</span>
           </div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div
@@ -141,7 +127,6 @@ function ResultCard({
         </div>
       )}
 
-      {/* Lucro potencial + RR */}
       <div className="relative grid sm:grid-cols-2 gap-4">
         <div
           className={`p-4 rounded-xl border ${
@@ -150,32 +135,27 @@ function ResultCard({
               : "bg-green-500/10 border-green-500/20"
           }`}
         >
-          <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">
-            Lucro Potencial
-          </p>
+          <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Lucro Potencial</p>
           <p className={`text-3xl font-bold ${isAI ? "text-[#00FFB2]" : "text-green-400"}`}>
             ${data.profitPotential}
           </p>
         </div>
         <div className="bg-gray-800/80 border border-gray-700 p-4 rounded-xl">
-          <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">
-            Risk / Reward
-          </p>
+          <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Risk / Reward</p>
           <p className="text-3xl font-bold text-white">1:{data.riskReward}</p>
         </div>
       </div>
 
-      {/* Contexto fundamental */}
-      {data.marketAuxSummary && data.marketAuxSummary !== "Sem dados fundamentais recentes." && (
-        <div className="relative bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl">
-          <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">
-            Contexto Fundamental
-          </p>
-          <p className="text-sm text-gray-300">{data.marketAuxSummary}</p>
-        </div>
-      )}
+      {data.marketAuxSummary &&
+        data.marketAuxSummary !== "Sem dados fundamentais recentes." && (
+          <div className="relative bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl">
+            <p className="text-gray-400 text-xs uppercase tracking-wider mb-2">
+              Contexto Fundamental
+            </p>
+            <p className="text-sm text-gray-300">{data.marketAuxSummary}</p>
+          </div>
+        )}
 
-      {/* Risco sugerido */}
       <div
         className={`relative text-xs px-4 py-3 rounded-xl border ${
           isAI
@@ -183,10 +163,9 @@ function ResultCard({
             : "bg-gray-800/50 border-gray-700 text-gray-400"
         }`}
       >
-        💡 {data.riskSuggestion}
+        SGT {data.riskSuggestion}
       </div>
 
-      {/* Botão XM */}
       <a
         href={xmLink}
         target="_blank"
@@ -202,28 +181,30 @@ function ResultCard({
         {isBuy ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
         Criar ordem {data.signal} na XM
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+          />
         </svg>
       </a>
     </div>
   );
 }
 
-// ─── Página principal ─────────────────────────────────────────────────────────
-
 export default function Bot24Analyze() {
   const { startLoading, stopLoading } = useLoader();
   const supabase = useMemo(() => createClient(), []);
 
-  const [capital,     setCapital]     = useState(1000);
-  const [timeframe,   setTimeframe]   = useState("H1");
-  const [traderLevel, setTraderLevel] = useState("beginner");
-  const [risk,        setRisk]        = useState(2);
-  const [result,      setResult]      = useState<any>(null);
+  const [capital,       setCapital]       = useState(1000);
+  const [timeframe,     setTimeframe]     = useState("H1");
+  const [traderLevel,   setTraderLevel]   = useState("beginner");
+  const [risk,          setRisk]          = useState(2);
+  const [result,        setResult]        = useState<any>(null);
   const [analysisCount, setAnalysisCount] = useState(0);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [errorMsg,    setErrorMsg]    = useState<string | null>(null);
+  const [isAnalyzing,   setIsAnalyzing]   = useState(false);
+  const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
 
   useEffect(() => {
     async function loadStats() {
@@ -236,12 +217,16 @@ export default function Bot24Analyze() {
         );
         setAnalysisCount(countData || 0);
 
+        // ✅ Carrega capital e risco do perfil guardado
         const { data: profile } = await supabase
           .from("trading_profiles")
-          .select("trader_level")
+          .select("trader_level, capital, risk_percent")
           .eq("user_id", user.id)
           .single();
+
         if (profile?.trader_level) setTraderLevel(profile.trader_level);
+        if (profile?.capital)      setCapital(profile.capital);
+        if (profile?.risk_percent) setRisk(profile.risk_percent);
       } catch (err) {
         console.error("loadStats error:", err);
       }
@@ -250,7 +235,7 @@ export default function Bot24Analyze() {
   }, [supabase]);
 
   async function handleAnalyze() {
-    if (isAnalyzing)       return;
+    if (isAnalyzing)        return;
     if (analysisCount >= 10) {
       setErrorMsg("Limite diário de 10 análises atingido.");
       return;
@@ -262,7 +247,7 @@ export default function Bot24Analyze() {
 
     try {
       await saveBot24Request({
-        pair: FIXED_PAIR,
+        pair:         FIXED_PAIR,
         timeframe,
         capital,
         risk_percent: risk,
@@ -270,9 +255,9 @@ export default function Bot24Analyze() {
       });
 
       const response = await fetch("/api/bot24/analyze", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body:    JSON.stringify({
           pair: FIXED_PAIR,
           capital,
           timeframe,
@@ -287,7 +272,9 @@ export default function Bot24Analyze() {
       }
 
       const analysis = await response.json();
-      await saveBot24History(analysis);
+
+      // ✅ Passa _capital e _risk para atualizar trading_profiles
+      await saveBot24History({ ...analysis, _capital: capital, _risk: risk });
       setResult(analysis);
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -306,7 +293,8 @@ export default function Bot24Analyze() {
     }
   }
 
-  const xmLink = traderLevel === "beginner" ? XM_LINKS.beginner : XM_LINKS.advanced;
+  const xmLink =
+    traderLevel === "beginner" ? XM_LINKS.beginner : XM_LINKS.advanced;
 
   return (
     <div className="relative min-h-screen">
@@ -335,26 +323,30 @@ export default function Bot24Analyze() {
               </span>
             </h1>
             <p className="text-gray-400">
-              Inteligência de mercado automatizada baseada em IA
+              Inteligência de mercado automatizada baseada no Gemini 1.5 flash
             </p>
           </div>
         </div>
 
-        {/* Badges: par fixo + contador */}
+        {/* Badges */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* EUR/USD fixo */}
           <div className="flex items-center gap-2 bg-[#00FFB2]/10 border border-[#00FFB2]/30 px-4 py-2 rounded-lg">
             <span className="w-2 h-2 bg-[#00FFB2] rounded-full animate-pulse" />
-            <span className="text-[#00FFB2] font-black text-sm tracking-wider">EUR / USD</span>
+            <span className="text-[#00FFB2] font-black text-sm tracking-wider">
+              EUR / USD
+            </span>
             <span className="text-[10px] text-[#00FFB2]/60 uppercase tracking-widest font-bold">
               · Foco Único
             </span>
           </div>
 
-          {/* Contador diário */}
           <div className="inline-flex items-center gap-2 bg-gray-900/60 border border-gray-700 px-4 py-2 rounded-lg text-sm text-white">
             Análises hoje:
-            <span className={`font-bold ${analysisCount >= 10 ? "text-red-400" : "text-green-400"}`}>
+            <span
+              className={`font-bold ${
+                analysisCount >= 10 ? "text-red-400" : "text-green-400"
+              }`}
+            >
               {analysisCount} / 10
             </span>
           </div>
@@ -413,7 +405,7 @@ export default function Bot24Analyze() {
             </div>
           </div>
 
-          {/* Info: o que vai acontecer */}
+          {/* Info cards */}
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="flex items-start gap-3 bg-gray-800/40 border border-gray-700/50 p-3 rounded-xl">
               <Brain className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
@@ -453,8 +445,19 @@ export default function Bot24Analyze() {
             {isAnalyzing ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
                 </svg>
                 A analisar EUR/USD...
               </span>
@@ -466,10 +469,9 @@ export default function Bot24Analyze() {
           </button>
         </div>
 
-        {/* Resultados — dois cards lado a lado em desktop */}
+        {/* Resultados */}
         {result && (
           <div className="space-y-6">
-            {/* Card 1: Análise do utilizador */}
             <ResultCard
               data={result}
               capital={capital}
@@ -477,8 +479,6 @@ export default function Bot24Analyze() {
               xmLink={xmLink}
               isAI={false}
             />
-
-            {/* Card 2: Sugestão da IA */}
             {result.aiSuggestion && (
               <ResultCard
                 data={result.aiSuggestion}
