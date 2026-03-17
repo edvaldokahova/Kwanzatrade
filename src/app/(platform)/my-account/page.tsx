@@ -168,10 +168,12 @@ export default function MyAccountPage() {
 
       {/* HEADER */}
       <div className="flex items-center gap-3">
-        <Settings className="w-8 h-8 text-blue-500" />
-        <h1 className="text-3xl font-black tracking-tighter text-white uppercase">
-          My Account
-        </h1>
+        <Settings className="w-8 h-8 text-gray-500" />
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            MEU <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              PERFIL
+            </span>
+           </h1>
       </div>
 
       {/* Feedback */}
@@ -203,7 +205,7 @@ export default function MyAccountPage() {
 
               {/* Avatar + Email */}
               <div className="flex items-center gap-6 relative z-10">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-3xl font-black text-white shadow-lg flex-shrink-0">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-white to-indigo-700 flex items-center justify-center text-3xl font-black text-black shadow-lg flex-shrink-0">
                   {email[0]?.toUpperCase() || "U"}
                 </div>
                 <div className="min-w-0">
@@ -211,7 +213,7 @@ export default function MyAccountPage() {
                     <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <p className="text-white font-bold truncate">{email}</p>
                   </div>
-                  <p className="text-gray-500 text-sm mt-0.5">Membro Livre</p>
+                  <p className="text-indigo-700 text-sm mt-0.5">Membro Livre</p>
                 </div>
               </div>
 
@@ -229,7 +231,7 @@ export default function MyAccountPage() {
                   <div className="flex items-center gap-2 text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">
                     <ShieldAlert className="w-3 h-3" /> Risk Profile
                   </div>
-                  <div className="text-2xl font-black text-blue-400">
+                  <div className="text-2xl font-black text-green-400">
                     {profile.risk_percent}%
                   </div>
                 </div>
@@ -239,7 +241,7 @@ export default function MyAccountPage() {
             {/* TRADING EXPERIENCE */}
             <div className="bg-gray-950/60 border border-gray-800 p-8 rounded-[2.5rem] space-y-6">
               <div className="flex items-center gap-2 text-lg font-bold text-white">
-                <Trophy className="w-5 h-5 text-yellow-500" />
+                <Trophy className="w-5 h-5 text-white" />
                 Trading Experience
               </div>
 
@@ -268,7 +270,7 @@ export default function MyAccountPage() {
                 <button
                   onClick={updateTraderLevel}
                   disabled={updating || newLevel === profile.trader_level}
-                  className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 w-full sm:w-auto justify-center"
+                  className="bg-white hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold px-6 py-3 rounded-xl transition-all flex items-center gap-2 w-full sm:w-auto justify-center"
                 >
                   {updating ? (
                     <>
@@ -294,7 +296,7 @@ export default function MyAccountPage() {
                 onClick={changePassword}
                 className="flex items-center gap-3 w-full bg-gray-800/80 hover:bg-gray-700 text-white p-4 rounded-2xl transition border border-gray-700/50"
               >
-                <Key className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                <Key className="w-5 h-5 text-white flex-shrink-0" />
                 <span className="font-bold text-sm">Reset Password</span>
               </button>
 
