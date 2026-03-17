@@ -48,9 +48,11 @@ export default function Dashboard() {
               <LayoutDashboard size={14} />
               Command Center
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white">
-              Painel <span className="text-gray-500">KwanzaTrade</span>
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            PAINEL <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              INICIAL
+            </span>
+           </h1>
             <p className="text-gray-500 text-sm">
               Bem-vindo à vanguarda do trading algorítmico.
             </p>
@@ -64,7 +66,7 @@ export default function Dashboard() {
           </div>
           <div>
             <p className="text-[10px] text-gray-500 font-bold uppercase">Status do Bot24</p>
-            <p className="text-xs text-white font-black tracking-widest">SISTEMA ONLINE</p>
+            <p className="text-xs text-white font-black tracking-widest">ONLINE</p>
           </div>
         </div>
       </header>
@@ -91,7 +93,7 @@ export default function Dashboard() {
               className="mb-6 opacity-90"
             />
             <h2 className="text-3xl font-black text-white mb-3 uppercase">
-              Bot24 AI Analysis
+              Bot24 Analysis
             </h2>
             <p className="text-gray-400 text-sm">
               Analise qualquer ativo usando redes neurais e sentimento institucional.
