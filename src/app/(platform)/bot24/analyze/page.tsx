@@ -8,7 +8,7 @@ import { saveBot24History } from "@/lib/saveBot24History";
 import { useLoader } from "@/context/LoaderContext";
 import { Brain, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 
-// ✅ EUR/USD é o único par — sem lista de pares
+// ✅ EUR/USD é o único par — sem lista de par
 const FIXED_PAIR = "EURUSD";
 const TIMEFRAMES  = ["M1", "M5", "M15", "M30", "H1", "H4", "D1"];
 
