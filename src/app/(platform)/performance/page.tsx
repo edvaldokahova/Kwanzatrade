@@ -108,8 +108,7 @@ export default function PerformancePage() {
                 <TrendingUp size={14} /> Market Intelligence
               </div>
               <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
-            PERFORMANCE <br />
-            <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+            PERFORMANCE <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
               REPORT
             </span>
            </h1>
