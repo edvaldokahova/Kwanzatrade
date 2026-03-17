@@ -20,24 +20,21 @@ export async function POST(request: NextRequest) {
     const { pair, capital, timeframe, traderLevel, risk } = body;
 
     if (!pair || !capital || !timeframe || !traderLevel || risk == null) {
-      return NextResponse.json(
-        { error: "Parâmetros em falta" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Parâmetros em falta" }, { status: 400 });
     }
 
-    // ✅ runBot24Analysis corre server-side — chaves API nunca expostas ao cliente
+    // ✅ Análise completa server-side — chaves API nunca expostas ao cliente
     const result = await runBot24Analysis({
-      pair: String(pair),
-      capital: Number(capital),
-      timeframe: String(timeframe),
+      pair:        String(pair),
+      capital:     Number(capital),
+      timeframe:   String(timeframe),
       traderLevel: String(traderLevel),
-      risk: Number(risk),
+      risk:        Number(risk),
     });
 
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error("Analyze API error:", error);
+    console.error("❌ Analyze API error:", error);
     return NextResponse.json(
       { error: "Falha na análise", details: error?.message },
       { status: 500 }
