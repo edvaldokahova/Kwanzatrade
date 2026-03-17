@@ -25,7 +25,7 @@ type Signal = {
   isTopMomentum?: boolean;
 };
 
-const TIMEFRAMES = ["All", "M5", "M15", "H1", "H4"];
+const TIMEFRAMES = ["All", "M1", "M5", "M15", "H1", "H4"];
 
 function TrendIcon({ trend }: { trend?: string }) {
   if (!trend) return null;
