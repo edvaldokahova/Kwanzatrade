@@ -146,7 +146,7 @@ export default function PerformancePage() {
               <p className="text-green-500 text-xs font-black uppercase tracking-[0.2em] mb-2">
                 Bullish Momentum
               </p>
-              <div className="text-5xl font-black text-blue-500 tracking-tighter">
+              <div className="text-5xl font-black text-green-500 tracking-tighter">
                 {buy}{" "}
                 <span className="text-lg text-gray-600 uppercase">Buy</span>
               </div>
