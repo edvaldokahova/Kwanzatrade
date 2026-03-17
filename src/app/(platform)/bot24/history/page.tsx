@@ -122,7 +122,7 @@ export default function Bot24HistoryPage() {
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen w-full overflow-x-hidden">
       {/* Background */}
       <Image
         src="/hero-b.webp"
@@ -158,10 +158,11 @@ export default function Bot24HistoryPage() {
           </button>
         </div>
 
-        {/* Table Card with Internal Scroll */}
-        <div className="w-full bg-gray-900/80 backdrop-blur rounded-[2rem] border border-gray-800 shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse min-w-[900px]">
+        {/* --- O AJUSTE ESTÁ AQUI --- */}
+        <div className="w-full max-w-full bg-gray-900/80 backdrop-blur rounded-[2rem] border border-gray-800 shadow-xl overflow-hidden">
+          {/* Este wrapper 'overflow-x-auto' com 'block' garante que o scroll seja apenas horizontal e interno */}
+          <div className="block w-full overflow-x-auto custom-scrollbar">
+            <table className="w-full text-sm text-left border-collapse min-w-[1000px]">
               <thead className="bg-gray-800/90 text-gray-400 text-[10px] uppercase tracking-wider">
                 <tr>
                   {COLUMNS.map(({ field, label }) => (
@@ -266,7 +267,9 @@ export default function Bot24HistoryPage() {
             </table>
           </div>
         </div>
+        {/* --- FIM DO AJUSTE --- */}
+
       </div>
     </div>
   );
-  }
+}
