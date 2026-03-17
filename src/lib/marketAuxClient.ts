@@ -7,11 +7,6 @@ export type MarketAuxResult = {
 const newsCache: Record<string, { data: MarketAuxResult; timestamp: number }> = {};
 const ONE_HOUR = 60 * 60 * 1000;
 
-/**
- * Busca notícias e sentimento fundamental para o par.
- * Usado como contexto auxiliar para o Gemini — melhora a qualidade das análises.
- * Cache de 1h.
- */
 export async function fetchMarketAuxData(pair: string): Promise<MarketAuxResult> {
   const now = Date.now();
 
@@ -26,7 +21,6 @@ export async function fetchMarketAuxData(pair: string): Promise<MarketAuxResult>
     return null;
   }
 
-  // MarketAux aceita formato EUR/USD
   const formattedPair = `${pair.slice(0, 3)}/${pair.slice(3)}`;
 
   const url = [
@@ -55,21 +49,22 @@ export async function fetchMarketAuxData(pair: string): Promise<MarketAuxResult>
     }
 
     const articles = data.data.slice(0, 5);
+
     const headlines: string[] = articles
       .map((a: any) => a.title as string)
       .filter(Boolean);
 
-    // Análise de sentimento via scores das entidades
     let bullishCount = 0;
     let bearishCount = 0;
+
     articles.forEach((article: any) => {
       (article.entities ?? []).forEach((e: any) => {
-        if (e.sentiment_score > 0.2) bullishCount++;
+        if (e.sentiment_score > 0.2)  bullishCount++;
         if (e.sentiment_score < -0.2) bearishCount++;
       });
     });
 
-    const sentiment: MarketAuxResult["sentiment"] =
+    const sentiment: "bullish" | "bearish" | "neutral" =
       bullishCount > bearishCount ? "bullish"
       : bearishCount > bullishCount ? "bearish"
       : "neutral";
