@@ -142,7 +142,7 @@ export default function LiveSignals() {
           <div className="space-y-1">
             <p className="text-sm font-black text-white tracking-tighter">
               KwanzaTrade{" "}
-              <span className="text-blue-500 italic">LIVE</span>
+              <span className="text-blue-500">LIVE</span>
             </p>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
