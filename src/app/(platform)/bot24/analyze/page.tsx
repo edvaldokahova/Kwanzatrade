@@ -130,15 +130,14 @@ export default function Bot24Analyze() {
         <div className="flex items-center gap-4">
           <Image src="/bot24_an.svg" alt="Bot24" width={60} height={60} />
           <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight text-left">
-  BOT24 <span className="relative">
-    <span className="bg-gradient-to-r from-[#00FFB2] via-[#00C2FF] to-[#00FFB2] bg-clip-text text-transparent animate-gradient-x">
-      ANALYSIS
-    </span>
-    {/* Efeito de brilho externo (glow) opcional */}
-    <span className="absolute inset-0 bg-[#00FFB2] blur-2xl opacity-20 pointer-events-none"></span>
-  </span>
-</h1>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
+              BOT24 <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-[#00FFB2] via-[#00C2FF] to-[#00FFB2] bg-clip-text text-transparent animate-gradient-x">
+                  ANALYSIS
+                </span>
+                <span className="absolute inset-0 bg-[#00FFB2]/15 blur-2xl -z-10 pointer-events-none"></span>
+              </span>
+            </h1>
             <p className="text-gray-400">Inteligência de mercado automatizada baseada em IA</p>
           </div>
         </div>
@@ -163,7 +162,7 @@ export default function Bot24Analyze() {
                 onChange={(e) => setPair(e.target.value)}
                 className="bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-green-500 transition"
               >
-                <option value="">Selecionar Par</option>
+                <option value="">Selecione um par de moedas</option>
                 {TOP_PAIRS.map((p) => (
                   <option key={p} value={p} className="bg-gray-800">{p}</option>
                 ))}
