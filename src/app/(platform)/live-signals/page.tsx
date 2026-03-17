@@ -142,12 +142,14 @@ export default function LiveSignals() {
           <div className="space-y-1">
             <p className="text-sm font-black text-white tracking-tighter">
               KwanzaTrade{" "}
-              <span className="text-blue-500">LIVE</span>
+              <span className="text-green-500">LIVE</span>
             </p>
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-3xl font-black text-white tracking-tighter uppercase">
-                AI Live Signals
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            IA LIVE <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              SIGNAIL
+            </span>
+           </h1>
               <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 <span className="text-[10px] text-red-500 font-black uppercase tracking-[0.2em]">
