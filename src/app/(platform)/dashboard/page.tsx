@@ -157,15 +157,6 @@ export default function Dashboard() {
             <ArrowUpRight size={16} />
           </a>
         </div>
-
-        {/* HISTORY */}
-        <NextLink href="/bot24/history" className="group">
-          <div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/30 hover:shadow-[0_0_30px_rgba(34,197,94,0.15)] transition-all hover:scale-[1.02]">
-            <Image src="/history.svg" alt="History" width={100} height={100} className="mb-6 opacity-90" />
-            <h2 className="text-xl font-black text-white mb-2 uppercase">Trade History</h2>
-            <p className="text-gray-500 text-sm">Veja todas as análises feitas pelo Bot24.</p>
-          </div>
-        </NextLink>
       </div>
 
       {/* WHATSAPP FLOAT */}
