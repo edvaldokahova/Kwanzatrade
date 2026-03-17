@@ -123,6 +123,7 @@ export default function Bot24HistoryPage() {
 
   return (
     <div className="relative min-h-screen">
+      {/* Background */}
       <Image
         src="/hero-b.webp"
         alt="Background"
@@ -132,9 +133,11 @@ export default function Bot24HistoryPage() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      <div className="relative max-w-7xl mx-auto py-10 px-4 space-y-6">
+      {/* Content Container */}
+      <div className="relative w-full max-w-7xl mx-auto py-10 px-4 md:px-10 space-y-6">
+        
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-16">
           <div>
             <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
               Bot24 History
@@ -155,17 +158,17 @@ export default function Bot24HistoryPage() {
           </button>
         </div>
 
-        {/* Table Container */}
-        <div className="w-full overflow-hidden rounded-2xl border border-gray-800 shadow-xl bg-gray-900/80 backdrop-blur">
+        {/* Table Card with Internal Scroll */}
+        <div className="w-full bg-gray-900/80 backdrop-blur rounded-[2rem] border border-gray-800 shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left border-collapse">
+            <table className="w-full text-sm text-left border-collapse min-w-[900px]">
               <thead className="bg-gray-800/90 text-gray-400 text-[10px] uppercase tracking-wider">
                 <tr>
                   {COLUMNS.map(({ field, label }) => (
                     <th
                       key={field}
                       onClick={() => toggleSort(field)}
-                      className="px-6 py-4 cursor-pointer hover:text-green-400 font-bold select-none transition-colors whitespace-nowrap"
+                      className="px-6 py-5 cursor-pointer hover:text-green-400 font-bold select-none transition-colors whitespace-nowrap"
                     >
                       <span className="flex items-center gap-1">
                         {label}
@@ -177,62 +180,83 @@ export default function Bot24HistoryPage() {
                       </span>
                     </th>
                   ))}
-                  <th className="px-6 py-4 text-right whitespace-nowrap">Ação</th>
+                  <th className="px-6 py-5 text-right whitespace-nowrap">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/50">
                 {loading ? (
                   <tr>
-                    <td colSpan={COLUMNS.length + 1} className="text-center py-16">
+                    <td colSpan={COLUMNS.length + 1} className="text-center py-20">
                       <div className="flex flex-col items-center gap-3">
                         <div className="animate-spin w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full" />
                         <span className="text-gray-500 text-xs uppercase tracking-widest">
-                          Carregando histórico...
+                          Sincronizando dados...
                         </span>
                       </div>
                     </td>
                   </tr>
                 ) : history.length === 0 ? (
                   <tr>
-                    <td colSpan={COLUMNS.length + 1} className="text-center py-16 text-gray-500 text-sm">
+                    <td colSpan={COLUMNS.length + 1} className="text-center py-20 text-gray-500 text-sm">
                       Nenhuma análise encontrada.
                     </td>
                   </tr>
                 ) : (
                   history.map((item) => (
                     <tr key={item.id} className="hover:bg-gray-800/40 transition-all duration-150">
-                      <td className="px-6 py-4 font-bold text-white whitespace-nowrap">{item.pair}</td>
+                      <td className="px-6 py-4 font-bold text-white whitespace-nowrap">
+                        {item.pair}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold ${
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold ${
                           item.signal?.toUpperCase().includes("BUY")
                             ? "bg-green-500/15 text-green-400 border border-green-500/20"
                             : "bg-red-500/15 text-red-400 border border-red-500/20"
                         }`}>
-                          {item.signal?.toUpperCase().includes("BUY") ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                          {item.signal?.toUpperCase().includes("BUY") ? (
+                            <TrendingUp className="w-3 h-3" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3" />
+                          )}
                           {item.signal}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-gray-300 font-medium whitespace-nowrap">{item.confidence}%</td>
-                      <td className="px-6 py-4 text-gray-400 whitespace-nowrap">{item.trend ?? "—"}</td>
-                      <td className="px-6 py-4 text-green-400 font-semibold whitespace-nowrap">{item.market_score ?? "—"}</td>
-                      <td className="px-6 py-4 text-gray-300 whitespace-nowrap">{item.probability != null ? `${item.probability}%` : "—"}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="bg-gray-800 text-gray-400 px-2 py-1 rounded text-xs font-mono">{item.timeframe}</span>
+                      <td className="px-6 py-4 text-gray-300 font-medium whitespace-nowrap">
+                        {item.confidence}%
+                      </td>
+                      <td className="px-6 py-4 text-gray-400 whitespace-nowrap">
+                        {item.trend ?? "—"}
+                      </td>
+                      <td className="px-6 py-4 text-green-400 font-semibold whitespace-nowrap">
+                        {item.market_score ?? "—"}
+                      </td>
+                      <td className="px-6 py-4 text-gray-300 whitespace-nowrap">
+                        {item.probability != null ? `${item.probability}%` : "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-gray-500 text-xs">
+                        <span className="bg-gray-800 text-gray-400 px-2.5 py-1 rounded text-xs font-mono">
+                          {item.timeframe}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 text-gray-500 text-xs">
                           <Clock className="w-3 h-3" />
-                          {new Date(item.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          {new Date(item.created_at).toLocaleDateString("pt-BR", { 
+                            day: "2-digit", 
+                            month: "2-digit", 
+                            hour: "2-digit", 
+                            minute: "2-digit" 
+                          })}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <button
                           onClick={() => handleRedo(item)}
                           disabled={redoingId === item.id || dailyCount >= 10}
-                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                          className="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
                         >
                           <RefreshCw className={`w-3 h-3 ${redoingId === item.id ? "animate-spin" : ""}`} />
-                          {redoingId === item.id ? "..." : "Redo"}
+                          {redoingId === item.id ? "REFAZENDO" : "REDO"}
                         </button>
                       </td>
                     </tr>
@@ -245,4 +269,4 @@ export default function Bot24HistoryPage() {
       </div>
     </div>
   );
-}
+  }
