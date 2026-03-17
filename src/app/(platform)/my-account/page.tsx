@@ -199,9 +199,6 @@ export default function MyAccountPage() {
           {/* CARD PRINCIPAL */}
           <div className="md:col-span-2 space-y-6">
             <div className="bg-gray-950/60 border border-gray-800 p-8 rounded-[2.5rem] relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                <User size={120} />
-              </div>
 
               {/* Avatar + Email */}
               <div className="flex items-center gap-6 relative z-10">
@@ -213,7 +210,7 @@ export default function MyAccountPage() {
                     <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <p className="text-white font-bold truncate">{email}</p>
                   </div>
-                  <p className="text-indigo-700 text-sm mt-0.5">Membro Livre</p>
+                  <p className="text-text-gray-500 text-sm mt-0.5">Membro Livre</p>
                 </div>
               </div>
 
@@ -309,8 +306,8 @@ export default function MyAccountPage() {
               </button>
             </div>
 
-            <div className="p-6 bg-blue-600/5 border border-blue-500/10 rounded-[2.5rem] text-center">
-              <p className="text-xs text-blue-400 leading-relaxed italic">
+            <div className="p-6 bg-gray-500/5 border border-gray-500/5/10 rounded-[2.5rem] text-center">
+              <p className="text-xs text-white leading-relaxed italic">
                 "O gerenciamento de risco é a única coisa que separa um trader de um apostador."
               </p>
             </div>
