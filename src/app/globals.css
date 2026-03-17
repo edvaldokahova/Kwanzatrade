@@ -77,6 +77,7 @@ body {
   color: white;
 }
 .menu.active {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  }
+  background: rgba(255, 255, 255, 0.1); /* Fundo branco sutil */
+  color: #ffffff;                       /* Texto e ícone branco */
+  font-weight: 600;                     /* Dá um leve destaque extra */
+}
