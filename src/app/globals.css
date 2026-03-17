@@ -22,6 +22,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Animação do Gradiente Vivo */
+@layer utilities {
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-move 3s ease infinite;
+  }
+
+  @keyframes gradient-move {
+    0%, 100% {
+      background-position: left center;
+    }
+    50% {
+      background-position: right center;
+    }
+  }
+}
+
 /* Scrollbar global */
 ::-webkit-scrollbar {
   width: 6px;
@@ -62,4 +79,4 @@ body {
 .menu.active {
   background: rgba(59, 130, 246, 0.15);
   color: #60a5fa;
-}
+  }
