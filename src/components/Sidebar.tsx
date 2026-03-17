@@ -5,7 +5,6 @@ import Image from "next/image";
 import {
   LayoutDashboard,
   Bot,
-  History,
   User,
   ExternalLink,
   Download,
@@ -43,6 +42,18 @@ export default function Sidebar({
 
   const [user, setUser] = useState<any>(null);
 
+  // NOVO: Bloqueio de Scroll e Cliques no fundo
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user ?? null);
@@ -69,11 +80,11 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay: Bloqueia cliques e escurece o fundo */}
       {open && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[50]"
           aria-hidden="true"
         />
       )}
