@@ -139,7 +139,6 @@ export default function PerformancePage() {
               <div className="text-5xl font-black text-white tracking-tighter">
                 {history.length}
               </div>
-              <Search className="absolute -right-4 -bottom-4 text-white/5 w-24 h-24" />
             </div>
 
             <div className="bg-gradient-to-br from-blue-900/20 to-black border border-blue-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
@@ -294,10 +293,10 @@ export default function PerformancePage() {
         <div className="flex justify-center items-center gap-2 text-gray-700">
           <ShieldCheck size={14} />
           <p className="text-[10px] font-bold uppercase tracking-widest">
-            KwanzaTrade Secure Quantitative Analysis — Confidential Data
+            KwanzaTrade Secure Quantitative Analysis
           </p>
         </div>
       </div>
     </div>
   );
-}
+}                                  
