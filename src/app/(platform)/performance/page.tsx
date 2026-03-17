@@ -104,13 +104,15 @@ export default function PerformancePage() {
               KwanzaTrade
             </div>
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">
+              <div className="flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-[0.3em]">
                 <TrendingUp size={14} /> Market Intelligence
               </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase leading-none">
-                Performance{" "}
-                <span className="text-blue-600">Report</span>
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            PERFORMANCE <br />
+            <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              REPORT
+            </span>
+           </h1>
             </div>
           </div>
           <div className="bg-gray-900/60 border border-gray-800 px-4 py-2 rounded-xl backdrop-blur-md">
