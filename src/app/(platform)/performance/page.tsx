@@ -150,7 +150,7 @@ export default function PerformancePage() {
                 {buy}{" "}
                 <span className="text-lg text-gray-600 uppercase">Buy</span>
               </div>
-              <div className="absolute top-8 right-8 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
+              <div className="absolute top-8 right-8 w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
             </div>
 
             <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/10 p-8 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-transform">
