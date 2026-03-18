@@ -8,7 +8,7 @@ import { saveBot24History } from "@/lib/saveBot24History";
 import { useLoader } from "@/context/LoaderContext";
 import {
   Brain, TrendingUp, TrendingDown, Sparkles,
-  Copy, Check, Clock, AlertTriangle,
+  Copy, Check, Clock, AlertTriangle, Info,
 } from "lucide-react";
 
 const FIXED_PAIR = "EURUSD";
@@ -17,9 +17,9 @@ const TIMEFRAMES  = ["M1", "M5", "M15", "M30", "H1", "H4", "D1"];
 const XM_LINKS = {
   beginner: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5",
   advanced: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=1",
+  micro:    "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=5",
 };
 
-// ✅ Tempo de vida de cada timeframe em segundos
 const TF_LIFETIME: Record<string, number> = {
   M1:  5   * 60,
   M5:  15  * 60,
@@ -30,21 +30,119 @@ const TF_LIFETIME: Record<string, number> = {
   D1:  24  * 60 * 60,
 };
 
-// ✅ Lote Sugerido — fórmula real para EUR/USD
-// Lot = Risk Amount / (SL em pips × valor pip por lote)
-// Para EUR/USD: 1 pip = 0.0001 | pip value = $10/lote standard
+// ─── Lógica de lote ───────────────────────────────────────────────────────────
+
+const MICRO_THRESHOLD = 50; // abaixo de $50 → recomenda conta Micro
+
+type LotResult = {
+  lot: string;
+  isMicro: boolean;
+  pipValue: number;   // $ por pip no lote calculado
+  riskAmount: number; // $ efectivamente arriscado
+};
+
 function calcLotSize(
   capital: number,
   risk: number,
   entry: number,
   stopLoss: number
-): string {
-  const riskAmount = capital * (risk / 100);
-  const slDistance = Math.abs(entry - stopLoss);
-  const slPips     = slDistance / 0.0001;
-  if (slPips <= 0) return "0.00";
-  const lot = riskAmount / (slPips * 10);
-  return lot.toFixed(2);
+): LotResult {
+  const riskAmount  = capital * (risk / 100);
+  const slDistance  = Math.abs(entry - stopLoss);
+  const slPips      = slDistance / 0.0001;
+
+  if (slPips <= 0) {
+    return { lot: "0.00", isMicro: false, pipValue: 0, riskAmount };
+  }
+
+  const isMicro = capital < MICRO_THRESHOLD;
+
+  if (isMicro) {
+    // Conta Micro: pip value = $0.001 por 0.01 lote → $0.1 por lote
+    // Lot = riskAmount / (slPips × 0.1)
+    const lot = riskAmount / (slPips * 0.1);
+    const clamped = Math.max(0.01, Math.min(lot, 100));
+    const pipValue = clamped * 0.1;
+    return {
+      lot:       clamped.toFixed(2),
+      isMicro:   true,
+      pipValue,
+      riskAmount,
+    };
+  } else {
+    // Conta Standard: pip value = $10 por lote
+    const lot = riskAmount / (slPips * 10);
+    const clamped = Math.max(0.01, Math.min(lot, 100));
+    const pipValue = clamped * 10;
+    return {
+      lot:       clamped.toFixed(2),
+      isMicro:   false,
+      pipValue,
+      riskAmount,
+    };
+  }
+}
+
+// ─── MicroAlert ───────────────────────────────────────────────────────────────
+
+function MicroAlert({ capital, lotResult }: { capital: number; lotResult: LotResult }) {
+  if (!lotResult.isMicro) return null;
+
+  return (
+    <div className="relative rounded-xl border border-yellow-400/30 bg-yellow-400/5 p-4 space-y-3">
+      <div className="flex items-start gap-3">
+        <div className="p-1.5 bg-yellow-400/15 rounded-lg flex-shrink-0 mt-0.5">
+          <Info className="w-4 h-4 text-yellow-400" />
+        </div>
+        <div>
+          <p className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-1">
+            ⚡ Alerta Micro — Conta XM Micro recomendada
+          </p>
+          <p className="text-[11px] text-gray-400 leading-relaxed">
+            Com <span className="text-white font-bold">${capital}</span> de capital,
+            a conta Standard não permite gerir o risco correctamente — o lote mínimo
+            (0.01) movimenta $0.10/pip e pode facilmente ultrapassar o teu limite de{" "}
+            <span className="text-white font-bold">
+              ${lotResult.riskAmount.toFixed(2)}
+            </span>{" "}
+            de risco.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 text-[10px]">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+          <p className="text-red-400 font-black uppercase tracking-wider mb-1">
+            ❌ Conta Standard
+          </p>
+          <p className="text-gray-400">Lote mínimo 0.01</p>
+          <p className="text-gray-400">$0.10/pip</p>
+          <p className="text-red-400 font-bold mt-1">
+            Risco real &gt; {((0.01 * 10 * 10) / capital * 100).toFixed(0)}% do capital
+          </p>
+        </div>
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
+          <p className="text-green-400 font-black uppercase tracking-wider mb-1">
+            ✅ Conta Micro
+          </p>
+          <p className="text-gray-400">Lote mínimo 0.01</p>
+          <p className="text-gray-400">$0.001/pip</p>
+          <p className="text-green-400 font-bold mt-1">
+            Risco controlado em {lotResult.lot} lotes Micro
+          </p>
+        </div>
+      </div>
+
+      <a
+        href={XM_LINKS.micro}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black font-black text-[10px] uppercase tracking-widest px-4 py-2 rounded-lg transition-all shadow-[0_0_15px_rgba(250,204,21,0.2)]"
+      >
+        Abrir Conta XM Micro →
+      </a>
+    </div>
+  );
 }
 
 // ─── CopyButton ───────────────────────────────────────────────────────────────
@@ -57,9 +155,7 @@ function CopyButton({ value }: { value: string | number }) {
       await navigator.clipboard.writeText(String(value));
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // browser antigo — silencia
-    }
+    } catch {}
   }
 
   return (
@@ -72,9 +168,7 @@ function CopyButton({ value }: { value: string | number }) {
       }`}
       title={copied ? "Copiado!" : "Copiar"}
     >
-      {copied
-        ? <Check className="w-3 h-3" />
-        : <Copy className="w-3 h-3" />}
+      {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
     </button>
   );
 }
@@ -113,16 +207,14 @@ function ExpiryTimer({
     : `Expira em ${mm > 0 ? `${mm}m ` : ""}${String(ss).padStart(2, "0")}s`;
 
   const barColor =
-    pct > 50
-      ? isAI ? "bg-[#00FFB2]" : "bg-blue-400"
-      : pct > 20
-      ? "bg-yellow-400"
-      : "bg-red-500";
+    pct > 50 ? (isAI ? "bg-[#00FFB2]" : "bg-blue-400")
+    : pct > 20 ? "bg-yellow-400"
+    : "bg-red-500";
 
   const textColor =
-    expired ? "text-red-400"
-    : pct > 50 ? (isAI ? "text-[#00FFB2]" : "text-blue-400")
-    : pct > 20 ? "text-yellow-400"
+    expired        ? "text-red-400"
+    : pct > 50     ? (isAI ? "text-[#00FFB2]" : "text-blue-400")
+    : pct > 20     ? "text-yellow-400"
     : "text-red-400";
 
   return (
@@ -185,8 +277,8 @@ function ResultCard({
     ? data.suggestedTimeframe
     : (selectedTimeframe ?? data.suggestedTimeframe);
 
-  // ✅ Lote calculado
-  const lotSize = calcLotSize(capital, risk, data.entry, data.stopLoss);
+  // ✅ Lote com lógica Micro/Standard
+  const lotResult = calcLotSize(capital, risk, data.entry, data.stopLoss);
 
   return (
     <div className={`relative rounded-2xl p-8 space-y-6 backdrop-blur overflow-hidden ${
@@ -231,7 +323,7 @@ function ResultCard({
         </span>
       </div>
 
-      {/* Reasoning (AI only) */}
+      {/* Reasoning */}
       {isAI && data.reasoning && (
         <div className="relative bg-[#00FFB2]/5 border border-[#00FFB2]/20 p-4 rounded-xl">
           <p className="text-[10px] text-[#00FFB2]/80 uppercase tracking-wider mb-1 font-bold">
@@ -241,19 +333,18 @@ function ResultCard({
         </div>
       )}
 
-      {/* ✅ Contador de vida da análise */}
-      <ExpiryTimer
-        timeframe={displayTimeframe}
-        createdAt={createdAt}
-        isAI={isAI}
-      />
+      {/* ✅ Alerta Micro — aparece se capital < $50 */}
+      <MicroAlert capital={capital} lotResult={lotResult} />
 
-      {/* Métricas sem copy (Par, Sinal, Confiança) */}
+      {/* Timer */}
+      <ExpiryTimer timeframe={displayTimeframe} createdAt={createdAt} isAI={isAI} />
+
+      {/* Métricas sem copy */}
       <div className="relative grid sm:grid-cols-3 gap-4">
         {[
-          { label: "Par",       value: data.pair,              color: "text-white" },
-          { label: "Sinal",     value: data.signal,            color: isBuy ? "text-green-400" : "text-red-400" },
-          { label: "Confiança", value: `${data.confidence}%`,  color: isAI ? "text-[#00FFB2]" : "text-white" },
+          { label: "Par",       value: data.pair,             color: "text-white" },
+          { label: "Sinal",     value: data.signal,           color: isBuy ? "text-green-400" : "text-red-400" },
+          { label: "Confiança", value: `${data.confidence}%`, color: isAI ? "text-[#00FFB2]" : "text-white" },
         ].map(({ label, value, color }) => (
           <div key={label} className={`p-4 rounded-xl border ${
             isAI ? "bg-gray-800/60 border-[#00FFB2]/10" : "bg-gray-800/80 border-gray-700"
@@ -264,7 +355,7 @@ function ResultCard({
         ))}
       </div>
 
-      {/* ✅ Métricas COM copy (Entry, SL, TP) */}
+      {/* Métricas COM copy */}
       <div className="relative grid sm:grid-cols-3 gap-4">
         {[
           { label: "Entry Price", value: data.entry,      color: "text-blue-400" },
@@ -283,7 +374,7 @@ function ResultCard({
         ))}
       </div>
 
-      {/* Confidence bar (AI only) */}
+      {/* Confidence bar */}
       {isAI && (
         <div className="relative">
           <div className="flex justify-between mb-2">
@@ -301,7 +392,7 @@ function ResultCard({
         </div>
       )}
 
-      {/* ✅ Lucro Potencial + RR + Lote Sugerido */}
+      {/* Lucro + RR + Lote */}
       <div className="relative grid sm:grid-cols-3 gap-4">
         <div className={`p-4 rounded-xl border ${
           isAI ? "bg-[#00FFB2]/5 border-[#00FFB2]/20" : "bg-green-500/10 border-green-500/20"
@@ -317,14 +408,32 @@ function ResultCard({
           <p className="text-3xl font-bold text-white">1:{data.riskReward}</p>
         </div>
 
+        {/* ✅ Lote Sugerido com badge Micro/Standard */}
         <div className={`p-4 rounded-xl border ${
-          isAI ? "bg-gray-800/60 border-[#00FFB2]/10" : "bg-gray-800/80 border-gray-700"
+          lotResult.isMicro
+            ? "bg-yellow-400/5 border-yellow-400/20"
+            : isAI
+            ? "bg-gray-800/60 border-[#00FFB2]/10"
+            : "bg-gray-800/80 border-gray-700"
         }`}>
-          <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Lote Sugerido</p>
-          <p className={`text-3xl font-bold ${isAI ? "text-[#00FFB2]" : "text-blue-400"}`}>
-            {lotSize}
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-gray-400 text-xs uppercase tracking-wider">Lote Sugerido</p>
+            <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+              lotResult.isMicro
+                ? "bg-yellow-400/15 border-yellow-400/30 text-yellow-400"
+                : "bg-blue-400/15 border-blue-400/30 text-blue-400"
+            }`}>
+              {lotResult.isMicro ? "Micro" : "Standard"}
+            </span>
+          </div>
+          <p className={`text-3xl font-bold ${
+            lotResult.isMicro ? "text-yellow-400" : isAI ? "text-[#00FFB2]" : "text-blue-400"
+          }`}>
+            {lotResult.lot}
           </p>
-          <p className="text-[9px] text-gray-600 mt-1 font-mono">lots · EUR/USD</p>
+          <p className="text-[9px] text-gray-600 mt-1 font-mono">
+            ~${lotResult.pipValue.toFixed(3)}/pip · EUR/USD
+          </p>
         </div>
       </div>
 
@@ -339,7 +448,7 @@ function ResultCard({
           </div>
         )}
 
-      {/* Risk suggestion */}
+      {/* SGT */}
       <div className={`relative text-xs px-4 py-3 rounded-xl border ${
         isAI
           ? "bg-[#00FFB2]/5 border-[#00FFB2]/10 text-[#00FFB2]/80"
@@ -364,12 +473,8 @@ function ResultCard({
         {isBuy ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
         Criar ordem {data.signal} na XM
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
       </a>
     </div>
@@ -390,7 +495,6 @@ export default function Bot24Analyze() {
   const [analysisCount, setAnalysisCount] = useState(0);
   const [isAnalyzing,   setIsAnalyzing]   = useState(false);
   const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
-  // ✅ Marca o momento exato em que a análise foi gerada
   const [createdAt,     setCreatedAt]     = useState<Date>(new Date());
 
   useEffect(() => {
@@ -443,13 +547,7 @@ export default function Bot24Analyze() {
       const response = await fetch("/api/bot24/analyze", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          pair: FIXED_PAIR,
-          capital,
-          timeframe,
-          traderLevel,
-          risk,
-        }),
+        body:    JSON.stringify({ pair: FIXED_PAIR, capital, timeframe, traderLevel, risk }),
       });
 
       if (!response.ok) {
@@ -460,7 +558,7 @@ export default function Bot24Analyze() {
       const analysis = await response.json();
       await saveBot24History({ ...analysis, _capital: capital, _risk: risk });
       setResult(analysis);
-      setCreatedAt(new Date()); // ✅ reinicia o timer
+      setCreatedAt(new Date());
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -480,15 +578,12 @@ export default function Bot24Analyze() {
 
   const xmLink = traderLevel === "beginner" ? XM_LINKS.beginner : XM_LINKS.advanced;
 
+  // ✅ Aviso antecipado no formulário se capital < $50
+  const showMicroWarning = capital > 0 && capital < MICRO_THRESHOLD;
+
   return (
     <div className="relative min-h-screen">
-      <Image
-        src="/hero-b.webp"
-        alt="Background"
-        fill
-        priority
-        className="object-cover opacity-10"
-      />
+      <Image src="/hero-b.webp" alt="Background" fill priority className="object-cover opacity-10" />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
       <div className="relative max-w-6xl mx-auto space-y-10 py-10 px-4">
@@ -557,10 +652,21 @@ export default function Bot24Analyze() {
                 type="number"
                 value={capital}
                 onChange={(e) => setCapital(Number(e.target.value))}
-                className="bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-green-500 transition placeholder-gray-600"
+                className={`bg-gray-800 border text-white rounded-lg p-3 focus:outline-none transition placeholder-gray-600 ${
+                  showMicroWarning
+                    ? "border-yellow-400/50 focus:border-yellow-400"
+                    : "border-gray-700 focus:border-green-500"
+                }`}
                 placeholder="Ex: 100"
                 min={1}
               />
+              {/* ✅ Aviso inline no formulário */}
+              {showMicroWarning && (
+                <p className="text-[10px] text-yellow-400 font-bold flex items-center gap-1 mt-0.5">
+                  <AlertTriangle className="w-3 h-3" />
+                  Capital baixo — será recomendada Conta Micro
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1">
@@ -625,11 +731,7 @@ export default function Bot24Analyze() {
                 </svg>
                 A analisar EUR/USD...
               </span>
-            ) : analysisCount >= 10 ? (
-              "Limite Atingido"
-            ) : (
-              "▶ Iniciar Análise"
-            )}
+            ) : analysisCount >= 10 ? "Limite Atingido" : "▶ Iniciar Análise"}
           </button>
         </div>
 
