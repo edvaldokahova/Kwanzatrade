@@ -8,7 +8,7 @@ import { isForexMarketOpen, getCurrentSession } from "./marketAnalysis";
 // ─── Configuração ─────────────────────────────────────────────────────────────
 
 const PAIR         = "EURUSD";   // ✅ Foco único em EUR/USD
-const CAPITAL      = 1000;
+const CAPITAL      = 100;
 const TRADER_LEVEL = "intermediate";
 
 // Timeframes para geração de live signals por hora
