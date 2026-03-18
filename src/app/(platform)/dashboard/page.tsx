@@ -96,7 +96,7 @@ export default function Dashboard() {
               Bot24 Analysis
             </h2>
             <p className="text-gray-400 text-sm">
-              Analise qualquer ativo usando redes neurais e sentimento institucional.
+              Analise EURUSD usando redes neurais e sentimento institucional.
             </p>
             <div className="mt-8">
               {analysesLeft !== null ? (
@@ -125,7 +125,7 @@ export default function Dashboard() {
           <div className="bg-[#111] border border-gray-800 p-8 rounded-[2.5rem] hover:border-green-500/40 hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all hover:scale-[1.02] h-full">
             <Image src="/heatmap.svg" alt="Heatmap" width={100} height={100} className="mb-6 opacity-90" />
             <h2 className="text-xl font-black text-white mb-2 uppercase">Market Heatmap</h2>
-            <p className="text-gray-500 text-sm mb-6">Veja os pares com maior força relativa.</p>
+            <p className="text-gray-500 text-sm mb-6">Veja os pares com maior força relativa. (BREVEMENTE)</p>
             <div className="flex items-center gap-2 text-[10px] font-black text-green-500 tracking-[0.2em]">
               Ver mapa <ArrowUpRight size={14} />
             </div>
