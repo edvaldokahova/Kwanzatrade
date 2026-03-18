@@ -22,15 +22,22 @@ function ResultCard({
   risk,
   xmLink,
   isAI = false,
+  selectedTimeframe,
 }: {
   data: any;
   capital: number;
   risk: number;
   xmLink: string;
   isAI?: boolean;
+  selectedTimeframe?: string;
 }) {
   if (!data) return null;
   const isBuy = data.signal === "BUY";
+
+  // ✅ Utilizador vê o TF que escolheu — IA vê o TF ótimo do Gemini
+  const displayTimeframe = isAI
+    ? data.suggestedTimeframe
+    : (selectedTimeframe ?? data.suggestedTimeframe);
 
   return (
     <div
@@ -66,6 +73,7 @@ function ResultCard({
           </h2>
         </div>
 
+        {/* ✅ Badge corrigido — mostra TF correto conforme o contexto */}
         <span
           className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
             isAI
@@ -73,7 +81,7 @@ function ResultCard({
               : "bg-gray-800 border-gray-700 text-gray-400"
           }`}
         >
-          {data.suggestedTimeframe}
+          {displayTimeframe}
           {isAI && " · Ótimo"}
         </span>
       </div>
@@ -217,7 +225,6 @@ export default function Bot24Analyze() {
         );
         setAnalysisCount(countData || 0);
 
-        // ✅ Carrega capital e risco do perfil guardado
         const { data: profile } = await supabase
           .from("trading_profiles")
           .select("trader_level, capital, risk_percent")
@@ -273,7 +280,6 @@ export default function Bot24Analyze() {
 
       const analysis = await response.json();
 
-      // ✅ Passa _capital e _risk para atualizar trading_profiles
       await saveBot24History({ ...analysis, _capital: capital, _risk: risk });
       setResult(analysis);
 
@@ -469,7 +475,7 @@ export default function Bot24Analyze() {
           </button>
         </div>
 
-        {/* Resultados */}
+        {/* ✅ selectedTimeframe passado para ambos os cards */}
         {result && (
           <div className="space-y-6">
             <ResultCard
@@ -478,6 +484,7 @@ export default function Bot24Analyze() {
               risk={risk}
               xmLink={xmLink}
               isAI={false}
+              selectedTimeframe={timeframe}
             />
             {result.aiSuggestion && (
               <ResultCard
@@ -486,6 +493,7 @@ export default function Bot24Analyze() {
                 risk={risk}
                 xmLink={xmLink}
                 isAI={true}
+                selectedTimeframe={timeframe}
               />
             )}
           </div>
