@@ -151,97 +151,82 @@ function candlesToText(candles: Candle[]): string {
 }
 
 function buildUserPrompt(input: UserAnalysisInput): string {
+  // ✅ Prompt limpo — sem instrução de formato JSON no texto
+  // O formato é controlado por responseMimeType na chamada à API
   return `
-Você é um trader quantitativo profissional de nível institucional. Analise os dados estruturados abaixo e forneça uma análise técnica precisa.
+Você é um trader quantitativo profissional de nível institucional. Analise os dados e devolva uma análise técnica precisa.
 
-═══ CONTEXTO DE MERCADO ESTRUTURADO ═══
+CONTEXTO DE MERCADO:
 Par: ${input.pair}
 Preço atual: ${input.lastPrice}
-Tendência (últimas 20 barras): ${input.trend} — ${input.trendStrength}
-Suporte chave: ${input.support}
-Resistência chave: ${input.resistance}
-Volatilidade: ${input.volatility} (range médio: ${input.volatilityValue} pips)
+Tendência (20 barras): ${input.trend} — ${input.trendStrength}
+Suporte: ${input.support} | Resistência: ${input.resistance}
+Volatilidade: ${input.volatility} (range médio: ${input.volatilityValue})
 Momentum (10 barras): ${input.momentum > 0 ? "+" : ""}${input.momentum}%
 Padrão recente: ${input.recentBehavior}
 Sessão ativa: ${input.activeSession}
 
-═══ ÚLTIMOS 10 CANDLES OHLC (60min) ═══
+CANDLES OHLC (60min):
 ${candlesToText(input.candles)}
 
-═══ FUNDAMENTAL / SENTIMENTO ═══
-Sentimento de notícias: ${input.newsSentiment ?? "neutral"}
+SENTIMENTO FUNDAMENTAL:
+Sentimento: ${input.newsSentiment ?? "neutral"}
 Headlines: ${(input.newsHeadlines ?? []).slice(0, 3).join(" | ") || "N/A"}
 
-═══ PARÂMETROS DO TRADER ═══
+PARÂMETROS DO TRADER:
 Nível: ${input.traderLevel}
-Timeframe selecionado: ${input.timeframe}
+Timeframe: ${input.timeframe}
 Capital: $${input.capital}
-Risco máximo: ${input.risk}%
+Risco: ${input.risk}%
 
-INSTRUÇÕES:
-- Calcule entry baseado no preço atual e contexto
-- Stop loss baseado no suporte/resistência e volatilidade
-- Take profit com RR mínimo 1:1.5
-- Responda APENAS com JSON válido, sem markdown nem texto extra
-
-{
-  "signal": "BUY" ou "SELL",
-  "confidence": número entre 55 e 90,
-  "entry_price": número com 5 decimais,
-  "stop_loss": número com 5 decimais,
-  "take_profit": número com 5 decimais,
-  "suggestedTimeframe": "${input.timeframe}",
-  "tradingWindow": string descritivo da sessão,
-  "riskSuggestion": string com conselho de gestão de risco,
-  "score": "X.X / 10",
-  "reasoning": string máx 120 chars explicando o setup
-}`.trim();
+Devolve um objeto JSON com estes campos exactos:
+- signal: "BUY" ou "SELL" (nunca NEUTRAL — escolhe sempre o mais forte)
+- confidence: número inteiro entre 55 e 90
+- entry_price: número com 5 casas decimais
+- stop_loss: número com 5 casas decimais (baseado em suporte/resistência)
+- take_profit: número com 5 casas decimais (RR mínimo 1:1.5)
+- suggestedTimeframe: "${input.timeframe}"
+- tradingWindow: string descritiva da sessão activa
+- riskSuggestion: conselho de gestão de risco (string curta)
+- score: "X.X / 10"
+- reasoning: máx 120 caracteres explicando o setup`.trim();
 }
 
 function buildAIPrompt(input: AISuggestionInput): string {
   return `
-Você é um gestor de fundos hedge com 30 anos de experiência em Forex. Tem acesso aos mesmos dados que um trader institucional. Dê a sua MELHOR sugestão, sem limitações.
+Você é um gestor de fundos hedge com 30 anos de experiência em Forex. Analise estes dados e dê a sua MELHOR sugestão de trading.
 
-═══ DADOS ESTRUTURADOS DO MERCADO ═══
+DADOS DE MERCADO:
 Par: ${input.pair}
 Preço atual: ${input.lastPrice}
 Tendência: ${input.trend} (${input.trendStrength})
 Suporte: ${input.support} | Resistência: ${input.resistance}
-Volatilidade: ${input.volatility} — range médio ${input.volatilityValue}
+Volatilidade: ${input.volatility} — range ${input.volatilityValue}
 Momentum: ${input.momentum > 0 ? "+" : ""}${input.momentum}%
 Padrão: ${input.recentBehavior}
 Sessão: ${input.activeSession}
 
-═══ ÚLTIMOS 10 CANDLES OHLC (60min) ═══
+CANDLES OHLC (60min):
 ${candlesToText(input.candles)}
 
-═══ SENTIMENTO FUNDAMENTAL ═══
-Sentimento: ${input.newsSentiment ?? "neutral"}
-Headlines: ${(input.newsHeadlines ?? []).slice(0, 3).join(" | ") || "N/A"}
+SENTIMENTO:
+${input.newsSentiment ?? "neutral"} — ${(input.newsHeadlines ?? []).slice(0, 3).join(" | ") || "N/A"}
 
-═══ PERFIL DO INVESTIDOR ═══
-Nível de experiência: ${input.traderLevel}
-Capital disponível: $${input.capital}
+PERFIL:
+Nível: ${input.traderLevel}
+Capital: $${input.capital}
 
-INSTRUÇÕES CRÍTICAS:
-1. Escolha o timeframe ÓTIMO com base nas condições atuais
-2. Use todo o contexto (candles, suporte/resistência, momentum, sessão, notícias)
-3. Confidence acima de 80 APENAS se o setup for realmente de alta qualidade
-4. Calcule níveis precisos baseados na estrutura de mercado identificada
-5. Responda APENAS com JSON válido, sem markdown nem texto extra
-
-{
-  "signal": "BUY" ou "SELL",
-  "confidence": número entre 65 e 94,
-  "entry_price": número com 5 decimais,
-  "stop_loss": número com 5 decimais,
-  "take_profit": número com 5 decimais,
-  "suggestedTimeframe": string (timeframe ÓTIMO escolhido pela IA),
-  "tradingWindow": string descritivo,
-  "riskSuggestion": string com risco % recomendado para este setup,
-  "score": "X.X / 10",
-  "reasoning": string máx 150 chars — o MOTIVO principal do setup
-}`.trim();
+Escolhe o timeframe ÓTIMO para as condições actuais. Devolve um objeto JSON com:
+- signal: "BUY" ou "SELL" (nunca NEUTRAL)
+- confidence: número inteiro entre 65 e 94
+- entry_price: número com 5 casas decimais
+- stop_loss: número com 5 casas decimais
+- take_profit: número com 5 casas decimais
+- suggestedTimeframe: o timeframe óptimo que escolheste
+- tradingWindow: sessão recomendada
+- riskSuggestion: % de risco recomendado para este setup
+- score: "X.X / 10"
+- reasoning: máx 150 caracteres com o motivo principal`.trim();
 }
 
 // ─── Core Gemini call ─────────────────────────────────────────────────────────
@@ -276,9 +261,11 @@ async function callGemini(
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature:     0.2,
-            // ✅ CORRIGIDO: 512 cortava o JSON a meio — 2048 garante resposta completa
-            maxOutputTokens: 2048,
+            temperature:      0.2,
+            maxOutputTokens:  2048,
+            // ✅ SOLUÇÃO DEFINITIVA: força o modelo a devolver JSON puro
+            // sem markdown, sem code blocks, sem texto extra — parse trivial
+            responseMimeType: "application/json",
           },
         }),
       }
@@ -297,12 +284,22 @@ async function callGemini(
     const text: string = result?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
     if (!text) {
-      console.error(`❌ [${mode}] Gemini devolveu resposta vazia:`, JSON.stringify(result).slice(0, 400));
+      console.error(`❌ [${mode}] Gemini devolveu texto vazio. Response:`, JSON.stringify(result).slice(0, 400));
       return getDefaultResponse(latestPrice);
     }
 
-    console.log(`✅ [${mode}] Gemini (${GEMINI_MODEL}) respondeu em ${duration}s — ${text.length} chars`);
-    return parseGeminiJSON(text, latestPrice, mode);
+    console.log(`✅ [${mode}] Gemini respondeu em ${duration}s`);
+
+    // ✅ Com responseMimeType JSON, o parse é directo — sem regex necessário
+    try {
+      const parsed = JSON.parse(text) as GeminiAnalysisResult;
+      console.log(`✅ [${mode}] Parse OK — sinal: ${parsed.signal} (${parsed.confidence}%)`);
+      return parsed;
+    } catch {
+      // Fallback: tenta limpar e fazer parse novamente
+      console.warn(`⚠️ [${mode}] Parse directo falhou, tentando limpeza. Texto: ${text.slice(0, 200)}`);
+      return parseGeminiJSON(text, latestPrice, mode);
+    }
 
   } catch (error: any) {
     clearTimeout(timeoutId);
@@ -317,39 +314,25 @@ async function callGemini(
   }
 }
 
-// ─── Parse & fallback ─────────────────────────────────────────────────────────
+// ─── Parse de fallback (só usado se responseMimeType falhar) ──────────────────
 
 function parseGeminiJSON(
   text: string,
   latestPrice?: number,
   mode: string = "unknown"
 ): GeminiAnalysisResult {
-  // 1. Tenta extrair de markdown code block
   const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (codeBlock) {
-    try {
-      const parsed = JSON.parse(codeBlock[1]);
-      console.log(`✅ [${mode}] JSON extraído de code block — sinal: ${parsed.signal} (${parsed.confidence}%)`);
-      return parsed;
-    } catch (e) {
-      console.warn(`⚠️ [${mode}] Code block encontrado mas parse falhou:`, codeBlock[1].slice(0, 200));
-    }
+    try { return JSON.parse(codeBlock[1]); } catch {}
   }
 
-  // 2. Tenta objeto JSON bruto
   const start = text.indexOf("{");
   const end   = text.lastIndexOf("}");
   if (start !== -1 && end > start) {
-    try {
-      const parsed = JSON.parse(text.slice(start, end + 1));
-      console.log(`✅ [${mode}] JSON extraído de texto bruto — sinal: ${parsed.signal} (${parsed.confidence}%)`);
-      return parsed;
-    } catch (e) {
-      console.warn(`⚠️ [${mode}] JSON bruto encontrado mas parse falhou:`, text.slice(start, end + 1).slice(0, 200));
-    }
+    try { return JSON.parse(text.slice(start, end + 1)); } catch {}
   }
 
-  console.error(`❌ [${mode}] JSON parse falhou. Texto completo:\n${text}`);
+  console.error(`❌ [${mode}] Todos os métodos de parse falharam.`);
   return getDefaultResponse(latestPrice);
 }
 
