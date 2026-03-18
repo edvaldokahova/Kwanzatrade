@@ -1,13 +1,8 @@
 /**
  * Server-side ONLY.
- * Dois modos de análise:
- * - fetchGeminiAnalysis: análise com parâmetros do utilizador (timeframe, risk)
- * - fetchGeminiAISuggestion: sugestão ótima livre dos parâmetros do utilizador
  */
 
 import type { Candle } from "./marketAnalysis";
-
-// ─── Tipo ────────────────────────────────────────────────────────────────────
 
 export interface MarketContextInput {
   pair: string;
@@ -51,25 +46,20 @@ export interface GeminiAnalysisResult {
   reasoning: string;
 }
 
-// ─── Funções públicas ─────────────────────────────────────────────────────────
-
 export async function fetchGeminiAnalysis(
   input: UserAnalysisInput
 ): Promise<GeminiAnalysisResult> {
-  const prompt = buildUserPrompt(input);
-  return callGemini(prompt, input.lastPrice);
+  return callGemini(buildUserPrompt(input), input.lastPrice, "user_analysis");
 }
 
 export async function fetchGeminiAISuggestion(
   input: AISuggestionInput
 ): Promise<GeminiAnalysisResult> {
-  const prompt = buildAIPrompt(input);
-  return callGemini(prompt, input.lastPrice);
+  return callGemini(buildAIPrompt(input), input.lastPrice, "ai_suggestion");
 }
 
-// ─── Prompts ──────────────────────────────────────────────────────────────────
-
 function candlesToText(candles: Candle[]): string {
+  if (!candles || candles.length === 0) return "Sem dados de candles disponíveis";
   return candles.slice(0, 10).map(
     (c) => `[${c.time}] O:${c.open} H:${c.high} L:${c.low} C:${c.close}`
   ).join("\n");
@@ -149,7 +139,7 @@ Nível de experiência: ${input.traderLevel}
 Capital disponível: $${input.capital}
 
 INSTRUÇÕES CRÍTICAS:
-1. Escolha o timeframe ÓTIMO com base nas condições atuais (não está limitado pelo utilizador)
+1. Escolha o timeframe ÓTIMO com base nas condições atuais
 2. Use todo o contexto (candles, suporte/resistência, momentum, sessão, notícias)
 3. Confidence acima de 80 APENAS se o setup for realmente de alta qualidade
 4. Calcule níveis precisos baseados na estrutura de mercado identificada
@@ -169,81 +159,119 @@ INSTRUÇÕES CRÍTICAS:
 }`.trim();
 }
 
-// ─── Core Gemini call ─────────────────────────────────────────────────────────
-
 async function callGemini(
   prompt: string,
-  latestPrice?: number
+  latestPrice?: number,
+  mode: string = "unknown"
 ): Promise<GeminiAnalysisResult> {
   const apiKey = process.env.GEMINI_API_KEY;
+
   if (!apiKey) {
-    console.error("❌ GEMINI_API_KEY não definida");
+    console.error(`❌ [${mode}] GEMINI_API_KEY não definida`);
     return getDefaultResponse(latestPrice);
   }
 
+  // ✅ Timeout explícito de 25s por call ao Gemini
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 25_000);
+
   try {
+    console.log(`🤖 [${mode}] Chamando Gemini...`);
+    const startTime = Date.now();
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
+        signal:  controller.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature: 0.2,   // baixo = mais determinístico e preciso
-            maxOutputTokens: 1024,
+            temperature:      0.2,
+            maxOutputTokens:  512,  // ✅ Reduzido de 1024 — resposta mais rápida
           },
         }),
       }
     );
 
+    clearTimeout(timeoutId);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
     if (!response.ok) {
-      throw new Error(`Gemini HTTP ${response.status}: ${await response.text()}`);
+      const errorBody = await response.text();
+      console.error(`❌ [${mode}] Gemini HTTP ${response.status}:`, errorBody.slice(0, 300));
+      return getDefaultResponse(latestPrice);
     }
 
     const result = await response.json();
-    const text: string =
-      result?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    if (!text) throw new Error("Resposta vazia do Gemini");
+    const text: string = result?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-    return parseGeminiJSON(text, latestPrice);
-  } catch (error) {
-    console.error("❌ Gemini Error:", error);
+    if (!text) {
+      console.error(`❌ [${mode}] Gemini devolveu resposta vazia. Full response:`, JSON.stringify(result).slice(0, 500));
+      return getDefaultResponse(latestPrice);
+    }
+
+    console.log(`✅ [${mode}] Gemini respondeu em ${duration}s`);
+    return parseGeminiJSON(text, latestPrice, mode);
+
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+
+    // ✅ Distingue timeout de outros erros
+    if (error?.name === "AbortError") {
+      console.error(`❌ [${mode}] Gemini TIMEOUT — chamada abortada após 25s`);
+    } else {
+      console.error(`❌ [${mode}] Gemini Error:`, error?.message ?? error);
+    }
+
     return getDefaultResponse(latestPrice);
   }
 }
 
 function parseGeminiJSON(
   text: string,
-  latestPrice?: number
+  latestPrice?: number,
+  mode: string = "unknown"
 ): GeminiAnalysisResult {
   // 1. Tenta extrair de markdown code block
   const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (codeBlock) {
-    try { return JSON.parse(codeBlock[1]); } catch {}
+    try {
+      const parsed = JSON.parse(codeBlock[1]);
+      console.log(`✅ [${mode}] JSON extraído de code block`);
+      return parsed;
+    } catch {}
   }
+
   // 2. Tenta objeto JSON bruto
   const start = text.indexOf("{");
   const end   = text.lastIndexOf("}");
   if (start !== -1 && end > start) {
-    try { return JSON.parse(text.slice(start, end + 1)); } catch {}
+    try {
+      const parsed = JSON.parse(text.slice(start, end + 1));
+      console.log(`✅ [${mode}] JSON extraído de texto bruto`);
+      return parsed;
+    } catch {}
   }
-  console.warn("⚠️ Gemini JSON parse failed. Raw:", text.slice(0, 200));
+
+  // 3. Falhou — loga o texto completo para diagnóstico
+  console.error(`❌ [${mode}] JSON parse FALHOU. Texto completo do Gemini:\n${text}`);
   return getDefaultResponse(latestPrice);
 }
 
 function getDefaultResponse(latestPrice?: number): GeminiAnalysisResult {
   const price = latestPrice ?? 1.085;
   return {
-    signal: "NEUTRAL",
-    confidence: 50,
-    entry_price: price,
-    stop_loss:   parseFloat((price * 0.9985).toFixed(5)),
-    take_profit: parseFloat((price * 1.003).toFixed(5)),
+    signal:             "NEUTRAL",
+    confidence:         50,
+    entry_price:        price,
+    stop_loss:          parseFloat((price * 0.9985).toFixed(5)),
+    take_profit:        parseFloat((price * 1.003).toFixed(5)),
     suggestedTimeframe: "H1",
-    tradingWindow: "Aguardar confirmação de sessão",
-    riskSuggestion: "Aguardar sinal mais claro antes de entrar",
-    score: "5.0 / 10",
-    reasoning: "Dados insuficientes para análise precisa",
+    tradingWindow:      "Aguardar confirmação de sessão",
+    riskSuggestion:     "Aguardar sinal mais claro antes de entrar",
+    score:              "5.0 / 10",
+    reasoning:          "Dados insuficientes para análise precisa",
   };
-  }
+}
