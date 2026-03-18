@@ -171,7 +171,6 @@ async function callGemini(
     return getDefaultResponse(latestPrice);
   }
 
-  // ✅ Timeout explícito de 25s por call ao Gemini
   const controller = new AbortController();
   const timeoutId  = setTimeout(() => controller.abort(), 25_000);
 
@@ -180,7 +179,8 @@ async function callGemini(
     const startTime = Date.now();
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      // ✅ CORRIGIDO: gemini-1.5-flash-latest
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
       {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -188,8 +188,8 @@ async function callGemini(
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature:      0.2,
-            maxOutputTokens:  512,  // ✅ Reduzido de 1024 — resposta mais rápida
+            temperature:     0.2,
+            maxOutputTokens: 512,
           },
         }),
       }
@@ -200,7 +200,7 @@ async function callGemini(
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(`❌ [${mode}] Gemini HTTP ${response.status}:`, errorBody.slice(0, 300));
+      console.error(`❌ [${mode}] Gemini HTTP ${response.status}:`, errorBody.slice(0, 400));
       return getDefaultResponse(latestPrice);
     }
 
@@ -208,7 +208,7 @@ async function callGemini(
     const text: string = result?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
     if (!text) {
-      console.error(`❌ [${mode}] Gemini devolveu resposta vazia. Full response:`, JSON.stringify(result).slice(0, 500));
+      console.error(`❌ [${mode}] Gemini devolveu resposta vazia:`, JSON.stringify(result).slice(0, 400));
       return getDefaultResponse(latestPrice);
     }
 
@@ -218,9 +218,8 @@ async function callGemini(
   } catch (error: any) {
     clearTimeout(timeoutId);
 
-    // ✅ Distingue timeout de outros erros
     if (error?.name === "AbortError") {
-      console.error(`❌ [${mode}] Gemini TIMEOUT — chamada abortada após 25s`);
+      console.error(`❌ [${mode}] Gemini TIMEOUT — abortado após 25s`);
     } else {
       console.error(`❌ [${mode}] Gemini Error:`, error?.message ?? error);
     }
@@ -255,8 +254,7 @@ function parseGeminiJSON(
     } catch {}
   }
 
-  // 3. Falhou — loga o texto completo para diagnóstico
-  console.error(`❌ [${mode}] JSON parse FALHOU. Texto completo do Gemini:\n${text}`);
+  console.error(`❌ [${mode}] JSON parse falhou. Texto do Gemini:\n${text}`);
   return getDefaultResponse(latestPrice);
 }
 
