@@ -50,7 +50,7 @@ function ResultCard({
             <div className="flex items-center gap-2 bg-[#00FFB2]/10 border border-[#00FFB2]/30 px-3 py-1.5 rounded-full">
               <Sparkles className="w-3 h-3 text-[#00FFB2]" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[#00FFB2]">
-                IA Premium
+                1.5 flash
               </span>
             </div>
           ) : (
@@ -62,7 +62,7 @@ function ResultCard({
             </div>
           )}
           <h2 className="text-xl font-bold text-white">
-            {isAI ? "Sugestão do Bot24" : "Resultado da Análise"}
+            {isAI ? "Melhor Opção" : "Resultado da Análise"}
           </h2>
         </div>
 
@@ -163,7 +163,7 @@ function ResultCard({
             : "bg-gray-800/50 border-gray-700 text-gray-400"
         }`}
       >
-        SGT {data.riskSuggestion}
+        SGT: {data.riskSuggestion}
       </div>
 
       <a
