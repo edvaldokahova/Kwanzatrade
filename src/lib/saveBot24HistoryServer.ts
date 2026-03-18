@@ -44,7 +44,7 @@ export async function saveBot24HistoryServer(
 
 /**
  * Salva sinal em live_signals (server-side, admin client).
- * Usado pelo scheduler para popular a página de Live Signals.
+ * Usado pelo scheduler para popular a páginas de Live Signals.
  */
 export async function saveLiveSignal(
   result: Bot24SingleResult
