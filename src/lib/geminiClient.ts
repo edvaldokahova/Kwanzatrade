@@ -78,14 +78,14 @@ export interface GeminiAnalysisResult {
   reasoning: string;
 }
 
-// ─── Funções públicas ─────────────────────────────────────────────────────────
+// ─── Funcoes publicas ─────────────────────────────────────────────────────────
 
 export async function fetchGeminiAnalysis(
   input: UserAnalysisInput
 ): Promise<GeminiAnalysisResult> {
   const cacheKey = buildCacheKey("user", input.pair, input.timeframe, input.traderLevel, input.capital, input.risk);
   const cached = getCached(cacheKey);
-  if (cached) { console.log(`📦 [user_analysis] Cache hit`); return cached; }
+  if (cached) { console.log("Cache hit user_analysis"); return cached; }
   const result = await callGemini(buildUserPrompt(input), input.lastPrice, "user_analysis", input.timeframe);
   setCache(cacheKey, result);
   return result;
@@ -96,7 +96,7 @@ export async function fetchGeminiAISuggestion(
 ): Promise<GeminiAnalysisResult> {
   const cacheKey = buildCacheKey("ai", input.pair, "auto", input.traderLevel, input.capital, 2);
   const cached = getCached(cacheKey);
-  if (cached) { console.log(`📦 [ai_suggestion] Cache hit`); return cached; }
+  if (cached) { console.log("Cache hit ai_suggestion"); return cached; }
   const result = await callGemini(buildAIPrompt(input), input.lastPrice, "ai_suggestion", "H1");
   setCache(cacheKey, result);
   return result;
@@ -112,37 +112,53 @@ function candlesToText(candles: Candle[]): string {
 }
 
 function buildUserPrompt(input: UserAnalysisInput): string {
-  return `Trader quant institucional. Analise EURUSD e responda em JSON.
-
-Dados: preco=${input.lastPrice} tendencia=${input.trend}(${input.trendStrength}) suporte=${input.support} resistencia=${input.resistance} volatilidade=${input.volatility} momentum=${input.momentum}% padrao="${input.recentBehavior}" sessao="${input.activeSession}"
-
-Candles 60min:
-${candlesToText(input.candles)}
-
-Sentimento: ${input.newsSentiment ?? "neutral"}
-Trader: nivel=${input.traderLevel} timeframe=${input.timeframe} capital=$${input.capital} risco=${input.risk}%
-
-JSON obrigatorio (sem markdown, sem texto extra, apenas o objeto):
-{"signal":"BUY","confidence":72,"entry_price":1.08450,"stop_loss":1.07980,"take_profit":1.09200,"suggestedTimeframe":"${input.timeframe}","tradingWindow":"London+NY","riskSuggestion":"Risco controlado","score":"7.5 / 10","reasoning":"Tendencia bullish com suporte confirmado"}
-
-Substitua os valores do exemplo pela sua analise real. Responda APENAS com o JSON, sem mais nada.`.trim();
+  return [
+    "Analyze EURUSD and respond with a single JSON object only. No markdown. No explanation.",
+    "",
+    `price=${input.lastPrice}`,
+    `trend=${input.trend}(${input.trendStrength})`,
+    `support=${input.support}`,
+    `resistance=${input.resistance}`,
+    `volatility=${input.volatility}`,
+    `momentum=${input.momentum}%`,
+    `pattern=${input.recentBehavior}`,
+    `session=${input.activeSession}`,
+    `traderLevel=${input.traderLevel}`,
+    `timeframe=${input.timeframe}`,
+    `capital=${input.capital}`,
+    `risk=${input.risk}%`,
+    `news_sentiment=${input.newsSentiment ?? "neutral"}`,
+    "",
+    "Candles 60min:",
+    candlesToText(input.candles),
+    "",
+    "Return this exact JSON structure with real values:",
+    `{"signal":"BUY","confidence":72,"entry_price":${input.lastPrice},"stop_loss":${(input.lastPrice * 0.998).toFixed(5)},"take_profit":${(input.lastPrice * 1.004).toFixed(5)},"suggestedTimeframe":"${input.timeframe}","tradingWindow":"London+NY","riskSuggestion":"Use 2% risk per trade","score":"7.5 / 10","reasoning":"Bullish trend confirmed at support"}`,
+  ].join("\n");
 }
 
 function buildAIPrompt(input: AISuggestionInput): string {
-  return `Gestor hedge fund 30 anos Forex. Analise EURUSD e responda em JSON.
-
-Dados: preco=${input.lastPrice} tendencia=${input.trend}(${input.trendStrength}) suporte=${input.support} resistencia=${input.resistance} volatilidade=${input.volatility} momentum=${input.momentum}% padrao="${input.recentBehavior}" sessao="${input.activeSession}"
-
-Candles 60min:
-${candlesToText(input.candles)}
-
-Sentimento: ${input.newsSentiment ?? "neutral"}
-Trader: nivel=${input.traderLevel} capital=$${input.capital}
-
-JSON obrigatorio (sem markdown, sem texto extra, apenas o objeto):
-{"signal":"SELL","confidence":78,"entry_price":1.08450,"stop_loss":1.08900,"take_profit":1.07700,"suggestedTimeframe":"H4","tradingWindow":"New York","riskSuggestion":"1.5% do capital","score":"8.0 / 10","reasoning":"Resistencia rejeitada com momentum bearish"}
-
-Substitua os valores do exemplo pela sua analise real. Responda APENAS com o JSON, sem mais nada.`.trim();
+  return [
+    "You are a hedge fund manager. Analyze EURUSD and respond with a single JSON object only. No markdown. No explanation.",
+    "",
+    `price=${input.lastPrice}`,
+    `trend=${input.trend}(${input.trendStrength})`,
+    `support=${input.support}`,
+    `resistance=${input.resistance}`,
+    `volatility=${input.volatility}`,
+    `momentum=${input.momentum}%`,
+    `pattern=${input.recentBehavior}`,
+    `session=${input.activeSession}`,
+    `traderLevel=${input.traderLevel}`,
+    `capital=${input.capital}`,
+    `news_sentiment=${input.newsSentiment ?? "neutral"}`,
+    "",
+    "Candles 60min:",
+    candlesToText(input.candles),
+    "",
+    "Choose the optimal timeframe. Return this exact JSON structure with real values:",
+    `{"signal":"SELL","confidence":78,"entry_price":${input.lastPrice},"stop_loss":${(input.lastPrice * 1.004).toFixed(5)},"take_profit":${(input.lastPrice * 0.994).toFixed(5)},"suggestedTimeframe":"H4","tradingWindow":"New York","riskSuggestion":"1.5% risk recommended","score":"8.0 / 10","reasoning":"Resistance rejection with bearish momentum"}`,
+  ].join("\n");
 }
 
 // ─── Core Gemini call ─────────────────────────────────────────────────────────
@@ -157,28 +173,28 @@ async function callGemini(
 ): Promise<GeminiAnalysisResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    console.error(`❌ [${mode}] GEMINI_API_KEY não definida`);
+    console.error("GEMINI_API_KEY not defined");
     return getDefaultResponse(latestPrice, fallbackTimeframe);
   }
 
   const controller = new AbortController();
-  const timeoutId  = setTimeout(() => controller.abort(), 25_000);
+  const timeoutId = setTimeout(() => controller.abort(), 25000);
 
   try {
-    console.log(`🤖 [${mode}] Chamando Gemini (${GEMINI_MODEL})...`);
+    console.log(`Calling Gemini [${mode}]...`);
     const startTime = Date.now();
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal:  controller.signal,
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
-            temperature:      0.1,
-            maxOutputTokens:  1024,
+            temperature: 0.1,
+            maxOutputTokens: 1024,
             responseMimeType: "application/json",
           },
         }),
@@ -190,7 +206,7 @@ async function callGemini(
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error(`❌ [${mode}] Gemini HTTP ${response.status}:`, errorBody.slice(0, 400));
+      console.error(`Gemini HTTP ${response.status} [${mode}]:`, errorBody.slice(0, 400));
       return getDefaultResponse(latestPrice, fallbackTimeframe);
     }
 
@@ -198,21 +214,19 @@ async function callGemini(
     const text: string = result?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
     if (!text) {
-      console.error(`❌ [${mode}] Resposta vazia do Gemini`);
+      console.error(`Gemini empty response [${mode}]:`, JSON.stringify(result).slice(0, 400));
       return getDefaultResponse(latestPrice, fallbackTimeframe);
     }
 
-    console.log(`✅ [${mode}] Gemini respondeu em ${duration}s (${text.length} chars)`);
-
-    // ✅ Parser robusto — recupera campos mesmo de JSON truncado
+    console.log(`Gemini [${mode}] responded in ${duration}s (${text.length} chars)`);
     return robustParse(text, latestPrice, fallbackTimeframe, mode);
 
   } catch (error: any) {
     clearTimeout(timeoutId);
     if (error?.name === "AbortError") {
-      console.error(`❌ [${mode}] TIMEOUT após 25s`);
+      console.error(`Gemini TIMEOUT [${mode}]`);
     } else {
-      console.error(`❌ [${mode}] Erro:`, error?.message);
+      console.error(`Gemini error [${mode}]:`, error?.message);
     }
     return getDefaultResponse(latestPrice, fallbackTimeframe);
   }
@@ -220,11 +234,6 @@ async function callGemini(
 
 // ─── Parser robusto ───────────────────────────────────────────────────────────
 
-/**
- * Extrai campos individualmente com regex.
- * Funciona mesmo com JSON truncado — os campos críticos (signal, confidence,
- * entry_price, stop_loss, take_profit) vêm sempre primeiro no prompt.
- */
 function robustParse(
   text: string,
   latestPrice?: number,
@@ -233,66 +242,55 @@ function robustParse(
 ): GeminiAnalysisResult {
   const price = latestPrice ?? 1.085;
 
-  // 1. Tenta parse directo (JSON completo)
-  const cleanText = text.trim();
+  // 1. Parse directo
   try {
-    const parsed = JSON.parse(cleanText);
+    const parsed = JSON.parse(text.trim());
     if (parsed.signal && parsed.entry_price) {
-      console.log(`✅ [${mode}] Parse directo OK — ${parsed.signal} (${parsed.confidence}%)`);
+      console.log(`Parse OK [${mode}]: ${parsed.signal} (${parsed.confidence}%)`);
       return normalizeResult(parsed, price, fallbackTimeframe);
     }
-  } catch {}
+  } catch (_) {}
 
-  // 2. Tenta remover markdown e fazer parse
-  const stripped = cleanText.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  // 2. Remove markdown e tenta de novo
+  const stripped = text.replace(/```json/g, "").replace(/```/g, "").trim();
   try {
     const parsed = JSON.parse(stripped);
     if (parsed.signal && parsed.entry_price) {
-      console.log(`✅ [${mode}] Parse após strip markdown OK`);
+      console.log(`Parse after strip [${mode}]: ${parsed.signal} (${parsed.confidence}%)`);
       return normalizeResult(parsed, price, fallbackTimeframe);
     }
-  } catch {}
+  } catch (_) {}
 
-  // 3. ✅ Extracção campo a campo com regex (resiliente a truncagem)
-  console.warn(`⚠️ [${mode}] JSON incompleto — extraindo campos individualmente`);
+  // 3. Extracao campo a campo — resiliente a JSON truncado
+  console.warn(`Extracting fields individually [${mode}]`);
 
-  const extractStr = (key: string): string | undefined => {
+  function extractStr(key: string): string | undefined {
     const m = text.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`, "i"));
-    return m?.[1];
-  };
-  const extractNum = (key: string): number | undefined => {
+    return m ? m[1] : undefined;
+  }
+  function extractNum(key: string): number | undefined {
     const m = text.match(new RegExp(`"${key}"\\s*:\\s*([0-9]+\\.?[0-9]*)`, "i"));
     return m ? parseFloat(m[1]) : undefined;
-  };
+  }
 
-  const signal    = (extractStr("signal") ?? "NEUTRAL") as GeminiAnalysisResult["signal"];
-  const confidence = extractNum("confidence") ?? 55;
-  const entry      = extractNum("entry_price") ?? price;
-  const sl         = extractNum("stop_loss") ?? parseFloat((price * 0.9985).toFixed(5));
-  const tp         = extractNum("take_profit") ?? parseFloat((price * 1.003).toFixed(5));
-  const tf         = extractStr("suggestedTimeframe") ?? fallbackTimeframe;
-  const window_    = extractStr("tradingWindow") ?? "London / New York";
-  const riskSug    = extractStr("riskSuggestion") ?? "Use gestão de risco conservadora";
-  const score      = extractStr("score") ?? "6.0 / 10";
-  const reasoning  = extractStr("reasoning") ?? "Análise baseada em dados técnicos";
-
-  // Valida sinal
-  const validSignal = ["BUY", "SELL", "NEUTRAL"].includes(signal) ? signal : "NEUTRAL";
+  const rawSignal = extractStr("signal") ?? "NEUTRAL";
+  const signal: GeminiAnalysisResult["signal"] =
+    rawSignal === "BUY" || rawSignal === "SELL" ? rawSignal : "NEUTRAL";
 
   const recovered: GeminiAnalysisResult = {
-    signal:             validSignal,
-    confidence:         Math.min(94, Math.max(50, confidence)),
-    entry_price:        entry,
-    stop_loss:          sl,
-    take_profit:        tp,
-    suggestedTimeframe: tf,
-    tradingWindow:      window_,
-    riskSuggestion:     riskSug,
-    score,
-    reasoning,
+    signal,
+    confidence:         Math.min(94, Math.max(50, extractNum("confidence") ?? 55)),
+    entry_price:        extractNum("entry_price") ?? price,
+    stop_loss:          extractNum("stop_loss") ?? parseFloat((price * 0.9985).toFixed(5)),
+    take_profit:        extractNum("take_profit") ?? parseFloat((price * 1.003).toFixed(5)),
+    suggestedTimeframe: extractStr("suggestedTimeframe") ?? fallbackTimeframe,
+    tradingWindow:      extractStr("tradingWindow") ?? "London / New York",
+    riskSuggestion:     extractStr("riskSuggestion") ?? "Use gestao de risco conservadora",
+    score:              extractStr("score") ?? "6.0 / 10",
+    reasoning:          extractStr("reasoning") ?? "Analise baseada em dados tecnicos",
   };
 
-  console.log(`✅ [${mode}] Campos extraídos — ${recovered.signal} (${recovered.confidence}%)`);
+  console.log(`Fields extracted [${mode}]: ${recovered.signal} (${recovered.confidence}%)`);
   return recovered;
 }
 
@@ -313,7 +311,7 @@ function normalizeResult(
     take_profit:        tp,
     suggestedTimeframe: parsed.suggestedTimeframe ?? fallbackTimeframe,
     tradingWindow:      parsed.tradingWindow      ?? "London / New York",
-    riskSuggestion:     parsed.riskSuggestion     ?? "Use gestão de risco conservadora",
+    riskSuggestion:     parsed.riskSuggestion     ?? "Use gestao de risco conservadora",
     score:              parsed.score              ?? "6.0 / 10",
     reasoning:          parsed.reasoning          ?? "",
   };
@@ -331,8 +329,9 @@ function getDefaultResponse(
     stop_loss:          parseFloat((price * 0.9985).toFixed(5)),
     take_profit:        parseFloat((price * 1.003).toFixed(5)),
     suggestedTimeframe: fallbackTimeframe,
-    tradingWindow:      "Aguardar confirmação de sessão",
+    tradingWindow:      "Aguardar confirmacao de sessao",
     riskSuggestion:     "Aguardar sinal mais claro antes de entrar",
     score:              "5.0 / 10",
-    reasoning:          "Dados insuficientes para análise precisa",
+    reasoning:          "Dados insuficientes para analise precisa",
   };
+}
