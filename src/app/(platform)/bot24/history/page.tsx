@@ -230,7 +230,7 @@ export default function Bot24HistoryPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8">
           <div>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
-            HISTÓRICO <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+            HISTÓRICO DE <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
               ANÁLISES
             </span>
            </h1>
