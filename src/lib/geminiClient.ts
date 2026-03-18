@@ -14,7 +14,7 @@ type CacheEntry = {
 };
 
 const responseCache: Record<string, CacheEntry> = {};
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutos
+const CACHE_TTL = 15 * 60 * 1000;
 
 function capitalBucket(capital: number): string {
   return String(Math.floor(capital / 500) * 500);
@@ -246,7 +246,6 @@ INSTRUÇÕES CRÍTICAS:
 
 // ─── Core Gemini call ─────────────────────────────────────────────────────────
 
-// ✅ Modelo actualizado para gemini-2.5-flash
 const GEMINI_MODEL = "gemini-2.5-flash";
 
 async function callGemini(
@@ -278,7 +277,8 @@ async function callGemini(
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature:     0.2,
-            maxOutputTokens: 512,
+            // ✅ CORRIGIDO: 512 cortava o JSON a meio — 2048 garante resposta completa
+            maxOutputTokens: 2048,
           },
         }),
       }
@@ -301,7 +301,7 @@ async function callGemini(
       return getDefaultResponse(latestPrice);
     }
 
-    console.log(`✅ [${mode}] Gemini (${GEMINI_MODEL}) respondeu em ${duration}s`);
+    console.log(`✅ [${mode}] Gemini (${GEMINI_MODEL}) respondeu em ${duration}s — ${text.length} chars`);
     return parseGeminiJSON(text, latestPrice, mode);
 
   } catch (error: any) {
@@ -329,9 +329,11 @@ function parseGeminiJSON(
   if (codeBlock) {
     try {
       const parsed = JSON.parse(codeBlock[1]);
-      console.log(`✅ [${mode}] JSON extraído de code block`);
+      console.log(`✅ [${mode}] JSON extraído de code block — sinal: ${parsed.signal} (${parsed.confidence}%)`);
       return parsed;
-    } catch {}
+    } catch (e) {
+      console.warn(`⚠️ [${mode}] Code block encontrado mas parse falhou:`, codeBlock[1].slice(0, 200));
+    }
   }
 
   // 2. Tenta objeto JSON bruto
@@ -340,12 +342,14 @@ function parseGeminiJSON(
   if (start !== -1 && end > start) {
     try {
       const parsed = JSON.parse(text.slice(start, end + 1));
-      console.log(`✅ [${mode}] JSON extraído de texto bruto`);
+      console.log(`✅ [${mode}] JSON extraído de texto bruto — sinal: ${parsed.signal} (${parsed.confidence}%)`);
       return parsed;
-    } catch {}
+    } catch (e) {
+      console.warn(`⚠️ [${mode}] JSON bruto encontrado mas parse falhou:`, text.slice(start, end + 1).slice(0, 200));
+    }
   }
 
-  console.error(`❌ [${mode}] JSON parse falhou. Texto do Gemini:\n${text}`);
+  console.error(`❌ [${mode}] JSON parse falhou. Texto completo:\n${text}`);
   return getDefaultResponse(latestPrice);
 }
 
