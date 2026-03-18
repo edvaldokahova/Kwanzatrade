@@ -297,7 +297,7 @@ function ResultCard({
             <div className="flex items-center gap-2 bg-[#00FFB2]/10 border border-[#00FFB2]/30 px-3 py-1.5 rounded-full">
               <Sparkles className="w-3 h-3 text-[#00FFB2]" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[#00FFB2]">
-                1.5 flash
+                2.5 flash
               </span>
             </div>
           ) : (
@@ -602,7 +602,7 @@ export default function Bot24Analyze() {
               </span>
             </h1>
             <p className="text-gray-400">
-              Inteligência de mercado automatizada baseada no Gemini 1.5 flash
+              Inteligência de mercado automatizada baseada no Gemini 2.5 flash
             </p>
           </div>
         </div>
@@ -700,7 +700,7 @@ export default function Bot24Analyze() {
             <div className="flex items-start gap-3 bg-[#00FFB2]/5 border border-[#00FFB2]/20 p-3 rounded-xl">
               <Sparkles className="w-4 h-4 text-[#00FFB2] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-bold text-[#00FFB2]">Sugestão 1.5 flash</p>
+                <p className="text-xs font-bold text-[#00FFB2]">Sugestão 2.5 flash</p>
                 <p className="text-[10px] text-gray-500 mt-0.5">
                   IA escolhe o timeframe e risco ótimos com alta precisão
                 </p>
