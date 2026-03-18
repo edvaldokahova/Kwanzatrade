@@ -227,11 +227,13 @@ export default function Bot24HistoryPage() {
       <div className="relative w-full max-w-7xl mx-auto py-10 px-4 md:px-8 space-y-6">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-16">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-10">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-              Bot24 History
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            HISTÓRICO <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              ANÁLISES
+            </span>
+           </h1>
             <p className="text-gray-400 mt-1 text-sm">
               Análises registadas:{" "}
               <span className="text-green-400 font-bold">{dailyCount} / 10 hoje</span>
