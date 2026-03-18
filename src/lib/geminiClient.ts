@@ -1,8 +1,55 @@
 /**
  * Server-side ONLY.
+ * Modelo: gemini-2.5-flash
+ * Cache de respostas: TTL 15min por combinação de parâmetros
  */
 
 import type { Candle } from "./marketAnalysis";
+
+// ─── Cache de respostas Gemini ────────────────────────────────────────────────
+
+type CacheEntry = {
+  result:    GeminiAnalysisResult;
+  timestamp: number;
+};
+
+const responseCache: Record<string, CacheEntry> = {};
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutos
+
+function capitalBucket(capital: number): string {
+  return String(Math.floor(capital / 500) * 500);
+}
+
+function riskBucket(risk: number): string {
+  return (Math.round(risk * 2) / 2).toFixed(1);
+}
+
+function buildCacheKey(
+  mode: string,
+  pair: string,
+  timeframe: string,
+  traderLevel: string,
+  capital: number,
+  risk: number
+): string {
+  return [mode, pair, timeframe, traderLevel, capitalBucket(capital), riskBucket(risk)].join("|");
+}
+
+function getCached(key: string): GeminiAnalysisResult | null {
+  const entry = responseCache[key];
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL) {
+    delete responseCache[key];
+    return null;
+  }
+  return entry.result;
+}
+
+function setCache(key: string, result: GeminiAnalysisResult): void {
+  responseCache[key] = { result, timestamp: Date.now() };
+}
+
+// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface MarketContextInput {
   pair: string;
@@ -46,17 +93,55 @@ export interface GeminiAnalysisResult {
   reasoning: string;
 }
 
+// ─── Funções públicas ─────────────────────────────────────────────────────────
+
 export async function fetchGeminiAnalysis(
   input: UserAnalysisInput
 ): Promise<GeminiAnalysisResult> {
-  return callGemini(buildUserPrompt(input), input.lastPrice, "user_analysis");
+  const cacheKey = buildCacheKey(
+    "user",
+    input.pair,
+    input.timeframe,
+    input.traderLevel,
+    input.capital,
+    input.risk
+  );
+
+  const cached = getCached(cacheKey);
+  if (cached) {
+    console.log(`📦 [user_analysis] Cache hit — ${cacheKey}`);
+    return cached;
+  }
+
+  const result = await callGemini(buildUserPrompt(input), input.lastPrice, "user_analysis");
+  setCache(cacheKey, result);
+  return result;
 }
 
 export async function fetchGeminiAISuggestion(
   input: AISuggestionInput
 ): Promise<GeminiAnalysisResult> {
-  return callGemini(buildAIPrompt(input), input.lastPrice, "ai_suggestion");
+  const cacheKey = buildCacheKey(
+    "ai",
+    input.pair,
+    "auto",
+    input.traderLevel,
+    input.capital,
+    2
+  );
+
+  const cached = getCached(cacheKey);
+  if (cached) {
+    console.log(`📦 [ai_suggestion] Cache hit — ${cacheKey}`);
+    return cached;
+  }
+
+  const result = await callGemini(buildAIPrompt(input), input.lastPrice, "ai_suggestion");
+  setCache(cacheKey, result);
+  return result;
 }
+
+// ─── Prompts ──────────────────────────────────────────────────────────────────
 
 function candlesToText(candles: Candle[]): string {
   if (!candles || candles.length === 0) return "Sem dados de candles disponíveis";
@@ -159,6 +244,11 @@ INSTRUÇÕES CRÍTICAS:
 }`.trim();
 }
 
+// ─── Core Gemini call ─────────────────────────────────────────────────────────
+
+// ✅ Modelo actualizado para gemini-2.5-flash
+const GEMINI_MODEL = "gemini-2.5-flash";
+
 async function callGemini(
   prompt: string,
   latestPrice?: number,
@@ -175,12 +265,11 @@ async function callGemini(
   const timeoutId  = setTimeout(() => controller.abort(), 25_000);
 
   try {
-    console.log(`🤖 [${mode}] Chamando Gemini...`);
+    console.log(`🤖 [${mode}] Chamando Gemini (${GEMINI_MODEL})...`);
     const startTime = Date.now();
 
     const response = await fetch(
-      // ✅ CORRIGIDO: gemini-1.5-flash-latest
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -212,7 +301,7 @@ async function callGemini(
       return getDefaultResponse(latestPrice);
     }
 
-    console.log(`✅ [${mode}] Gemini respondeu em ${duration}s`);
+    console.log(`✅ [${mode}] Gemini (${GEMINI_MODEL}) respondeu em ${duration}s`);
     return parseGeminiJSON(text, latestPrice, mode);
 
   } catch (error: any) {
@@ -227,6 +316,8 @@ async function callGemini(
     return getDefaultResponse(latestPrice);
   }
 }
+
+// ─── Parse & fallback ─────────────────────────────────────────────────────────
 
 function parseGeminiJSON(
   text: string,
