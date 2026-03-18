@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Radio,
   X,
+  History,
   Activity,
 } from "lucide-react";
 
@@ -22,7 +23,8 @@ import { createClient } from "@/utils/supabase/client";
 const NAV_ITEMS = [
   { href: "/my-account", label: "Minha Conta", icon: User },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/bot24/analyze", label: "BOT24 AI", icon: Bot },
+  { href: "/bot24/analyze", label: "BOT24", icon: Bot },
+  { href: "/bot24/history", label: "Histórico", icon: History },
   { href: "/live-signals", label: "Live Signals", icon: Radio },
   { href: "/performance", label: "Performance", icon: TrendingUp },
   { href: "/bot24/heatmap", label: "Heatmap", icon: Activity },
