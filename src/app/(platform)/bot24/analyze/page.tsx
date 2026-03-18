@@ -96,7 +96,7 @@ function MicroAlert({ capital, lotResult }: { capital: number; lotResult: LotRes
         </div>
         <div>
           <p className="text-xs font-black text-yellow-400 uppercase tracking-widest mb-1">
-            ⚡ Alerta Micro — Conta XM Micro recomendada
+            Alerta Micro — Conta XM Micro recomendada
           </p>
           <p className="text-[11px] text-gray-400 leading-relaxed">
             Com <span className="text-white font-bold">${capital}</span> de capital,
@@ -113,7 +113,7 @@ function MicroAlert({ capital, lotResult }: { capital: number; lotResult: LotRes
       <div className="grid grid-cols-2 gap-3 text-[10px]">
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
           <p className="text-red-400 font-black uppercase tracking-wider mb-1">
-            ❌ Conta Standard
+            Conta Standard
           </p>
           <p className="text-gray-400">Lote mínimo 0.01</p>
           <p className="text-gray-400">$0.10/pip</p>
@@ -123,7 +123,7 @@ function MicroAlert({ capital, lotResult }: { capital: number; lotResult: LotRes
         </div>
         <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
           <p className="text-green-400 font-black uppercase tracking-wider mb-1">
-            ✅ Conta Micro
+            Conta Micro
           </p>
           <p className="text-gray-400">Lote mínimo 0.01</p>
           <p className="text-gray-400">$0.001/pip</p>
