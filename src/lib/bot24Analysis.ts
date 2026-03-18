@@ -166,7 +166,7 @@ export async function runBot24Analysis(
     }),
   ]);
 
-  // ── 3. Compõe resultados ──────────────────────────────────────────────────
+  // ── 3. Compoe resultados ──────────────────────────────────────────────────
   const userAnalysis  = buildSingleResult(pair, geminiUser, capital, risk,   timeframe,                   marketAuxSummary);
   const aiSuggestion  = buildSingleResult(pair, geminiAI,   capital, aiRisk, geminiAI.suggestedTimeframe, marketAuxSummary);
 
