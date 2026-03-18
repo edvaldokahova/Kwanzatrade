@@ -7,7 +7,7 @@
 
 import type { Candle } from "./marketAnalysis";
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+// ─── Tipo ────────────────────────────────────────────────────────────────────
 
 export interface MarketContextInput {
   pair: string;
