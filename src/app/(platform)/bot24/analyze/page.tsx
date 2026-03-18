@@ -6,7 +6,10 @@ import { createClient } from "@/utils/supabase/client";
 import { saveBot24Request } from "@/lib/saveBot24Request";
 import { saveBot24History } from "@/lib/saveBot24History";
 import { useLoader } from "@/context/LoaderContext";
-import { Brain, TrendingUp, TrendingDown, Sparkles } from "lucide-react";
+import {
+  Brain, TrendingUp, TrendingDown, Sparkles,
+  Copy, Check, Clock, AlertTriangle,
+} from "lucide-react";
 
 const FIXED_PAIR = "EURUSD";
 const TIMEFRAMES  = ["M1", "M5", "M15", "M30", "H1", "H4", "D1"];
@@ -16,6 +19,148 @@ const XM_LINKS = {
   advanced: "https://clicks.pipaffiliates.com/c?c=1182135&l=en&p=1",
 };
 
+// ✅ Tempo de vida de cada timeframe em segundos
+const TF_LIFETIME: Record<string, number> = {
+  M1:  5   * 60,
+  M5:  15  * 60,
+  M15: 30  * 60,
+  M30: 60  * 60,
+  H1:  2   * 60 * 60,
+  H4:  8   * 60 * 60,
+  D1:  24  * 60 * 60,
+};
+
+// ✅ Lote Sugerido — fórmula real para EUR/USD
+// Lot = Risk Amount / (SL em pips × valor pip por lote)
+// Para EUR/USD: 1 pip = 0.0001 | pip value = $10/lote standard
+function calcLotSize(
+  capital: number,
+  risk: number,
+  entry: number,
+  stopLoss: number
+): string {
+  const riskAmount = capital * (risk / 100);
+  const slDistance = Math.abs(entry - stopLoss);
+  const slPips     = slDistance / 0.0001;
+  if (slPips <= 0) return "0.00";
+  const lot = riskAmount / (slPips * 10);
+  return lot.toFixed(2);
+}
+
+// ─── CopyButton ───────────────────────────────────────────────────────────────
+
+function CopyButton({ value }: { value: string | number }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(String(value));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // browser antigo — silencia
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`p-1.5 rounded-lg transition-all ${
+        copied
+          ? "text-green-400 bg-green-400/15"
+          : "text-gray-600 hover:text-gray-300 hover:bg-gray-700/50"
+      }`}
+      title={copied ? "Copiado!" : "Copiar"}
+    >
+      {copied
+        ? <Check className="w-3 h-3" />
+        : <Copy className="w-3 h-3" />}
+    </button>
+  );
+}
+
+// ─── ExpiryTimer ──────────────────────────────────────────────────────────────
+
+function ExpiryTimer({
+  timeframe,
+  createdAt,
+  isAI,
+}: {
+  timeframe: string;
+  createdAt: Date;
+  isAI: boolean;
+}) {
+  const lifetime = TF_LIFETIME[timeframe] ?? TF_LIFETIME["H1"];
+  const [remaining, setRemaining] = useState<number>(lifetime);
+
+  useEffect(() => {
+    const tick = () => {
+      const elapsed = (Date.now() - createdAt.getTime()) / 1000;
+      setRemaining(Math.max(0, lifetime - elapsed));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [createdAt, lifetime]);
+
+  const pct     = (remaining / lifetime) * 100;
+  const expired = remaining <= 0;
+  const mm      = Math.floor(remaining / 60);
+  const ss      = Math.floor(remaining % 60);
+
+  const label = expired
+    ? "Análise expirada — gera uma nova"
+    : `Expira em ${mm > 0 ? `${mm}m ` : ""}${String(ss).padStart(2, "0")}s`;
+
+  const barColor =
+    pct > 50
+      ? isAI ? "bg-[#00FFB2]" : "bg-blue-400"
+      : pct > 20
+      ? "bg-yellow-400"
+      : "bg-red-500";
+
+  const textColor =
+    expired ? "text-red-400"
+    : pct > 50 ? (isAI ? "text-[#00FFB2]" : "text-blue-400")
+    : pct > 20 ? "text-yellow-400"
+    : "text-red-400";
+
+  return (
+    <div className={`relative rounded-xl border px-4 py-3 space-y-2 ${
+      expired
+        ? "bg-red-500/10 border-red-500/20"
+        : isAI
+        ? "bg-gray-800/40 border-[#00FFB2]/10"
+        : "bg-gray-800/40 border-gray-700"
+    }`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {expired
+            ? <AlertTriangle className="w-3 h-3 text-red-400" />
+            : <Clock className={`w-3 h-3 ${isAI ? "text-[#00FFB2]" : "text-gray-400"}`} />
+          }
+          <span className={`text-[10px] font-black uppercase tracking-wider ${textColor}`}>
+            {label}
+          </span>
+        </div>
+        {!expired && (
+          <span className={`text-xs font-mono font-bold ${textColor}`}>
+            {Math.round(pct)}%
+          </span>
+        )}
+      </div>
+      <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── ResultCard ───────────────────────────────────────────────────────────────
+
 function ResultCard({
   data,
   capital,
@@ -23,6 +168,7 @@ function ResultCard({
   xmLink,
   isAI = false,
   selectedTimeframe,
+  createdAt,
 }: {
   data: any;
   capital: number;
@@ -30,27 +176,29 @@ function ResultCard({
   xmLink: string;
   isAI?: boolean;
   selectedTimeframe?: string;
+  createdAt: Date;
 }) {
   if (!data) return null;
   const isBuy = data.signal === "BUY";
 
-  // ✅ Utilizador vê o TF que escolheu — IA vê o TF ótimo do Gemini
   const displayTimeframe = isAI
     ? data.suggestedTimeframe
     : (selectedTimeframe ?? data.suggestedTimeframe);
 
+  // ✅ Lote calculado
+  const lotSize = calcLotSize(capital, risk, data.entry, data.stopLoss);
+
   return (
-    <div
-      className={`relative rounded-2xl p-8 space-y-6 backdrop-blur overflow-hidden ${
-        isAI
-          ? "bg-gray-900/70 border border-[#00FFB2]/30"
-          : "bg-gray-900/70 border border-gray-700"
-      }`}
-    >
+    <div className={`relative rounded-2xl p-8 space-y-6 backdrop-blur overflow-hidden ${
+      isAI
+        ? "bg-gray-900/70 border border-[#00FFB2]/30"
+        : "bg-gray-900/70 border border-gray-700"
+    }`}>
       {isAI && (
         <div className="absolute inset-0 bg-gradient-to-br from-[#00FFB2]/5 via-transparent to-[#00C2FF]/5 pointer-events-none" />
       )}
 
+      {/* Header */}
       <div className="relative flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           {isAI ? (
@@ -73,19 +221,17 @@ function ResultCard({
           </h2>
         </div>
 
-        {/* ✅ Badge corrigido — mostra TF correto conforme o contexto */}
-        <span
-          className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
-            isAI
-              ? "bg-[#00FFB2]/10 border-[#00FFB2]/20 text-[#00FFB2]"
-              : "bg-gray-800 border-gray-700 text-gray-400"
-          }`}
-        >
+        <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
+          isAI
+            ? "bg-[#00FFB2]/10 border-[#00FFB2]/20 text-[#00FFB2]"
+            : "bg-gray-800 border-gray-700 text-gray-400"
+        }`}>
           {displayTimeframe}
           {isAI && " · Ótimo"}
         </span>
       </div>
 
+      {/* Reasoning (AI only) */}
       {isAI && data.reasoning && (
         <div className="relative bg-[#00FFB2]/5 border border-[#00FFB2]/20 p-4 rounded-xl">
           <p className="text-[10px] text-[#00FFB2]/80 uppercase tracking-wider mb-1 font-bold">
@@ -95,29 +241,49 @@ function ResultCard({
         </div>
       )}
 
-      <div className="relative grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {/* ✅ Contador de vida da análise */}
+      <ExpiryTimer
+        timeframe={displayTimeframe}
+        createdAt={createdAt}
+        isAI={isAI}
+      />
+
+      {/* Métricas sem copy (Par, Sinal, Confiança) */}
+      <div className="relative grid sm:grid-cols-3 gap-4">
         {[
-          { label: "Par",         value: data.pair,       color: "text-white" },
-          { label: "Sinal",       value: data.signal,     color: isBuy ? "text-green-400" : "text-red-400" },
-          { label: "Confiança",   value: `${data.confidence}%`, color: isAI ? "text-[#00FFB2]" : "text-white" },
-          { label: "Entry Price", value: data.entry,      color: "text-blue-400" },
-          { label: "Stop Loss",   value: data.stopLoss,   color: "text-red-400" },
-          { label: "Take Profit", value: data.takeProfit, color: "text-green-400" },
+          { label: "Par",       value: data.pair,              color: "text-white" },
+          { label: "Sinal",     value: data.signal,            color: isBuy ? "text-green-400" : "text-red-400" },
+          { label: "Confiança", value: `${data.confidence}%`,  color: isAI ? "text-[#00FFB2]" : "text-white" },
         ].map(({ label, value, color }) => (
-          <div
-            key={label}
-            className={`p-4 rounded-xl border ${
-              isAI
-                ? "bg-gray-800/60 border-[#00FFB2]/10"
-                : "bg-gray-800/80 border-gray-700"
-            }`}
-          >
+          <div key={label} className={`p-4 rounded-xl border ${
+            isAI ? "bg-gray-800/60 border-[#00FFB2]/10" : "bg-gray-800/80 border-gray-700"
+          }`}>
             <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">{label}</p>
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
           </div>
         ))}
       </div>
 
+      {/* ✅ Métricas COM copy (Entry, SL, TP) */}
+      <div className="relative grid sm:grid-cols-3 gap-4">
+        {[
+          { label: "Entry Price", value: data.entry,      color: "text-blue-400" },
+          { label: "Stop Loss",   value: data.stopLoss,   color: "text-red-400" },
+          { label: "Take Profit", value: data.takeProfit, color: "text-green-400" },
+        ].map(({ label, value, color }) => (
+          <div key={label} className={`p-4 rounded-xl border ${
+            isAI ? "bg-gray-800/60 border-[#00FFB2]/10" : "bg-gray-800/80 border-gray-700"
+          }`}>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-gray-400 text-xs uppercase tracking-wider">{label}</p>
+              <CopyButton value={value} />
+            </div>
+            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Confidence bar (AI only) */}
       {isAI && (
         <div className="relative">
           <div className="flex justify-between mb-2">
@@ -135,25 +301,34 @@ function ResultCard({
         </div>
       )}
 
-      <div className="relative grid sm:grid-cols-2 gap-4">
-        <div
-          className={`p-4 rounded-xl border ${
-            isAI
-              ? "bg-[#00FFB2]/5 border-[#00FFB2]/20"
-              : "bg-green-500/10 border-green-500/20"
-          }`}
-        >
+      {/* ✅ Lucro Potencial + RR + Lote Sugerido */}
+      <div className="relative grid sm:grid-cols-3 gap-4">
+        <div className={`p-4 rounded-xl border ${
+          isAI ? "bg-[#00FFB2]/5 border-[#00FFB2]/20" : "bg-green-500/10 border-green-500/20"
+        }`}>
           <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Lucro Potencial</p>
           <p className={`text-3xl font-bold ${isAI ? "text-[#00FFB2]" : "text-green-400"}`}>
             ${data.profitPotential}
           </p>
         </div>
+
         <div className="bg-gray-800/80 border border-gray-700 p-4 rounded-xl">
           <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Risk / Reward</p>
           <p className="text-3xl font-bold text-white">1:{data.riskReward}</p>
         </div>
+
+        <div className={`p-4 rounded-xl border ${
+          isAI ? "bg-gray-800/60 border-[#00FFB2]/10" : "bg-gray-800/80 border-gray-700"
+        }`}>
+          <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Lote Sugerido</p>
+          <p className={`text-3xl font-bold ${isAI ? "text-[#00FFB2]" : "text-blue-400"}`}>
+            {lotSize}
+          </p>
+          <p className="text-[9px] text-gray-600 mt-1 font-mono">lots · EUR/USD</p>
+        </div>
       </div>
 
+      {/* Contexto fundamental */}
       {data.marketAuxSummary &&
         data.marketAuxSummary !== "Sem dados fundamentais recentes." && (
           <div className="relative bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl">
@@ -164,16 +339,16 @@ function ResultCard({
           </div>
         )}
 
-      <div
-        className={`relative text-xs px-4 py-3 rounded-xl border ${
-          isAI
-            ? "bg-[#00FFB2]/5 border-[#00FFB2]/10 text-[#00FFB2]/80"
-            : "bg-gray-800/50 border-gray-700 text-gray-400"
-        }`}
-      >
+      {/* Risk suggestion */}
+      <div className={`relative text-xs px-4 py-3 rounded-xl border ${
+        isAI
+          ? "bg-[#00FFB2]/5 border-[#00FFB2]/10 text-[#00FFB2]/80"
+          : "bg-gray-800/50 border-gray-700 text-gray-400"
+      }`}>
         SGT: {data.riskSuggestion}
       </div>
 
+      {/* XM Button */}
       <a
         href={xmLink}
         target="_blank"
@@ -201,6 +376,8 @@ function ResultCard({
   );
 }
 
+// ─── Página principal ─────────────────────────────────────────────────────────
+
 export default function Bot24Analyze() {
   const { startLoading, stopLoading } = useLoader();
   const supabase = useMemo(() => createClient(), []);
@@ -213,6 +390,8 @@ export default function Bot24Analyze() {
   const [analysisCount, setAnalysisCount] = useState(0);
   const [isAnalyzing,   setIsAnalyzing]   = useState(false);
   const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
+  // ✅ Marca o momento exato em que a análise foi gerada
+  const [createdAt,     setCreatedAt]     = useState<Date>(new Date());
 
   useEffect(() => {
     async function loadStats() {
@@ -242,7 +421,7 @@ export default function Bot24Analyze() {
   }, [supabase]);
 
   async function handleAnalyze() {
-    if (isAnalyzing)        return;
+    if (isAnalyzing) return;
     if (analysisCount >= 10) {
       setErrorMsg("Limite diário de 10 análises atingido.");
       return;
@@ -279,9 +458,9 @@ export default function Bot24Analyze() {
       }
 
       const analysis = await response.json();
-
       await saveBot24History({ ...analysis, _capital: capital, _risk: risk });
       setResult(analysis);
+      setCreatedAt(new Date()); // ✅ reinicia o timer
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -299,8 +478,7 @@ export default function Bot24Analyze() {
     }
   }
 
-  const xmLink =
-    traderLevel === "beginner" ? XM_LINKS.beginner : XM_LINKS.advanced;
+  const xmLink = traderLevel === "beginner" ? XM_LINKS.beginner : XM_LINKS.advanced;
 
   return (
     <div className="relative min-h-screen">
@@ -338,21 +516,14 @@ export default function Bot24Analyze() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-[#00FFB2]/10 border border-[#00FFB2]/30 px-4 py-2 rounded-lg">
             <span className="w-2 h-2 bg-[#00FFB2] rounded-full animate-pulse" />
-            <span className="text-[#00FFB2] font-black text-sm tracking-wider">
-              EUR / USD
-            </span>
+            <span className="text-[#00FFB2] font-black text-sm tracking-wider">EUR / USD</span>
             <span className="text-[10px] text-[#00FFB2]/60 uppercase tracking-widest font-bold">
               · Most Liquid Pair
             </span>
           </div>
-
           <div className="inline-flex items-center gap-2 bg-gray-900/60 border border-gray-700 px-4 py-2 rounded-lg text-sm text-white">
             Análises hoje:
-            <span
-              className={`font-bold ${
-                analysisCount >= 10 ? "text-red-400" : "text-green-400"
-              }`}
-            >
+            <span className={`font-bold ${analysisCount >= 10 ? "text-red-400" : "text-green-400"}`}>
               {analysisCount} / 10
             </span>
           </div>
@@ -373,9 +544,7 @@ export default function Bot24Analyze() {
                 className="bg-gray-800 border border-gray-700 text-white rounded-lg p-3 focus:outline-none focus:border-green-500 transition"
               >
                 {TIMEFRAMES.map((t) => (
-                  <option key={t} value={t} className="bg-gray-800">
-                    {t}
-                  </option>
+                  <option key={t} value={t} className="bg-gray-800">{t}</option>
                 ))}
               </select>
             </div>
@@ -451,19 +620,8 @@ export default function Bot24Analyze() {
             {isAnalyzing ? (
               <span className="flex items-center gap-2">
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  />
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
                 A analisar EUR/USD...
               </span>
@@ -475,7 +633,7 @@ export default function Bot24Analyze() {
           </button>
         </div>
 
-        {/* ✅ selectedTimeframe passado para ambos os cards */}
+        {/* Resultados */}
         {result && (
           <div className="space-y-6">
             <ResultCard
@@ -485,6 +643,7 @@ export default function Bot24Analyze() {
               xmLink={xmLink}
               isAI={false}
               selectedTimeframe={timeframe}
+              createdAt={createdAt}
             />
             {result.aiSuggestion && (
               <ResultCard
@@ -494,6 +653,7 @@ export default function Bot24Analyze() {
                 xmLink={xmLink}
                 isAI={true}
                 selectedTimeframe={timeframe}
+                createdAt={createdAt}
               />
             )}
           </div>
