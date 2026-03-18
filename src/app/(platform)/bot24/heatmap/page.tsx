@@ -24,36 +24,42 @@ const XM_LINKS = {
 
 const DAILY_LIMIT = 10;
 
+// ✅ Horários corrigidos + fim de semana fechado
 function getMarketSessions() {
-  const hour = new Date().getUTCHours();
+  const now  = new Date();
+  const hour = now.getUTCHours();
+  const day  = now.getUTCDay(); // 0 = Domingo, 6 = Sábado
+
+  // Fim de semana — mercado Forex encerrado
+  if (day === 0 || day === 6) {
+    return { tokyo: false, london: false, newYork: false };
+  }
+
   return {
-    tokyo: hour >= 0 && hour < 9,
-    london: hour >= 7 && hour < 16,
-    newYork: hour >= 12 && hour < 21,
+    tokyo:   hour >= 0  && hour < 9,  // 00:00 – 09:00 UTC (01:00 – 10:00 Angola)
+    london:  hour >= 8  && hour < 17, // 08:00 – 17:00 UTC (09:00 – 18:00 Angola)
+    newYork: hour >= 13 && hour < 22, // 13:00 – 22:00 UTC (14:00 – 23:00 Angola)
   };
 }
 
 export default function ForexHeatmapPremium() {
-  // ✅ Instância estável
   const supabase = useMemo(() => createClient(), []);
 
-  const [data, setData] = useState<HeatmapItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [timeframeFilter, setTimeframeFilter] = useState("All");
-  const [topN, setTopN] = useState(10);
-  const [analysisCount, setAnalysisCount] = useState(0);
-  const [traderLevel, setTraderLevel] = useState<string>("beginner");
-  const [showLegend, setShowLegend] = useState(true);
+  const [data,           setData]           = useState<HeatmapItem[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [timeframeFilter,setTimeframeFilter] = useState("All");
+  const [topN,           setTopN]           = useState(10);
+  const [analysisCount,  setAnalysisCount]  = useState(0);
+  const [traderLevel,    setTraderLevel]    = useState<string>("beginner");
+  const [showLegend,     setShowLegend]     = useState(true);
 
+  // ✅ Recalcula sessões em tempo real a cada render
   const sessions = getMarketSessions();
 
-  // ✅ useCallback para evitar recriação desnecessária
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: countData } = await supabase.rpc("get_daily_analysis_count", {
@@ -87,10 +93,10 @@ export default function ForexHeatmapPremium() {
         const q = quantData?.find((item: any) => item.pair === h.pair);
         return {
           ...h,
-          isTop10: q?.top10 || false,
-          isHighProb: q?.high_probability || false,
-          isTopVol: q?.top_volatility || false,
-          isTopMomentum: q?.top_momentum || false,
+          isTop10:      q?.top10            || false,
+          isHighProb:   q?.high_probability || false,
+          isTopVol:     q?.top_volatility   || false,
+          isTopMomentum:q?.top_momentum     || false,
         };
       });
 
@@ -112,17 +118,34 @@ export default function ForexHeatmapPremium() {
     traderLevel === "beginner" ? XM_LINKS.beginner : XM_LINKS.advanced;
 
   const getQuantColor = (item: HeatmapItem) => {
-    if (item.isHighProb)
-      return "bg-yellow-400 text-black shadow-[0_0_20px_rgba(250,204,21,0.3)]";
-    if (item.isTop10) return "bg-green-400 text-black";
-    if (item.isTopVol) return "bg-red-500 text-white";
+    if (item.isHighProb)    return "bg-yellow-400 text-black shadow-[0_0_20px_rgba(250,204,21,0.3)]";
+    if (item.isTop10)       return "bg-green-400 text-black";
+    if (item.isTopVol)      return "bg-red-500 text-white";
     if (item.isTopMomentum) return "bg-blue-400 text-white";
     return "bg-gray-800 text-gray-200 border border-gray-700";
   };
 
+  // ✅ Informação de horário em Angola para cada sessão
+  const sessionInfo = [
+    {
+      label:    "London",
+      open:     sessions.london,
+      hoursAO:  "09:00 – 18:00",
+    },
+    {
+      label:    "New York",
+      open:     sessions.newYork,
+      hoursAO:  "14:00 – 23:00",
+    },
+    {
+      label:    "Tokyo",
+      open:     sessions.tokyo,
+      hoursAO:  "01:00 – 10:00",
+    },
+  ];
+
   return (
     <div className="relative min-h-screen">
-      {/* Background */}
       <Image
         src="/hero-b.webp"
         alt="Forex Background"
@@ -132,7 +155,6 @@ export default function ForexHeatmapPremium() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      {/* Content */}
       <div className="relative max-w-6xl mx-auto py-10 space-y-8 px-4 pb-32">
 
         {/* Header */}
@@ -140,7 +162,8 @@ export default function ForexHeatmapPremium() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight">
-                FOREX <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+                FOREX{" "}
+                <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
                   HEATMAP
                 </span>
               </h1>
@@ -159,20 +182,21 @@ export default function ForexHeatmapPremium() {
           </div>
         </div>
 
-        {/* Market Sessions */}
+        {/* ✅ Market Sessions — horários corrigidos com hora Angola */}
         <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "London", open: sessions.london },
-            { label: "New York", open: sessions.newYork },
-            { label: "Tokyo", open: sessions.tokyo },
-          ].map(({ label, open }) => (
+          {sessionInfo.map(({ label, open, hoursAO }) => (
             <div
               key={label}
               className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-center"
             >
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">
+                {label}
+              </p>
               <p className={`font-bold text-sm ${open ? "text-green-400" : "text-red-400"}`}>
                 ● {open ? "OPEN" : "CLOSED"}
+              </p>
+              <p className="text-[10px] text-gray-600 mt-1 font-mono">
+                {hoursAO} AO
               </p>
             </div>
           ))}
@@ -238,7 +262,6 @@ export default function ForexHeatmapPremium() {
                 key={item.id}
                 className={`relative rounded-xl p-5 flex flex-col items-center justify-between min-h-[170px] transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl group ${getQuantColor(item)}`}
               >
-                {/* Badges */}
                 <div className="absolute top-2 right-2 flex gap-1">
                   {item.isHighProb && (
                     <Target className="w-4 h-4 text-black animate-pulse" />
@@ -248,7 +271,6 @@ export default function ForexHeatmapPremium() {
                   )}
                 </div>
 
-                {/* Pair + TF */}
                 <div className="text-center">
                   <span className="text-[10px] uppercase opacity-60 font-black tracking-widest">
                     {item.timeframe}
@@ -256,7 +278,6 @@ export default function ForexHeatmapPremium() {
                   <h3 className="text-xl font-black tracking-tighter">{item.pair}</h3>
                 </div>
 
-                {/* Confidence */}
                 <div className="text-center my-2">
                   <span className="text-3xl font-black">{item.confidence}%</span>
                   <p className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-80">
@@ -264,7 +285,6 @@ export default function ForexHeatmapPremium() {
                   </p>
                 </div>
 
-                {/* CTA */}
                 <a
                   href={analysisCount >= DAILY_LIMIT ? undefined : getXMButtonLink()}
                   target="_blank"
@@ -302,9 +322,9 @@ export default function ForexHeatmapPremium() {
               <div className="grid gap-3 text-[11px] text-gray-300">
                 {[
                   { color: "bg-yellow-400", label: "Alta Probabilidade", desc: "Precisão +85%" },
-                  { color: "bg-green-400", label: "Top 10 Força", desc: "Volume e tendência" },
-                  { color: "bg-red-500", label: "Alta Volatilidade", desc: "Ideal para scalping" },
-                  { color: "bg-blue-400", label: "Top Momentum", desc: "Força direcional" },
+                  { color: "bg-green-400",  label: "Top 10 Força",       desc: "Volume e tendência" },
+                  { color: "bg-red-500",    label: "Alta Volatilidade",   desc: "Ideal para scalping" },
+                  { color: "bg-blue-400",   label: "Top Momentum",        desc: "Força direcional" },
                 ].map(({ color, label, desc }) => (
                   <div key={label} className="flex items-center gap-3">
                     <div className={`w-4 h-4 ${color} rounded-sm flex-shrink-0`} />
@@ -313,6 +333,19 @@ export default function ForexHeatmapPremium() {
                     </span>
                   </div>
                 ))}
+              </div>
+
+              {/* ✅ Referência de horários em Angola */}
+              <div className="pt-3 border-t border-gray-800 space-y-1">
+                <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold mb-2">
+                  Horários (Angola · UTC+1)
+                </p>
+                <p className="text-[10px] text-gray-500">🇯🇵 Tokyo: 01:00 – 10:00</p>
+                <p className="text-[10px] text-gray-500">🇬🇧 London: 09:00 – 18:00</p>
+                <p className="text-[10px] text-gray-500">🇺🇸 New York: 14:00 – 23:00</p>
+                <p className="text-[10px] text-[#00FFB2] font-bold mt-1">
+                  ★ Pico: 14:00 – 18:00 (London + NY)
+                </p>
               </div>
             </div>
           </div>
