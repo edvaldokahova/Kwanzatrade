@@ -34,7 +34,7 @@ export default function Bot24Loader({ show }: { show: boolean }) {
               <stop offset="0%" stopColor="#00FFB2" />
               <stop offset="100%" stopColor="#00C2FF" />
             </linearGradient>
-            
+
             <linearGradient id="bullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#00FFB2" />
               <stop offset="100%" stopColor="#00C28A" />
@@ -62,23 +62,18 @@ export default function Bot24Loader({ show }: { show: boolean }) {
                 0% { stroke-dashoffset: 300; }
                 100% { stroke-dashoffset: 0; }
               }
-              @keyframes signalPulse {
-                0% { opacity: 0.3; transform: scale(0.8); }
-                100% { opacity: 1; transform: scale(1.2); }
-              }
               .candle-1 { animation: candleMove 1.5s ease-in-out infinite; }
               .candle-2 { animation: candleMove 1.5s ease-in-out infinite 0.2s; }
               .candle-3 { animation: candleMove 1.5s ease-in-out infinite 0.4s; }
-              .hex-border { 
-                stroke-dasharray: 100; 
-                animation: hexRotate 3s linear infinite; 
+              .hex-border {
+                stroke-dasharray: 100;
+                animation: hexRotate 3s linear infinite;
               }
-              .dot-pulse { animation: signalPulse 0.8s ease-in-out infinite alternate; }
             `}</style>
           </defs>
 
-          {/* Hexagono de Fundo */}
-          <polygon 
+          {/* Hexágono de fundo */}
+          <polygon
             points="50,5 82,22 82,58 50,75 18,58 18,22"
             fill="#0A1628"
             stroke="url(#neonGrad)"
@@ -87,27 +82,26 @@ export default function Bot24Loader({ show }: { show: boolean }) {
             filter="url(#glow)"
           />
 
-          {/* Velas (Candles) Animadas */}
+          {/* Vela 1 — bearish */}
           <g className="candle-1">
             <rect x="34.2" y="21" width="1.6" height="8" rx="0.8" fill="#FF4C6A" />
             <rect x="31" y="29" width="8" height="18" rx="1" fill="url(#bearGrad)" filter="url(#glow)" />
             <rect x="34.2" y="47" width="1.6" height="10" rx="0.8" fill="#FF4C6A" />
           </g>
 
+          {/* Vela 2 — bullish */}
           <g className="candle-2">
             <rect x="49.2" y="23" width="1.6" height="9" rx="0.8" fill="#00FFB2" />
             <rect x="46" y="32" width="8" height="14" rx="1" fill="url(#bullGrad)" filter="url(#glow)" />
             <rect x="49.2" y="46" width="1.6" height="10" rx="0.8" fill="#00FFB2" />
           </g>
 
+          {/* Vela 3 — bullish */}
           <g className="candle-3">
             <rect x="64.2" y="18" width="1.6" height="8" rx="0.8" fill="#00FFB2" />
             <rect x="61" y="26" width="8" height="22" rx="1" fill="url(#bullGrad)" filter="url(#glow)" />
             <rect x="64.2" y="48" width="1.6" height="9" rx="0.8" fill="#00FFB2" />
           </g>
-
-          {/* Ponto de Sinal Inferior */}
-          <circle cx="50" cy="86" r="3" fill="#00FFB2" className="dot-pulse" filter="url(#glow)" />
         </svg>
       </div>
 
@@ -116,9 +110,9 @@ export default function Bot24Loader({ show }: { show: boolean }) {
           Processando
         </p>
         <div className="flex gap-1">
-          <span className="w-1 h-1 bg-[#00FFB2] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-          <span className="w-1 h-1 bg-[#00C2FF] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-          <span className="w-1 h-1 bg-[#00FFB2] rounded-full animate-bounce"></span>
+          <span className="w-1 h-1 bg-[#00FFB2] rounded-full animate-bounce [animation-delay:-0.3s]" />
+          <span className="w-1 h-1 bg-[#00C2FF] rounded-full animate-bounce [animation-delay:-0.15s]" />
+          <span className="w-1 h-1 bg-[#00FFB2] rounded-full animate-bounce" />
         </div>
       </div>
     </div>
