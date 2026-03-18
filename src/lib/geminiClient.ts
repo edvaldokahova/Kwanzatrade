@@ -332,7 +332,7 @@ function parseGeminiJSON(
     try { return JSON.parse(text.slice(start, end + 1)); } catch {}
   }
 
-  console.error(`❌ [${mode}] Todos os métodos de parse falharam.`);
+  console.error(`❌ [${mode}] Todos os métodos de parse falharam. TEXTO COMPLETO:\n>>>START>>>\n${text}\n<<<END<<<`);
   return getDefaultResponse(latestPrice);
 }
 
