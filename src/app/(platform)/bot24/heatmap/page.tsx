@@ -8,9 +8,12 @@ import { Activity, Target, Zap, Info } from "lucide-react";
 type HeatmapItem = {
   id: string;
   pair: string;
-  signal: "Strong Buy" | "Buy" | "Neutral" | "Sell" | "Strong Sell";
+  signal: string;
   confidence: number;
   timeframe: string;
+  trend?: string;
+  market_session?: string;
+  created_at: string;
   isTop10?: boolean;
   isHighProb?: boolean;
   isTopVol?: boolean;
@@ -24,36 +27,33 @@ const XM_LINKS = {
 
 const DAILY_LIMIT = 10;
 
-// ✅ Horários corrigidos + fim de semana fechado
 function getMarketSessions() {
   const now  = new Date();
   const hour = now.getUTCHours();
-  const day  = now.getUTCDay(); // 0 = Domingo, 6 = Sábado
+  const day  = now.getUTCDay();
 
-  // Fim de semana — mercado Forex encerrado
   if (day === 0 || day === 6) {
     return { tokyo: false, london: false, newYork: false };
   }
 
   return {
-    tokyo:   hour >= 0  && hour < 9,  // 00:00 – 09:00 UTC (01:00 – 10:00 Angola)
-    london:  hour >= 8  && hour < 17, // 08:00 – 17:00 UTC (09:00 – 18:00 Angola)
-    newYork: hour >= 13 && hour < 22, // 13:00 – 22:00 UTC (14:00 – 23:00 Angola)
+    tokyo:   hour >= 0  && hour < 9,
+    london:  hour >= 8  && hour < 17,
+    newYork: hour >= 13 && hour < 22,
   };
 }
 
 export default function ForexHeatmapPremium() {
   const supabase = useMemo(() => createClient(), []);
 
-  const [data,           setData]           = useState<HeatmapItem[]>([]);
-  const [loading,        setLoading]        = useState(true);
-  const [timeframeFilter,setTimeframeFilter] = useState("All");
-  const [topN,           setTopN]           = useState(10);
-  const [analysisCount,  setAnalysisCount]  = useState(0);
-  const [traderLevel,    setTraderLevel]    = useState<string>("beginner");
-  const [showLegend,     setShowLegend]     = useState(true);
+  const [data,            setData]            = useState<HeatmapItem[]>([]);
+  const [loading,         setLoading]         = useState(true);
+  const [timeframeFilter, setTimeframeFilter] = useState("All");
+  const [topN,            setTopN]            = useState(10);
+  const [analysisCount,   setAnalysisCount]   = useState(0);
+  const [traderLevel,     setTraderLevel]     = useState<string>("beginner");
+  const [showLegend,      setShowLegend]      = useState(true);
 
-  // ✅ Recalcula sessões em tempo real a cada render
   const sessions = getMarketSessions();
 
   const fetchData = useCallback(async () => {
@@ -68,37 +68,55 @@ export default function ForexHeatmapPremium() {
       setAnalysisCount(countData || 0);
 
       const { data: profile } = await supabase
-        .from("users")
+        .from("trading_profiles")
         .select("trader_level")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single();
       if (profile?.trader_level) setTraderLevel(profile.trader_level);
 
+      // ✅ Lê de live_signals em vez de forex_heatmap (que estava vazia)
       let query = supabase
-        .from("forex_heatmap")
+        .from("live_signals")
         .select("*")
-        .order("confidence", { ascending: false });
+        .eq("pair", "EURUSD")
+        .order("confidence", { ascending: false })
+        .order("created_at", { ascending: false });
 
       if (timeframeFilter !== "All") {
         query = query.eq("timeframe", timeframeFilter);
       }
 
-      const { data: heatmapData } = await query;
+      const { data: signalData, error } = await query;
+
+      if (error) {
+        console.error("Heatmap fetch error:", error);
+        setData([]);
+        return;
+      }
+
+      // Deduplica por timeframe — mantém o sinal mais recente de cada TF
+      const seen = new Set<string>();
+      const deduped = (signalData || []).filter((s) => {
+        const key = s.timeframe ?? "unknown";
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
       const { data: quantData } = await supabase
         .from("bot24_quant")
-        .select("pair, top10, high_probability, top_volatility, top_momentum");
+        .select("pair, top10, high_probability, top_volatility, top_momentum")
+        .eq("pair", "EURUSD");
 
-      const mappedData: HeatmapItem[] = (heatmapData || []).map((h) => {
-        const q = quantData?.find((item: any) => item.pair === h.pair);
-        return {
-          ...h,
-          isTop10:      q?.top10            || false,
-          isHighProb:   q?.high_probability || false,
-          isTopVol:     q?.top_volatility   || false,
-          isTopMomentum:q?.top_momentum     || false,
-        };
-      });
+      const q = quantData?.[0];
+
+      const mappedData: HeatmapItem[] = deduped.map((s) => ({
+        ...s,
+        isTop10:       q?.top10            || false,
+        isHighProb:    q?.high_probability || false,
+        isTopVol:      q?.top_volatility   || false,
+        isTopMomentum: q?.top_momentum     || false,
+      }));
 
       setData(mappedData.slice(0, topN));
     } catch (err) {
@@ -125,23 +143,10 @@ export default function ForexHeatmapPremium() {
     return "bg-gray-800 text-gray-200 border border-gray-700";
   };
 
-  // ✅ Informação de horário em Angola para cada sessão
   const sessionInfo = [
-    {
-      label:    "London",
-      open:     sessions.london,
-      hoursAO:  "09:00 – 18:00",
-    },
-    {
-      label:    "New York",
-      open:     sessions.newYork,
-      hoursAO:  "14:00 – 23:00",
-    },
-    {
-      label:    "Tokyo",
-      open:     sessions.tokyo,
-      hoursAO:  "01:00 – 10:00",
-    },
+    { label: "London",   open: sessions.london,  hoursAO: "09:00 – 18:00" },
+    { label: "New York", open: sessions.newYork, hoursAO: "14:00 – 23:00" },
+    { label: "Tokyo",    open: sessions.tokyo,   hoursAO: "01:00 – 10:00" },
   ];
 
   return (
@@ -170,34 +175,30 @@ export default function ForexHeatmapPremium() {
               <Activity className="text-green-500 w-8 h-8 md:w-10 md:h-10" />
             </div>
             <p className="text-gray-400 mt-2">
-              Análise quantitativa e força de mercado em tempo real
+              Forca de mercado EUR/USD por timeframe
             </p>
           </div>
 
           <div className="bg-gray-900/60 backdrop-blur-xl px-4 py-2 rounded-lg border border-gray-800 text-sm text-white">
-            Análises restantes hoje:{" "}
+            Analises restantes hoje:{" "}
             <span className="text-green-400 font-bold">
               {Math.max(0, DAILY_LIMIT - analysisCount)}
             </span>
           </div>
         </div>
 
-        {/* ✅ Market Sessions — horários corrigidos com hora Angola */}
+        {/* Market Sessions */}
         <div className="grid grid-cols-3 gap-4">
           {sessionInfo.map(({ label, open, hoursAO }) => (
             <div
               key={label}
               className="bg-gray-900/50 border border-gray-800 rounded-xl p-4 text-center"
             >
-              <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">
-                {label}
-              </p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">{label}</p>
               <p className={`font-bold text-sm ${open ? "text-green-400" : "text-red-400"}`}>
-                ● {open ? "OPEN" : "CLOSED"}
+                {open ? "● OPEN" : "● CLOSED"}
               </p>
-              <p className="text-[10px] text-gray-600 mt-1 font-mono">
-                {hoursAO} AO
-              </p>
+              <p className="text-[10px] text-gray-600 mt-1 font-mono">{hoursAO} AO</p>
             </div>
           ))}
         </div>
@@ -213,10 +214,8 @@ export default function ForexHeatmapPremium() {
               onChange={(e) => setTimeframeFilter(e.target.value)}
               className="bg-gray-800 text-white p-2 rounded-lg border border-gray-700 focus:outline-none focus:border-green-500 transition"
             >
-              {["All", "M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"].map((tf) => (
-                <option key={tf} value={tf} className="bg-gray-800">
-                  {tf}
-                </option>
+              {["All", "M5", "M15", "H1", "H4"].map((tf) => (
+                <option key={tf} value={tf} className="bg-gray-800">{tf}</option>
               ))}
             </select>
           </div>
@@ -228,7 +227,7 @@ export default function ForexHeatmapPremium() {
             <input
               type="number"
               min={1}
-              max={50}
+              max={20}
               value={topN}
               onChange={(e) => setTopN(Number(e.target.value))}
               className="bg-gray-800 text-white p-2 rounded-lg border border-gray-700 w-24 focus:outline-none focus:border-green-500 transition"
@@ -244,17 +243,23 @@ export default function ForexHeatmapPremium() {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {loading ? (
             <div className="col-span-full text-center py-20">
               <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-gray-500 text-sm">
-                Calculando algoritmos quantitativos...
-              </p>
+              <p className="text-gray-500 text-sm">Calculando algoritmos quantitativos...</p>
             </div>
           ) : data.length === 0 ? (
-            <div className="col-span-full text-center py-20 text-gray-500 text-sm">
-              Nenhum dado disponível para este filtro.
+            <div className="col-span-full text-center py-20 space-y-3">
+              <p className="text-gray-500 text-sm font-bold uppercase">
+                Sem dados de heatmap no momento.
+              </p>
+              <p className="text-gray-600 text-xs">
+                Os sinais sao gerados diariamente as{" "}
+                <span className="text-[#00FFB2] font-bold">14:00 Angola</span>.
+                <br />
+                Apos a primeira actualizacao os dados aparecerao aqui automaticamente.
+              </p>
             </div>
           ) : (
             data.map((item) => (
@@ -263,12 +268,8 @@ export default function ForexHeatmapPremium() {
                 className={`relative rounded-xl p-5 flex flex-col items-center justify-between min-h-[170px] transition-all duration-300 hover:scale-[1.05] hover:shadow-2xl group ${getQuantColor(item)}`}
               >
                 <div className="absolute top-2 right-2 flex gap-1">
-                  {item.isHighProb && (
-                    <Target className="w-4 h-4 text-black animate-pulse" />
-                  )}
-                  {item.isTop10 && (
-                    <Zap className="w-4 h-4 text-black fill-current" />
-                  )}
+                  {item.isHighProb && <Target className="w-4 h-4 text-black animate-pulse" />}
+                  {item.isTop10    && <Zap    className="w-4 h-4 text-black fill-current" />}
                 </div>
 
                 <div className="text-center">
@@ -283,6 +284,9 @@ export default function ForexHeatmapPremium() {
                   <p className="text-[10px] uppercase tracking-[0.2em] font-bold opacity-80">
                     {item.signal}
                   </p>
+                  {item.trend && (
+                    <p className="text-[9px] opacity-60 mt-0.5 capitalize">{item.trend}</p>
+                  )}
                 </div>
 
                 <a
@@ -295,7 +299,7 @@ export default function ForexHeatmapPremium() {
                       : "bg-blue-600 hover:bg-blue-500 text-white"
                   }`}
                 >
-                  {analysisCount >= DAILY_LIMIT ? "Limite Atingido" : "Analisar na XM"}
+                  {analysisCount >= DAILY_LIMIT ? "Limite Atingido" : "Operar na XM"}
                 </a>
               </div>
             ))
@@ -321,24 +325,21 @@ export default function ForexHeatmapPremium() {
 
               <div className="grid gap-3 text-[11px] text-gray-300">
                 {[
-                  { color: "bg-yellow-400", label: "Alta Probabilidade", desc: "Precisão +85%" },
-                  { color: "bg-green-400",  label: "Top 10 Força",       desc: "Volume e tendência" },
+                  { color: "bg-yellow-400", label: "Alta Probabilidade", desc: "Precisao +85%" },
+                  { color: "bg-green-400",  label: "Top 10 Forca",       desc: "Volume e tendencia" },
                   { color: "bg-red-500",    label: "Alta Volatilidade",   desc: "Ideal para scalping" },
-                  { color: "bg-blue-400",   label: "Top Momentum",        desc: "Força direcional" },
+                  { color: "bg-blue-400",   label: "Top Momentum",        desc: "Forca direcional" },
                 ].map(({ color, label, desc }) => (
                   <div key={label} className="flex items-center gap-3">
                     <div className={`w-4 h-4 ${color} rounded-sm flex-shrink-0`} />
-                    <span>
-                      <b className="text-white">{label}:</b> {desc}
-                    </span>
+                    <span><b className="text-white">{label}:</b> {desc}</span>
                   </div>
                 ))}
               </div>
 
-              {/* ✅ Referência de horários em Angola */}
               <div className="pt-3 border-t border-gray-800 space-y-1">
                 <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold mb-2">
-                  Horários (Angola · UTC+1)
+                  Horarios (Angola · UTC+1)
                 </p>
                 <p className="text-[10px] text-gray-500">🇯🇵 Tokyo: 01:00 – 10:00</p>
                 <p className="text-[10px] text-gray-500">🇬🇧 London: 09:00 – 18:00</p>
