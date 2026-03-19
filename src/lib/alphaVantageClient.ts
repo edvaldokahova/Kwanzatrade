@@ -11,65 +11,53 @@ export type AlphaResult = {
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 // ─── Cache do preco actual (em memoria — TTL 5 minutos) ───────────────────────
-// Separado do cache principal para ter preco mais fresco sem gastar requests
+// FreeForexAPI e gratuito e ilimitado — cache em memoria e suficiente
 let priceCache: { price: number; timestamp: number } | null = null;
 const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 // ─── Preco actual em tempo real ───────────────────────────────────────────────
 
 /**
- * CURRENCY_EXCHANGE_RATE — endpoint gratuito da Alpha Vantage.
+ * FreeForexAPI — gratuito, sem API key, sem limite de requests.
  * Devolve o preco actual do par em tempo real.
- * Cache de 5 minutos em memoria para nao gastar requests desnecessarios.
+ * Cache de 5 minutos em memoria — nao consome quota da Alpha Vantage.
+ * Endpoint: https://www.freeforexapi.com/api/live?pairs=EURUSD
  */
 export async function fetchCurrentPrice(pair: string): Promise<number | null> {
-  // Verifica cache de preco
+  // Verifica cache em memoria
   if (priceCache && Date.now() - priceCache.timestamp < PRICE_CACHE_TTL) {
-    console.log(`💱 Preco ${pair} (cache): ${priceCache.price}`);
+    const age = Math.round((Date.now() - priceCache.timestamp) / 1000);
+    console.log(`💱 Preco ${pair} (cache ${age}s): ${priceCache.price}`);
     return priceCache.price;
   }
 
-  const apiKey = process.env.ALPHA_VANTAGE_KEY;
-  if (!apiKey) {
-    console.warn("ALPHA_VANTAGE_KEY nao definida");
-    return null;
-  }
-
-  const from = pair.slice(0, 3);
-  const to   = pair.slice(3);
-
-  const url = [
-    "https://www.alphavantage.co/query",
-    `?function=CURRENCY_EXCHANGE_RATE`,
-    `&from_currency=${from}`,
-    `&to_currency=${to}`,
-    `&apikey=${apiKey}`,
-  ].join("");
-
   try {
-    const res  = await fetch(url, { cache: "no-store" });
+    console.log(`💱 FreeForexAPI: A buscar preco actual de ${pair}...`);
+
+    const res = await fetch(
+      `https://www.freeforexapi.com/api/live?pairs=${pair}`,
+      { cache: "no-store" }
+    );
+
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
 
-    if (data["Note"] || data["Information"]) {
-      console.warn("CURRENCY_EXCHANGE_RATE rate limit:", (data["Note"] ?? data["Information"]).slice(0, 150));
+    // Valida resposta
+    if (data?.code !== 200 || !data?.rates?.[pair]?.rate) {
+      console.warn(`FreeForexAPI: resposta inesperada para ${pair}:`, JSON.stringify(data).slice(0, 200));
       return priceCache?.price ?? null;
     }
 
-    const rate = data?.["Realtime Currency Exchange Rate"]?.["5. Exchange Rate"];
-    if (!rate) {
-      console.warn("CURRENCY_EXCHANGE_RATE: campo Exchange Rate nao encontrado");
-      return null;
-    }
-
-    const price = parseFloat(parseFloat(rate).toFixed(5));
+    const price = parseFloat(data.rates[pair].rate.toFixed(5));
     priceCache = { price, timestamp: Date.now() };
-    console.log(`💱 Preco actual ${pair}: ${price}`);
+
+    console.log(`💱 Preco actual ${pair}: ${price} (FreeForexAPI)`);
     return price;
 
   } catch (error) {
-    console.error("fetchCurrentPrice error:", error);
+    console.error(`FreeForexAPI error para ${pair}:`, error);
+    // Devolve cache expirado se existir — melhor que null
     return priceCache?.price ?? null;
   }
 }
