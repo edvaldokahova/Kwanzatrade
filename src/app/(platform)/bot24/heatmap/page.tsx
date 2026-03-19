@@ -258,7 +258,7 @@ export default function ForexHeatmapPremium() {
                 Os sinais sao gerados diariamente as{" "}
                 <span className="text-[#00FFB2] font-bold">14:00 Angola</span>.
                 <br />
-                Apos a primeira actualizacao os dados aparecerao aqui automaticamente.
+                Apos a primeira actualização os dados aparecerão aqui automaticamente.
               </p>
             </div>
           ) : (
