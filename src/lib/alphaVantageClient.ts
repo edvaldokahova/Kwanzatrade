@@ -10,12 +10,6 @@ export type AlphaResult = {
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
-/**
- * Cache persistente no Supabase — partilhado entre TODAS as instâncias Vercel.
- * Resolve o problema do cache em memória que se apagava a cada cold start.
- * 1 request à Alpha Vantage por hora por par, independentemente de quantos
- * utilizadores peçam análises em simultâneo.
- */
 export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> {
   const supabase = createAdminClient();
 
@@ -31,16 +25,16 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
       const age = Date.now() - new Date(cached.fetched_at).getTime();
       if (age < ONE_HOUR_MS) {
         const remaining = Math.round((ONE_HOUR_MS - age) / 60_000);
-        console.log(`📦 Alpha Vantage: Cache Supabase hit para ${pair} (expira em ${remaining}min)`);
+        console.log(`📦 Alpha Vantage: Cache hit para ${pair} (expira em ${remaining}min)`);
         return cached.data as AlphaResult;
       }
       console.log(`⏰ Alpha Vantage: Cache expirado para ${pair} — a fazer request`);
     }
   } catch {
-    console.log(`ℹ️ Alpha Vantage: Sem cache para ${pair} — a fazer primeiro request`);
+    console.log(`ℹ️ Alpha Vantage: Sem cache para ${pair}`);
   }
 
-  // ── 2. Cache expirado ou inexistente — faz request à API ─────────────────
+  // ── 2. Fetch à API ────────────────────────────────────────────────────────
   const apiKey = process.env.ALPHA_VANTAGE_KEY;
   if (!apiKey) {
     console.warn("⚠️ ALPHA_VANTAGE_KEY não definida");
@@ -50,29 +44,30 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
   const from = pair.slice(0, 3);
   const to   = pair.slice(3);
 
+  // ✅ FX_DAILY — endpoint gratuito
+  // Devolve candles diários: suficiente para tendência, S/R e momentum
   const url = [
     "https://www.alphavantage.co/query",
-    `?function=FX_INTRADAY`,
+    `?function=FX_DAILY`,
     `&from_symbol=${from}`,
     `&to_symbol=${to}`,
-    `&interval=60min`,
     `&outputsize=compact`,
     `&apikey=${apiKey}`,
   ].join("");
 
   try {
-    console.log(`📡 Alpha Vantage: A fazer request para ${pair}...`);
+    console.log(`📡 Alpha Vantage: Request FX_DAILY para ${pair}...`);
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const raw = await response.json();
 
-    // Detecta rate limit — usa cache antigo se existir
+    // Detecta rate limit ou endpoint premium
     if (raw["Note"] || raw["Information"]) {
       const msg = raw["Note"] ?? raw["Information"];
-      console.error(`❌ Alpha Vantage RATE LIMIT para ${pair}:`, msg.slice(0, 150));
+      console.error(`❌ Alpha Vantage bloqueado para ${pair}:`, msg.slice(0, 200));
 
-      // Tenta devolver cache antigo mesmo expirado
+      // Devolve cache antigo mesmo expirado se existir
       const { data: stale } = await supabase
         .from("market_data_cache")
         .select("data")
@@ -80,21 +75,23 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
         .single();
 
       if (stale) {
-        console.warn(`⚠️ A usar cache expirado para ${pair} devido a rate limit`);
+        console.warn(`⚠️ A usar cache de emergência para ${pair}`);
         return stale.data as AlphaResult;
       }
       return null;
     }
 
-    const timeSeries = raw["Time Series FX (60min)"];
+    // ✅ FX_DAILY retorna "Time Series FX (Daily)"
+    const timeSeries = raw["Time Series FX (Daily)"];
     if (!timeSeries) {
-      console.warn(`⚠️ Sem time series para ${pair}`);
+      console.warn(`⚠️ Sem time series para ${pair}. Resposta:`, JSON.stringify(raw).slice(0, 300));
       return null;
     }
 
     const keys = Object.keys(timeSeries);
     if (keys.length === 0) return null;
 
+    // Candles ordenados do mais recente para o mais antigo
     const recentBars: Candle[] = keys.slice(0, 100).map((k) => ({
       time:  k,
       open:  parseFloat(timeSeries[k]["1. open"]),
@@ -121,15 +118,15 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
       );
 
     console.log(
-      `✅ Alpha Vantage: ${pair} atualizado e guardado em cache — ` +
-      `preco: ${result.latestPrice}, tendencia: ${marketContext.trend}`
+      `✅ Alpha Vantage: ${pair} guardado em cache — ` +
+      `preco: ${result.latestPrice}, tendencia: ${marketContext.trend} (${marketContext.trendStrength})`
     );
     return result;
 
   } catch (error) {
     console.error(`❌ Alpha Vantage error para ${pair}:`, error);
 
-    // Fallback: tenta cache antigo mesmo expirado
+    // Fallback de emergência
     try {
       const { data: stale } = await supabase
         .from("market_data_cache")
@@ -137,7 +134,7 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
         .eq("pair", pair)
         .single();
       if (stale) {
-        console.warn(`⚠️ A usar cache de emergência para ${pair}`);
+        console.warn(`⚠️ Cache de emergência para ${pair}`);
         return stale.data as AlphaResult;
       }
     } catch {}
