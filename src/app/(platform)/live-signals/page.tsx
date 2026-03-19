@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import {
   Target, Zap, Activity, BarChart3,
   Clock, Volume2, VolumeX, RefreshCw,
-  TrendingUp, TrendingDown, Minus,
+  TrendingUp, TrendingDown, Minus, CalendarClock,
 } from "lucide-react";
 
 type Signal = {
@@ -27,6 +27,72 @@ type Signal = {
 
 const TIMEFRAMES = ["All", "M1", "M5", "M15", "H1", "H4"];
 
+// ─── Calcula próxima actualização (13:00 UTC = 14:00 Angola) ─────────────────
+
+function getNextUpdateInfo(): { lastScheduled: Date; next: Date } {
+  const now = new Date();
+
+  // Próximo 13:00 UTC
+  const next = new Date(now);
+  next.setUTCHours(13, 0, 0, 0);
+  if (now.getUTCHours() >= 13) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+
+  // Último 13:00 UTC agendado
+  const lastScheduled = new Date(next);
+  lastScheduled.setUTCDate(lastScheduled.getUTCDate() - 1);
+
+  return { lastScheduled, next };
+}
+
+function formatAngolaTime(date: Date): string {
+  return date.toLocaleTimeString("pt-BR", {
+    timeZone: "Africa/Luanda",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatAngolaDateTime(date: Date): string {
+  return date.toLocaleDateString("pt-BR", {
+    timeZone: "Africa/Luanda",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ─── Contador regressivo ──────────────────────────────────────────────────────
+
+function CountdownToNext({ nextUpdate }: { nextUpdate: Date }) {
+  const [remaining, setRemaining] = useState("");
+
+  useEffect(() => {
+    function tick() {
+      const diff = nextUpdate.getTime() - Date.now();
+      if (diff <= 0) { setRemaining("A actualizar..."); return; }
+
+      const h = Math.floor(diff / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+
+      setRemaining(
+        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      );
+    }
+
+    tick();
+    const id = setInterval(tick, 1_000);
+    return () => clearInterval(id);
+  }, [nextUpdate]);
+
+  return <span className="font-mono text-[#00FFB2] font-black">{remaining}</span>;
+}
+
+// ─── Trend icon ───────────────────────────────────────────────────────────────
+
 function TrendIcon({ trend }: { trend?: string }) {
   if (!trend) return null;
   const t = trend.toLowerCase();
@@ -34,6 +100,8 @@ function TrendIcon({ trend }: { trend?: string }) {
   if (t === "bearish") return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
   return <Minus className="w-3.5 h-3.5 text-gray-500" />;
 }
+
+// ─── Página ───────────────────────────────────────────────────────────────────
 
 export default function LiveSignals() {
   const supabase = useMemo(() => createClient(), []);
@@ -48,6 +116,9 @@ export default function LiveSignals() {
   const audioRef        = useRef<HTMLAudioElement | null>(null);
   const isMutedRef      = useRef(isMuted);
 
+  // Info de agendamento (recalcula uma vez por render)
+  const { lastScheduled, next: nextUpdate } = getNextUpdateInfo();
+
   useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
 
   useEffect(() => {
@@ -61,7 +132,6 @@ export default function LiveSignals() {
 
   const fetchSignals = useCallback(async () => {
     try {
-      // ✅ EUR/USD apenas — pair filter
       let query = supabase
         .from("live_signals")
         .select("*")
@@ -85,13 +155,12 @@ export default function LiveSignals() {
 
       const mappedSignals: Signal[] = (signalsData || []).map((s) => ({
         ...s,
-        isTop10:      q?.top10             || false,
-        isHighProb:   q?.high_probability  || false,
-        isTopVol:     q?.top_volatility    || false,
-        isTopMomentum:q?.top_momentum      || false,
+        isTop10:       q?.top10            || false,
+        isHighProb:    q?.high_probability || false,
+        isTopVol:      q?.top_volatility   || false,
+        isTopMomentum: q?.top_momentum     || false,
       }));
 
-      // Notificação sonora
       if (mappedSignals.length > 0) {
         const newest = mappedSignals[0];
         if (
@@ -119,6 +188,11 @@ export default function LiveSignals() {
     const interval = setInterval(fetchSignals, 15_000);
     return () => clearInterval(interval);
   }, [fetchSignals]);
+
+  // Data do sinal mais recente na BD
+  const latestSignalDate = signals.length > 0
+    ? new Date(signals[0].created_at)
+    : null;
 
   return (
     <div className="relative min-h-screen">
@@ -155,7 +229,6 @@ export default function LiveSignals() {
                 </span>
               </div>
 
-              {/* EUR/USD badge */}
               <div className="flex items-center gap-1.5 bg-[#00FFB2]/10 px-3 py-1 rounded-full border border-[#00FFB2]/20">
                 <span className="w-1.5 h-1.5 bg-[#00FFB2] rounded-full animate-pulse" />
                 <span className="text-[10px] text-[#00FFB2] font-black uppercase tracking-[0.2em]">
@@ -163,7 +236,6 @@ export default function LiveSignals() {
                 </span>
               </div>
 
-              {/* Mute */}
               <button
                 onClick={() => setIsMuted((p) => !p)}
                 className={`p-2 rounded-xl border transition-all ${
@@ -175,7 +247,6 @@ export default function LiveSignals() {
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
               </button>
 
-              {/* Refresh */}
               <button
                 onClick={() => { setLoading(true); fetchSignals(); }}
                 className="p-2 rounded-xl border bg-gray-900 border-gray-800 text-gray-400 hover:text-white transition-all"
@@ -186,7 +257,7 @@ export default function LiveSignals() {
 
             {lastUpdate && (
               <p className="text-[10px] text-gray-600 font-mono">
-                Última atualização:{" "}
+                Pagina actualizada:{" "}
                 {lastUpdate.toLocaleTimeString("pt-BR", {
                   hour: "2-digit", minute: "2-digit", second: "2-digit",
                 })}
@@ -212,6 +283,60 @@ export default function LiveSignals() {
           </div>
         </div>
 
+        {/* ✅ Painel de agendamento — Ultima + Proxima actualizacao */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          {/* Ultima actualizacao dos sinais */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 flex items-center gap-4">
+            <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
+            <div>
+              <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold mb-0.5">
+                Ultima actualizacao dos sinais
+              </p>
+              <p className="text-sm font-bold text-white">
+                {latestSignalDate
+                  ? formatAngolaDateTime(latestSignalDate)
+                  : "Sem dados ainda"}
+              </p>
+              <p className="text-[9px] text-gray-600 mt-0.5">hora de Angola</p>
+            </div>
+          </div>
+
+          {/* Proxima actualizacao agendada */}
+          <div className="bg-[#00FFB2]/5 border border-[#00FFB2]/20 rounded-2xl px-5 py-4 flex items-center gap-4">
+            <CalendarClock className="w-5 h-5 text-[#00FFB2] flex-shrink-0" />
+            <div>
+              <p className="text-[9px] text-[#00FFB2]/60 uppercase tracking-widest font-bold mb-0.5">
+                Proxima actualizacao
+              </p>
+              <p className="text-sm font-bold text-white">
+                {formatAngolaTime(nextUpdate)} Angola
+              </p>
+              <p className="text-[9px] text-gray-600 mt-0.5">
+                {nextUpdate.toLocaleDateString("pt-BR", {
+                  timeZone: "Africa/Luanda",
+                  day: "2-digit",
+                  month: "2-digit",
+                })}
+              </p>
+            </div>
+          </div>
+
+          {/* Contador regressivo */}
+          <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 flex items-center gap-4">
+            <RefreshCw className="w-5 h-5 text-gray-500 flex-shrink-0" />
+            <div>
+              <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold mb-0.5">
+                Tempo para proxima
+              </p>
+              <CountdownToNext nextUpdate={nextUpdate} />
+              <p className="text-[9px] text-gray-600 mt-0.5">
+                1 actualizacao por dia (plano actual)
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Tabela */}
         <div className="bg-gray-950/60 backdrop-blur-md rounded-[2rem] border border-gray-800/60 overflow-hidden">
           <div className="overflow-x-auto">
@@ -220,8 +345,8 @@ export default function LiveSignals() {
                 <tr>
                   <th className="p-5">Par</th>
                   <th className="p-5 text-center">Sinal</th>
-                  <th className="p-5 text-center">Confiança</th>
-                  <th className="p-5 text-center">Tendência</th>
+                  <th className="p-5 text-center">Confianca</th>
+                  <th className="p-5 text-center">Tendencia</th>
                   <th className="p-5 text-center">TF</th>
                   <th className="p-5 text-right">Hora</th>
                 </tr>
@@ -240,19 +365,22 @@ export default function LiveSignals() {
                   </tr>
                 ) : signals.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-16 text-center text-gray-500 text-xs font-bold uppercase">
-                      Nenhum sinal EUR/USD para este timeframe no momento.
-                      <br />
-                      <span className="text-gray-600 text-[10px] normal-case mt-1 block">
-                        O scheduler atualiza a cada hora durante sessões ativas.
-                      </span>
+                    <td colSpan={6} className="p-16 text-center">
+                      <p className="text-gray-500 text-xs font-bold uppercase">
+                        Nenhum sinal EUR/USD para este timeframe no momento.
+                      </p>
+                      <p className="text-gray-600 text-[10px] normal-case mt-2">
+                        O proximo sinal sera gerado as{" "}
+                        <span className="text-[#00FFB2] font-bold">
+                          {formatAngolaTime(nextUpdate)} (Angola)
+                        </span>
+                      </p>
                     </td>
                   </tr>
                 ) : (
                   signals.map((s) => (
                     <tr key={s.id} className="group hover:bg-blue-600/[0.04] transition-all">
 
-                      {/* Par */}
                       <td className="p-5">
                         <div className="flex items-center gap-3">
                           <div>
@@ -278,26 +406,22 @@ export default function LiveSignals() {
                         </div>
                       </td>
 
-                      {/* Sinal */}
                       <td className="p-5 text-center">
-                        <div
-                          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-wider ${
-                            s.isHighProb
-                              ? "bg-yellow-500 border-yellow-400 text-black"
-                              : s.isTop10
-                              ? "bg-green-600 border-green-500 text-white"
-                              : s.signal?.toUpperCase().includes("BUY")
-                              ? "bg-gray-900 border-green-500/30 text-green-400"
-                              : "bg-gray-900 border-red-500/30 text-red-400"
-                          }`}
-                        >
+                        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-wider ${
+                          s.isHighProb
+                            ? "bg-yellow-500 border-yellow-400 text-black"
+                            : s.isTop10
+                            ? "bg-green-600 border-green-500 text-white"
+                            : s.signal?.toUpperCase().includes("BUY")
+                            ? "bg-gray-900 border-green-500/30 text-green-400"
+                            : "bg-gray-900 border-red-500/30 text-red-400"
+                        }`}>
                           {s.isTop10  && <Zap      size={12} className="fill-current" />}
                           {s.isTopVol && <Activity size={12} />}
                           {s.signal}
                         </div>
                       </td>
 
-                      {/* Confiança */}
                       <td className="p-5">
                         <div className="flex flex-col items-center gap-2">
                           <span className={`text-xs font-black ${s.confidence >= 80 ? "text-yellow-400" : "text-blue-400"}`}>
@@ -314,30 +438,25 @@ export default function LiveSignals() {
                         </div>
                       </td>
 
-                      {/* Tendência */}
                       <td className="p-5 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <TrendIcon trend={s.trend} />
-                          <span
-                            className={`text-[10px] font-black capitalize ${
-                              s.trend === "bullish" ? "text-green-400"
-                              : s.trend === "bearish" ? "text-red-400"
-                              : "text-gray-500"
-                            }`}
-                          >
+                          <span className={`text-[10px] font-black capitalize ${
+                            s.trend === "bullish" ? "text-green-400"
+                            : s.trend === "bearish" ? "text-red-400"
+                            : "text-gray-500"
+                          }`}>
                             {s.trend ?? "—"}
                           </span>
                         </div>
                       </td>
 
-                      {/* TF */}
                       <td className="p-5 text-center">
                         <span className="bg-gray-900 text-gray-400 px-3 py-1.5 rounded-xl text-[10px] font-black border border-gray-800">
                           {s.timeframe}
                         </span>
                       </td>
 
-                      {/* Hora */}
                       <td className="p-5 text-right">
                         <div className="flex items-center justify-end gap-2 text-gray-600">
                           <Clock size={12} />
@@ -359,10 +478,10 @@ export default function LiveSignals() {
         {/* Legenda */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Target,   label: "Alta Probabilidade (+85%)", color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
-            { icon: Zap,      label: "Top 10 Força",              color: "text-green-500",  bg: "bg-green-500/5 border-green-500/10" },
-            { icon: Activity, label: "Alta Volatilidade",         color: "text-red-500",    bg: "bg-red-500/5 border-red-500/10" },
-            { icon: BarChart3, label: "Momentum IA",              color: "text-blue-500",   bg: "bg-blue-500/5 border-blue-500/10" },
+            { icon: Target,    label: "Alta Probabilidade (+85%)", color: "text-yellow-400", bg: "bg-yellow-400/5 border-yellow-400/10" },
+            { icon: Zap,       label: "Top 10 Forca",              color: "text-green-500",  bg: "bg-green-500/5 border-green-500/10" },
+            { icon: Activity,  label: "Alta Volatilidade",         color: "text-red-500",    bg: "bg-red-500/5 border-red-500/10" },
+            { icon: BarChart3, label: "Momentum IA",               color: "text-blue-500",   bg: "bg-blue-500/5 border-blue-500/10" },
           ].map((item, i) => (
             <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border ${item.bg}`}>
               <item.icon className={`w-4 h-4 flex-shrink-0 ${item.color}`} />
