@@ -10,32 +10,37 @@ export type AlphaResult = {
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
-// ─── Cache do preco actual (em memoria — TTL 5 minutos) ───────────────────────
-// FreeForexAPI e gratuito e ilimitado — cache em memoria e suficiente
+// ─── Cache do preco actual (em memoria — TTL 1 hora) ──────────────────────────
+// Frankfurter actualiza diariamente — consistente com os candles FX_DAILY
+// Ilimitado e sem API key — cache em memoria e suficiente
 let priceCache: { price: number; timestamp: number } | null = null;
-const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const PRICE_CACHE_TTL = 60 * 60 * 1000; // 1 hora
 
 // ─── Preco actual em tempo real ───────────────────────────────────────────────
 
 /**
- * FreeForexAPI — gratuito, sem API key, sem limite de requests.
- * Devolve o preco actual do par em tempo real.
- * Cache de 5 minutos em memoria — nao consome quota da Alpha Vantage.
- * Endpoint: https://www.freeforexapi.com/api/live?pairs=EURUSD
+ * Frankfurter API — Banco Central Europeu.
+ * Gratuito, sem API key, sem limite de requests.
+ * Actualiza diariamente — consistente com os candles FX_DAILY que usamos.
+ * Endpoint: https://api.frankfurter.app/latest?from=EUR&to=USD
+ * Exemplo de resposta: {"amount":1.0,"base":"EUR","date":"2026-03-19","rates":{"USD":1.1489}}
  */
 export async function fetchCurrentPrice(pair: string): Promise<number | null> {
   // Verifica cache em memoria
   if (priceCache && Date.now() - priceCache.timestamp < PRICE_CACHE_TTL) {
-    const age = Math.round((Date.now() - priceCache.timestamp) / 1000);
-    console.log(`💱 Preco ${pair} (cache ${age}s): ${priceCache.price}`);
+    const age = Math.round((Date.now() - priceCache.timestamp) / 60_000);
+    console.log(`💱 Preco ${pair} (cache ${age}min): ${priceCache.price}`);
     return priceCache.price;
   }
 
   try {
-    console.log(`💱 FreeForexAPI: A buscar preco actual de ${pair}...`);
+    console.log(`💱 Frankfurter: A buscar preco actual de ${pair}...`);
+
+    const base  = pair.slice(0, 3); // EUR
+    const quote = pair.slice(3);    // USD
 
     const res = await fetch(
-      `https://www.freeforexapi.com/api/live?pairs=${pair}`,
+      `https://api.frankfurter.app/latest?from=${base}&to=${quote}`,
       { cache: "no-store" }
     );
 
@@ -43,20 +48,19 @@ export async function fetchCurrentPrice(pair: string): Promise<number | null> {
 
     const data = await res.json();
 
-    // Valida resposta
-    if (data?.code !== 200 || !data?.rates?.[pair]?.rate) {
-      console.warn(`FreeForexAPI: resposta inesperada para ${pair}:`, JSON.stringify(data).slice(0, 200));
+    if (!data?.rates?.[quote]) {
+      console.warn(`Frankfurter: campo ${quote} nao encontrado:`, JSON.stringify(data).slice(0, 200));
       return priceCache?.price ?? null;
     }
 
-    const price = parseFloat(data.rates[pair].rate.toFixed(5));
+    const price = parseFloat(data.rates[quote].toFixed(5));
     priceCache = { price, timestamp: Date.now() };
 
-    console.log(`💱 Preco actual ${pair}: ${price} (FreeForexAPI)`);
+    console.log(`💱 Preco actual ${pair}: ${price} (Frankfurter/BCE — ${data.date})`);
     return price;
 
   } catch (error) {
-    console.error(`FreeForexAPI error para ${pair}:`, error);
+    console.error(`Frankfurter error para ${pair}:`, error);
     // Devolve cache expirado se existir — melhor que null
     return priceCache?.price ?? null;
   }
