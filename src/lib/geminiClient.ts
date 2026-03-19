@@ -268,6 +268,17 @@ function robustParse(
     const m = text.match(new RegExp(`"${key}"\\s*:\\s*"([^"]*)"`, "i"));
     return m ? m[1] : undefined;
   }
+
+  // ✅ Extrai preco e valida se e realista para EURUSD (0.5 a 2.0)
+  // Rejeita valores truncados como "1" solto que causavam stop loss errado
+  function extractPrice(key: string): number | undefined {
+    const m = text.match(new RegExp(`"${key}"\\s*:\\s*([0-9]+\\.?[0-9]*)`, "i"));
+    if (!m) return undefined;
+    const val = parseFloat(m[1]);
+    if (val < 0.5 || val > 5.0) return undefined;
+    return parseFloat(val.toFixed(5));
+  }
+
   function extractNum(key: string): number | undefined {
     const m = text.match(new RegExp(`"${key}"\\s*:\\s*([0-9]+\\.?[0-9]*)`, "i"));
     return m ? parseFloat(m[1]) : undefined;
@@ -277,12 +288,29 @@ function robustParse(
   const signal: GeminiAnalysisResult["signal"] =
     rawSignal === "BUY" || rawSignal === "SELL" ? rawSignal : "NEUTRAL";
 
+  const entry = extractPrice("entry_price") ?? price;
+
+  // ✅ Se SL ou TP forem invalidos ou truncados, calcula a partir do entry
+  // BUY:  SL abaixo do entry, TP acima
+  // SELL: SL acima do entry, TP abaixo
+  const sl = extractPrice("stop_loss") ??
+    parseFloat((signal === "BUY"
+      ? entry - 0.0030
+      : entry + 0.0030
+    ).toFixed(5));
+
+  const tp = extractPrice("take_profit") ??
+    parseFloat((signal === "BUY"
+      ? entry + 0.0060
+      : entry - 0.0060
+    ).toFixed(5));
+
   const recovered: GeminiAnalysisResult = {
     signal,
     confidence:         Math.min(94, Math.max(50, extractNum("confidence") ?? 55)),
-    entry_price:        extractNum("entry_price") ?? price,
-    stop_loss:          extractNum("stop_loss") ?? parseFloat((price * 0.9985).toFixed(5)),
-    take_profit:        extractNum("take_profit") ?? parseFloat((price * 1.003).toFixed(5)),
+    entry_price:        entry,
+    stop_loss:          sl,
+    take_profit:        tp,
     suggestedTimeframe: extractStr("suggestedTimeframe") ?? fallbackTimeframe,
     tradingWindow:      extractStr("tradingWindow") ?? "London / New York",
     riskSuggestion:     extractStr("riskSuggestion") ?? "Use gestao de risco conservadora",
@@ -290,7 +318,7 @@ function robustParse(
     reasoning:          extractStr("reasoning") ?? "Analise baseada em dados tecnicos",
   };
 
-  console.log(`Fields extracted [${mode}]: ${recovered.signal} (${recovered.confidence}%)`);
+  console.log(`Fields extracted [${mode}]: ${recovered.signal} (${recovered.confidence}%) entry=${recovered.entry_price} sl=${recovered.stop_loss} tp=${recovered.take_profit}`);
   return recovered;
 }
 
@@ -300,13 +328,24 @@ function normalizeResult(
   fallbackTimeframe: string
 ): GeminiAnalysisResult {
   const entry = parseFloat(String(parsed.entry_price)) || latestPrice;
-  const sl    = parseFloat(String(parsed.stop_loss))   || parseFloat((latestPrice * 0.9985).toFixed(5));
-  const tp    = parseFloat(String(parsed.take_profit)) || parseFloat((latestPrice * 1.003).toFixed(5));
+
+  // ✅ Valida SL e TP — rejeita valores fora do intervalo realista
+  const rawSL = parseFloat(String(parsed.stop_loss));
+  const rawTP = parseFloat(String(parsed.take_profit));
+  const signal: string = parsed.signal ?? "NEUTRAL";
+
+  const sl = (rawSL >= 0.5 && rawSL <= 5.0)
+    ? parseFloat(rawSL.toFixed(5))
+    : parseFloat((signal === "BUY" ? entry - 0.0030 : entry + 0.0030).toFixed(5));
+
+  const tp = (rawTP >= 0.5 && rawTP <= 5.0)
+    ? parseFloat(rawTP.toFixed(5))
+    : parseFloat((signal === "BUY" ? entry + 0.0060 : entry - 0.0060).toFixed(5));
 
   return {
     signal:             parsed.signal ?? "NEUTRAL",
     confidence:         Number(parsed.confidence) || 55,
-    entry_price:        entry,
+    entry_price:        parseFloat(entry.toFixed(5)),
     stop_loss:          sl,
     take_profit:        tp,
     suggestedTimeframe: parsed.suggestedTimeframe ?? fallbackTimeframe,
@@ -325,7 +364,7 @@ function getDefaultResponse(
   return {
     signal:             "NEUTRAL",
     confidence:         50,
-    entry_price:        price,
+    entry_price:        parseFloat(price.toFixed(5)),
     stop_loss:          parseFloat((price * 0.9985).toFixed(5)),
     take_profit:        parseFloat((price * 1.003).toFixed(5)),
     suggestedTimeframe: fallbackTimeframe,
