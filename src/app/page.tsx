@@ -148,7 +148,10 @@ export default function Home() {
 {/* SOBRE */}
 <section className="border-t border-gray-800 py-24 px-6">
   <div className="max-w-4xl mx-auto text-center">
-    <h2 className="text-3xl font-semibold">KwanzaTrade?</h2>
+    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            KWANZA<span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">TRADE?
+            </span>
+           </h1>
 
     <p className="mt-6 text-gray-400 text-lg">
       A KwanzaTrade é uma ferramenta que reúne dados de mercado, sinais estruturados
@@ -185,12 +188,13 @@ export default function Home() {
       />
     </div>
 
-    <h2 className="text-3xl font-semibold">
-      Bot24
-    </h2>
+    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24
+            </span>
+           </h1>
 
     <p className="text-gray-400 mt-4">
-      O cérebro por trás das análises. O Bot24 observa o mercado continuamente
+      O cérebro por trás das análises. O BOT24 observa o mercado continuamente
       e organiza informação relevante para traders operarem com mais segurança e lucro.
     </p>
 
