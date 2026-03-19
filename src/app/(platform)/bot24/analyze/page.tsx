@@ -355,24 +355,48 @@ function ResultCard({
         ))}
       </div>
 
-      {/* Métricas COM copy */}
-      <div className="relative grid sm:grid-cols-3 gap-4">
-        {[
-          { label: "Entry Price", value: data.entry,      color: "text-blue-400" },
-          { label: "Stop Loss",   value: data.stopLoss,   color: "text-red-400" },
-          { label: "Take Profit", value: data.takeProfit, color: "text-green-400" },
-        ].map(({ label, value, color }) => (
-          <div key={label} className={`p-4 rounded-xl border ${
-            isAI ? "bg-gray-800/60 border-[#00FFB2]/10" : "bg-gray-800/80 border-gray-700"
-          }`}>
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-gray-400 text-xs uppercase tracking-wider">{label}</p>
-              <CopyButton value={value} />
-            </div>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-          </div>
-        ))}
+      {/* Métricas COM copy — Entry, SL, TP sempre com 5 casas decimais */}
+<div className="relative grid sm:grid-cols-3 gap-4">
+  {[
+    {
+      label: "Entry Price",
+      // ✅ Força 5 casas decimais independentemente do que o Gemini devolveu
+      value: typeof data.entry === "number"
+        ? data.entry.toFixed(5)
+        : parseFloat(data.entry).toFixed(5),
+      color: "text-blue-400",
+    },
+    {
+      label: "Stop Loss",
+      value: typeof data.stopLoss === "number"
+        ? data.stopLoss.toFixed(5)
+        : parseFloat(data.stopLoss).toFixed(5),
+      color: "text-red-400",
+    },
+    {
+      label: "Take Profit",
+      value: typeof data.takeProfit === "number"
+        ? data.takeProfit.toFixed(5)
+        : parseFloat(data.takeProfit).toFixed(5),
+      color: "text-green-400",
+    },
+  ].map(({ label, value, color }) => (
+    <div
+      key={label}
+      className={`p-4 rounded-xl border ${
+        isAI
+          ? "bg-gray-800/60 border-[#00FFB2]/10"
+          : "bg-gray-800/80 border-gray-700"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-gray-400 text-xs uppercase tracking-wider">{label}</p>
+        <CopyButton value={value} />
       </div>
+      <p className={`text-2xl font-bold ${color}`}>{value}</p>
+    </div>
+  ))}
+</div>
 
       {/* Confidence bar */}
       {isAI && (
