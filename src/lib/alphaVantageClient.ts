@@ -10,6 +10,79 @@ export type AlphaResult = {
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
+// ─── Cache do preco actual (em memoria — TTL 5 minutos) ───────────────────────
+// Separado do cache principal para ter preco mais fresco sem gastar requests
+let priceCache: { price: number; timestamp: number } | null = null;
+const PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+// ─── Preco actual em tempo real ───────────────────────────────────────────────
+
+/**
+ * CURRENCY_EXCHANGE_RATE — endpoint gratuito da Alpha Vantage.
+ * Devolve o preco actual do par em tempo real.
+ * Cache de 5 minutos em memoria para nao gastar requests desnecessarios.
+ */
+export async function fetchCurrentPrice(pair: string): Promise<number | null> {
+  // Verifica cache de preco
+  if (priceCache && Date.now() - priceCache.timestamp < PRICE_CACHE_TTL) {
+    console.log(`💱 Preco ${pair} (cache): ${priceCache.price}`);
+    return priceCache.price;
+  }
+
+  const apiKey = process.env.ALPHA_VANTAGE_KEY;
+  if (!apiKey) {
+    console.warn("ALPHA_VANTAGE_KEY nao definida");
+    return null;
+  }
+
+  const from = pair.slice(0, 3);
+  const to   = pair.slice(3);
+
+  const url = [
+    "https://www.alphavantage.co/query",
+    `?function=CURRENCY_EXCHANGE_RATE`,
+    `&from_currency=${from}`,
+    `&to_currency=${to}`,
+    `&apikey=${apiKey}`,
+  ].join("");
+
+  try {
+    const res  = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+
+    if (data["Note"] || data["Information"]) {
+      console.warn("CURRENCY_EXCHANGE_RATE rate limit:", (data["Note"] ?? data["Information"]).slice(0, 150));
+      return priceCache?.price ?? null;
+    }
+
+    const rate = data?.["Realtime Currency Exchange Rate"]?.["5. Exchange Rate"];
+    if (!rate) {
+      console.warn("CURRENCY_EXCHANGE_RATE: campo Exchange Rate nao encontrado");
+      return null;
+    }
+
+    const price = parseFloat(parseFloat(rate).toFixed(5));
+    priceCache = { price, timestamp: Date.now() };
+    console.log(`💱 Preco actual ${pair}: ${price}`);
+    return price;
+
+  } catch (error) {
+    console.error("fetchCurrentPrice error:", error);
+    return priceCache?.price ?? null;
+  }
+}
+
+// ─── Dados historicos (candles diarios) ──────────────────────────────────────
+
+/**
+ * FX_DAILY — endpoint gratuito da Alpha Vantage.
+ * Devolve candles diarios para analise de tendencia, suporte/resistencia,
+ * volatilidade e momentum.
+ * Cache persistente no Supabase — partilhado entre todas as instancias Vercel.
+ * Actualiza no maximo 1 vez por hora.
+ */
 export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> {
   const supabase = createAdminClient();
 
@@ -25,27 +98,25 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
       const age = Date.now() - new Date(cached.fetched_at).getTime();
       if (age < ONE_HOUR_MS) {
         const remaining = Math.round((ONE_HOUR_MS - age) / 60_000);
-        console.log(`📦 Alpha Vantage: Cache hit para ${pair} (expira em ${remaining}min)`);
+        console.log(`📦 Alpha Vantage: Cache Supabase hit para ${pair} (expira em ${remaining}min)`);
         return cached.data as AlphaResult;
       }
       console.log(`⏰ Alpha Vantage: Cache expirado para ${pair} — a fazer request`);
     }
   } catch {
-    console.log(`ℹ️ Alpha Vantage: Sem cache para ${pair}`);
+    console.log(`Alpha Vantage: Sem cache para ${pair} — primeiro request`);
   }
 
-  // ── 2. Fetch à API ────────────────────────────────────────────────────────
+  // ── 2. Fetch a API ─────────────────────────────────────────────────────────
   const apiKey = process.env.ALPHA_VANTAGE_KEY;
   if (!apiKey) {
-    console.warn("⚠️ ALPHA_VANTAGE_KEY não definida");
+    console.warn("ALPHA_VANTAGE_KEY nao definida");
     return null;
   }
 
   const from = pair.slice(0, 3);
   const to   = pair.slice(3);
 
-  // ✅ FX_DAILY — endpoint gratuito
-  // Devolve candles diários: suficiente para tendência, S/R e momentum
   const url = [
     "https://www.alphavantage.co/query",
     `?function=FX_DAILY`,
@@ -67,7 +138,6 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
       const msg = raw["Note"] ?? raw["Information"];
       console.error(`❌ Alpha Vantage bloqueado para ${pair}:`, msg.slice(0, 200));
 
-      // Devolve cache antigo mesmo expirado se existir
       const { data: stale } = await supabase
         .from("market_data_cache")
         .select("data")
@@ -75,16 +145,15 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
         .single();
 
       if (stale) {
-        console.warn(`⚠️ A usar cache de emergência para ${pair}`);
+        console.warn(`⚠️ Cache de emergencia para ${pair}`);
         return stale.data as AlphaResult;
       }
       return null;
     }
 
-    // ✅ FX_DAILY retorna "Time Series FX (Daily)"
     const timeSeries = raw["Time Series FX (Daily)"];
     if (!timeSeries) {
-      console.warn(`⚠️ Sem time series para ${pair}. Resposta:`, JSON.stringify(raw).slice(0, 300));
+      console.warn(`Sem time series para ${pair}. Resposta:`, JSON.stringify(raw).slice(0, 300));
       return null;
     }
 
@@ -119,14 +188,14 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
 
     console.log(
       `✅ Alpha Vantage: ${pair} guardado em cache — ` +
-      `preco: ${result.latestPrice}, tendencia: ${marketContext.trend} (${marketContext.trendStrength})`
+      `tendencia: ${marketContext.trend} (${marketContext.trendStrength}), ` +
+      `suporte: ${marketContext.support}, resistencia: ${marketContext.resistance}`
     );
     return result;
 
   } catch (error) {
-    console.error(`❌ Alpha Vantage error para ${pair}:`, error);
+    console.error(`Alpha Vantage error para ${pair}:`, error);
 
-    // Fallback de emergência
     try {
       const { data: stale } = await supabase
         .from("market_data_cache")
@@ -134,7 +203,7 @@ export async function fetchAlphaVantageData(pair: string): Promise<AlphaResult> 
         .eq("pair", pair)
         .single();
       if (stale) {
-        console.warn(`⚠️ Cache de emergência para ${pair}`);
+        console.warn(`Cache de emergencia para ${pair}`);
         return stale.data as AlphaResult;
       }
     } catch {}
