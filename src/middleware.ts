@@ -3,20 +3,22 @@ import type { NextRequest } from "next/server";
 import { createMiddlewareClient } from "@/utils/supabase/middleware";
 
 export async function middleware(req: NextRequest) {
-  // ✅ response mutável — o middleware client pode atualizar cookies
   let res = NextResponse.next({
     request: { headers: req.headers },
   });
 
-  // ✅ usa o client correto para middleware (não server.ts)
   const supabase = createMiddlewareClient(req, res);
 
-  // Renova a sessão se expirada (não usar getSession — usa getUser para validar server-side)
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const { pathname } = req.nextUrl;
+
+  // ✅ Rotas de callback e reset nunca devem ser interceptadas
+  // O Supabase precisa de processar o token antes de qualquer redirect
+  const isAuthCallback = pathname === "/auth/callback";
+  const isResetPassword = pathname === "/auth/resetPassword";
 
   const isAuthPage = pathname.startsWith("/auth");
 
@@ -27,11 +29,14 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/performance") ||
     pathname.startsWith("/my-account");
 
+  // Rota protegida sem sessão — redireciona para login
   if (!user && isProtectedRoute) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  if (user && isAuthPage) {
+  // ✅ Utilizador autenticado em página de auth
+  // MAS nunca redireciona callback nem reset — essas rotas processam tokens
+  if (user && isAuthPage && !isAuthCallback && !isResetPassword) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
