@@ -269,13 +269,15 @@ function robustParse(
     return m ? m[1] : undefined;
   }
 
-  // ✅ Extrai preco e valida se e realista para EURUSD (0.5 a 2.0)
-  // Rejeita valores truncados como "1" solto que causavam stop loss errado
-  function extractPrice(key: string): number | undefined {
+  // ✅ Extrai preco, valida intervalo realista (0.5–5.0)
+  // E valida distancia maxima do entry (200 pips = 0.0200 para EURUSD)
+  // Rejeita valores truncados como "1.1" que causavam SL de 490 pips
+  function extractPrice(key: string, entryRef?: number): number | undefined {
     const m = text.match(new RegExp(`"${key}"\\s*:\\s*([0-9]+\\.?[0-9]*)`, "i"));
     if (!m) return undefined;
     const val = parseFloat(m[1]);
     if (val < 0.5 || val > 5.0) return undefined;
+    if (entryRef && Math.abs(val - entryRef) > 0.0200) return undefined;
     return parseFloat(val.toFixed(5));
   }
 
@@ -290,16 +292,15 @@ function robustParse(
 
   const entry = extractPrice("entry_price") ?? price;
 
-  // ✅ Se SL ou TP forem invalidos ou truncados, calcula a partir do entry
-  // BUY:  SL abaixo do entry, TP acima
-  // SELL: SL acima do entry, TP abaixo
-  const sl = extractPrice("stop_loss") ??
+  // ✅ SL e TP validados com distancia maxima de 200 pips do entry
+  // Fallback calculado com base no sinal se valor for invalido
+  const sl = extractPrice("stop_loss", entry) ??
     parseFloat((signal === "BUY"
       ? entry - 0.0030
       : entry + 0.0030
     ).toFixed(5));
 
-  const tp = extractPrice("take_profit") ??
+  const tp = extractPrice("take_profit", entry) ??
     parseFloat((signal === "BUY"
       ? entry + 0.0060
       : entry - 0.0060
@@ -328,17 +329,21 @@ function normalizeResult(
   fallbackTimeframe: string
 ): GeminiAnalysisResult {
   const entry = parseFloat(String(parsed.entry_price)) || latestPrice;
-
-  // ✅ Valida SL e TP — rejeita valores fora do intervalo realista
-  const rawSL = parseFloat(String(parsed.stop_loss));
-  const rawTP = parseFloat(String(parsed.take_profit));
   const signal: string = parsed.signal ?? "NEUTRAL";
 
-  const sl = (rawSL >= 0.5 && rawSL <= 5.0)
+  const rawSL = parseFloat(String(parsed.stop_loss));
+  const rawTP = parseFloat(String(parsed.take_profit));
+
+  // ✅ Valida SL e TP — rejeita valores fora do intervalo realista
+  // OU demasiado longe do entry (mais de 200 pips = 0.0200)
+  const slValid = rawSL >= 0.5 && rawSL <= 5.0 && Math.abs(rawSL - entry) <= 0.0200;
+  const tpValid = rawTP >= 0.5 && rawTP <= 5.0 && Math.abs(rawTP - entry) <= 0.0200;
+
+  const sl = slValid
     ? parseFloat(rawSL.toFixed(5))
     : parseFloat((signal === "BUY" ? entry - 0.0030 : entry + 0.0030).toFixed(5));
 
-  const tp = (rawTP >= 0.5 && rawTP <= 5.0)
+  const tp = tpValid
     ? parseFloat(rawTP.toFixed(5))
     : parseFloat((signal === "BUY" ? entry + 0.0060 : entry - 0.0060).toFixed(5));
 
