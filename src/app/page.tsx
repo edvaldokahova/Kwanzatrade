@@ -148,8 +148,8 @@ export default function Home() {
 {/* SOBRE */}
 <section className="border-t border-gray-800 py-24 px-6">
   <div className="max-w-4xl mx-auto text-center">
-    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
-            KWANZA<span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">TRADE?
+    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-center">
+            <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">KWANZATRADE?
             </span>
            </h1>
 
@@ -188,7 +188,7 @@ export default function Home() {
       />
     </div>
 
-    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-center">
             <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24
             </span>
            </h1>
