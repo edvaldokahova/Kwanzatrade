@@ -546,3 +546,4 @@ export default function LiveSignals() {
       </div>
     </div>
   );
+}
