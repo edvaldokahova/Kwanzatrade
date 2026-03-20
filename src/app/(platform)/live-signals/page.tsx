@@ -27,71 +27,46 @@ type Signal = {
 
 const TIMEFRAMES = ["All", "M1", "M5", "M15", "H1", "H4"];
 
-// ─── Calcula próxima actualização (13:00 UTC = 14:00 Angola) ─────────────────
-
 function getNextUpdateInfo(): { lastScheduled: Date; next: Date } {
   const now = new Date();
-
-  // Próximo 13:00 UTC
   const next = new Date(now);
   next.setUTCHours(13, 0, 0, 0);
-  if (now.getUTCHours() >= 13) {
-    next.setUTCDate(next.getUTCDate() + 1);
-  }
-
-  // Último 13:00 UTC agendado
+  if (now.getUTCHours() >= 13) next.setUTCDate(next.getUTCDate() + 1);
   const lastScheduled = new Date(next);
   lastScheduled.setUTCDate(lastScheduled.getUTCDate() - 1);
-
   return { lastScheduled, next };
 }
 
 function formatAngolaTime(date: Date): string {
   return date.toLocaleTimeString("pt-BR", {
-    timeZone: "Africa/Luanda",
-    hour: "2-digit",
-    minute: "2-digit",
+    timeZone: "Africa/Luanda", hour: "2-digit", minute: "2-digit",
   });
 }
 
 function formatAngolaDateTime(date: Date): string {
   return date.toLocaleDateString("pt-BR", {
-    timeZone: "Africa/Luanda",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    timeZone: "Africa/Luanda", day: "2-digit", month: "2-digit",
+    hour: "2-digit", minute: "2-digit",
   });
 }
 
-// ─── Contador regressivo ──────────────────────────────────────────────────────
-
 function CountdownToNext({ nextUpdate }: { nextUpdate: Date }) {
   const [remaining, setRemaining] = useState("");
-
   useEffect(() => {
     function tick() {
       const diff = nextUpdate.getTime() - Date.now();
       if (diff <= 0) { setRemaining("A actualizar..."); return; }
-
       const h = Math.floor(diff / 3_600_000);
       const m = Math.floor((diff % 3_600_000) / 60_000);
       const s = Math.floor((diff % 60_000) / 1_000);
-
-      setRemaining(
-        `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
-      );
+      setRemaining(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
     }
-
     tick();
     const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
   }, [nextUpdate]);
-
   return <span className="font-mono text-[#00FFB2] font-black">{remaining}</span>;
 }
-
-// ─── Trend icon ───────────────────────────────────────────────────────────────
 
 function TrendIcon({ trend }: { trend?: string }) {
   if (!trend) return null;
@@ -101,7 +76,104 @@ function TrendIcon({ trend }: { trend?: string }) {
   return <Minus className="w-3.5 h-3.5 text-gray-500" />;
 }
 
-// ─── Página ───────────────────────────────────────────────────────────────────
+// ─── Card mobile ──────────────────────────────────────────────────────────────
+
+function SignalCard({ s }: { s: Signal }) {
+  const isBuy = s.signal?.toUpperCase().includes("BUY");
+
+  return (
+    <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-5 space-y-4">
+
+      {/* Linha 1: Par + Sinal + Hora */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div>
+            <span className="text-white font-black text-lg tracking-tight italic">
+              {s.pair}
+            </span>
+            {s.market_session && (
+              <p className="text-[9px] text-gray-600 font-mono mt-0.5">
+                · {s.market_session}
+              </p>
+            )}
+          </div>
+
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border font-black text-[10px] uppercase tracking-wider ${
+            s.isHighProb
+              ? "bg-yellow-500 border-yellow-400 text-black"
+              : s.isTop10
+              ? "bg-green-600 border-green-500 text-white"
+              : isBuy
+              ? "bg-gray-900 border-green-500/30 text-green-400"
+              : "bg-gray-900 border-red-500/30 text-red-400"
+          }`}>
+            {s.isTop10  && <Zap      size={10} className="fill-current" />}
+            {s.isTopVol && <Activity size={10} />}
+            {s.signal}
+          </div>
+
+          {s.isHighProb && (
+            <div className="bg-yellow-400/10 p-1 rounded-lg border border-yellow-400/20">
+              <Target className="w-3.5 h-3.5 text-yellow-500 animate-pulse" />
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 text-gray-500 text-[10px] font-mono">
+          <Clock size={10} />
+          {new Date(s.created_at).toLocaleTimeString("pt-BR", {
+            hour: "2-digit", minute: "2-digit",
+          })}
+        </div>
+      </div>
+
+      {/* Linha 2: Confiança + Tendência + TF */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-gray-800/60 rounded-xl px-3 py-2 text-center">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">
+            Confianca
+          </p>
+          <p className={`font-black text-sm ${s.confidence >= 80 ? "text-yellow-400" : "text-blue-400"}`}>
+            {s.confidence}%
+          </p>
+          <div className="h-1 bg-gray-700 rounded-full overflow-hidden mt-1">
+            <div
+              className={`h-full rounded-full ${s.confidence >= 80 ? "bg-yellow-400" : "bg-blue-500"}`}
+              style={{ width: `${s.confidence}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="bg-gray-800/60 rounded-xl px-3 py-2 text-center">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">
+            Tendencia
+          </p>
+          <div className="flex items-center justify-center gap-1">
+            <TrendIcon trend={s.trend} />
+            <span className={`text-[10px] font-black capitalize ${
+              s.trend === "bullish" ? "text-green-400"
+              : s.trend === "bearish" ? "text-red-400"
+              : "text-gray-500"
+            }`}>
+              {s.trend ?? "—"}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-gray-800/60 rounded-xl px-3 py-2 text-center">
+          <p className="text-[9px] text-gray-500 uppercase tracking-wider font-bold mb-0.5">
+            TF
+          </p>
+          <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded text-[10px] font-black font-mono border border-gray-600">
+            {s.timeframe}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Pagina ───────────────────────────────────────────────────────────────────
 
 export default function LiveSignals() {
   const supabase = useMemo(() => createClient(), []);
@@ -116,16 +188,13 @@ export default function LiveSignals() {
   const audioRef        = useRef<HTMLAudioElement | null>(null);
   const isMutedRef      = useRef(isMuted);
 
-  // Info de agendamento (recalcula uma vez por render)
-  const { lastScheduled, next: nextUpdate } = getNextUpdateInfo();
+  const { next: nextUpdate } = getNextUpdateInfo();
 
   useEffect(() => { isMutedRef.current = isMuted; }, [isMuted]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      audioRef.current = new Audio(
-        "https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"
-      );
+      audioRef.current = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
       audioRef.current.volume = 0.4;
     }
   }, []);
@@ -139,9 +208,7 @@ export default function LiveSignals() {
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (timeframeFilter !== "All") {
-        query = query.eq("timeframe", timeframeFilter);
-      }
+      if (timeframeFilter !== "All") query = query.eq("timeframe", timeframeFilter);
 
       const { data: signalsData, error: signalsError } = await query;
       if (signalsError) throw signalsError;
@@ -189,20 +256,11 @@ export default function LiveSignals() {
     return () => clearInterval(interval);
   }, [fetchSignals]);
 
-  // Data do sinal mais recente na BD
-  const latestSignalDate = signals.length > 0
-    ? new Date(signals[0].created_at)
-    : null;
+  const latestSignalDate = signals.length > 0 ? new Date(signals[0].created_at) : null;
 
   return (
     <div className="relative min-h-screen">
-      <Image
-        src="/hero-b.webp"
-        alt="Background"
-        fill
-        priority
-        className="object-cover opacity-10"
-      />
+      <Image src="/hero-b.webp" alt="Background" fill priority className="object-cover opacity-10" />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/85 to-black" />
 
       <div className="relative z-10 max-w-6xl mx-auto py-10 px-4 space-y-8">
@@ -224,16 +282,12 @@ export default function LiveSignals() {
 
               <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-[10px] text-red-500 font-black uppercase tracking-[0.2em]">
-                  Live Stream
-                </span>
+                <span className="text-[10px] text-red-500 font-black uppercase tracking-[0.2em]">Live Stream</span>
               </div>
 
               <div className="flex items-center gap-1.5 bg-[#00FFB2]/10 px-3 py-1 rounded-full border border-[#00FFB2]/20">
                 <span className="w-1.5 h-1.5 bg-[#00FFB2] rounded-full animate-pulse" />
-                <span className="text-[10px] text-[#00FFB2] font-black uppercase tracking-[0.2em]">
-                  EUR/USD
-                </span>
+                <span className="text-[10px] text-[#00FFB2] font-black uppercase tracking-[0.2em]">EUR/USD</span>
               </div>
 
               <button
@@ -258,9 +312,7 @@ export default function LiveSignals() {
             {lastUpdate && (
               <p className="text-[10px] text-gray-600 font-mono">
                 Pagina actualizada:{" "}
-                {lastUpdate.toLocaleTimeString("pt-BR", {
-                  hour: "2-digit", minute: "2-digit", second: "2-digit",
-                })}
+                {lastUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
               </p>
             )}
           </div>
@@ -283,62 +335,72 @@ export default function LiveSignals() {
           </div>
         </div>
 
-        {/* ✅ Painel de agendamento — Ultima + Proxima actualizacao */}
+        {/* Painel de agendamento */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-          {/* Ultima actualizacao dos sinais */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 flex items-center gap-4">
             <Clock className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <div>
               <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold mb-0.5">
-                Ultima actualizacao dos sinais
+                Ultima actualizacao
               </p>
               <p className="text-sm font-bold text-white">
-                {latestSignalDate
-                  ? formatAngolaDateTime(latestSignalDate)
-                  : "Sem dados ainda"}
+                {latestSignalDate ? formatAngolaDateTime(latestSignalDate) : "Sem dados ainda"}
               </p>
               <p className="text-[9px] text-gray-600 mt-0.5">hora de Angola</p>
             </div>
           </div>
 
-          {/* Proxima actualizacao agendada */}
           <div className="bg-[#00FFB2]/5 border border-[#00FFB2]/20 rounded-2xl px-5 py-4 flex items-center gap-4">
             <CalendarClock className="w-5 h-5 text-[#00FFB2] flex-shrink-0" />
             <div>
               <p className="text-[9px] text-[#00FFB2]/60 uppercase tracking-widest font-bold mb-0.5">
-                Proxima actualizacao
+                Proxima actualizacao cron
               </p>
-              <p className="text-sm font-bold text-white">
-                {formatAngolaTime(nextUpdate)} Angola
-              </p>
+              <p className="text-sm font-bold text-white">{formatAngolaTime(nextUpdate)} Angola</p>
               <p className="text-[9px] text-gray-600 mt-0.5">
-                {nextUpdate.toLocaleDateString("pt-BR", {
-                  timeZone: "Africa/Luanda",
-                  day: "2-digit",
-                  month: "2-digit",
-                })}
+                {nextUpdate.toLocaleDateString("pt-BR", { timeZone: "Africa/Luanda", day: "2-digit", month: "2-digit" })}
               </p>
             </div>
           </div>
 
-          {/* Contador regressivo */}
           <div className="bg-gray-900/50 border border-gray-800 rounded-2xl px-5 py-4 flex items-center gap-4">
             <RefreshCw className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <div>
               <p className="text-[9px] text-gray-600 uppercase tracking-widest font-bold mb-0.5">
-                Tempo para proxima
+                Tempo para cron
               </p>
               <CountdownToNext nextUpdate={nextUpdate} />
-              <p className="text-[9px] text-gray-600 mt-0.5">
-                1 actualizacao por dia (plano actual)
-              </p>
+              <p className="text-[9px] text-gray-600 mt-0.5">1 cron/dia + analises manuais</p>
             </div>
           </div>
         </div>
 
-        {/* Tabela */}
-        <div className="bg-gray-950/60 backdrop-blur-md rounded-[2rem] border border-gray-800/60 overflow-hidden">
+        {/* ── MOBILE: cards ─────────────────────────────────────────────── */}
+        <div className="block md:hidden space-y-3">
+          {loading ? (
+            <div className="flex flex-col items-center gap-4 py-16">
+              <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent animate-spin rounded-full" />
+              <span className="text-gray-400 text-xs font-black uppercase tracking-widest">
+                Scanning Market Pulse...
+              </span>
+            </div>
+          ) : signals.length === 0 ? (
+            <div className="text-center py-16 space-y-2">
+              <p className="text-gray-500 text-xs font-bold uppercase">
+                Nenhum sinal EUR/USD no momento.
+              </p>
+              <p className="text-gray-600 text-[10px]">
+                Proximo cron as{" "}
+                <span className="text-[#00FFB2] font-bold">{formatAngolaTime(nextUpdate)} Angola</span>
+              </p>
+            </div>
+          ) : (
+            signals.map((s) => <SignalCard key={s.id} s={s} />)
+          )}
+        </div>
+
+        {/* ── DESKTOP: tabela ───────────────────────────────────────────── */}
+        <div className="hidden md:block bg-gray-950/60 backdrop-blur-md rounded-[2rem] border border-gray-800/60 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-gray-900/80 border-b border-gray-800 text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
@@ -371,16 +433,13 @@ export default function LiveSignals() {
                       </p>
                       <p className="text-gray-600 text-[10px] normal-case mt-2">
                         O proximo sinal sera gerado as{" "}
-                        <span className="text-[#00FFB2] font-bold">
-                          {formatAngolaTime(nextUpdate)} (Angola)
-                        </span>
+                        <span className="text-[#00FFB2] font-bold">{formatAngolaTime(nextUpdate)} (Angola)</span>
                       </p>
                     </td>
                   </tr>
                 ) : (
                   signals.map((s) => (
                     <tr key={s.id} className="group hover:bg-blue-600/[0.04] transition-all">
-
                       <td className="p-5">
                         <div className="flex items-center gap-3">
                           <div>
@@ -388,13 +447,9 @@ export default function LiveSignals() {
                               {s.pair}
                             </span>
                             <div className="flex items-center gap-1 mt-0.5">
-                              <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">
-                                Bot24 Verified
-                              </span>
+                              <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Bot24 Verified</span>
                               {s.market_session && (
-                                <span className="text-[9px] text-gray-700 font-mono ml-1">
-                                  · {s.market_session}
-                                </span>
+                                <span className="text-[9px] text-gray-700 font-mono ml-1">· {s.market_session}</span>
                               )}
                             </div>
                           </div>
@@ -408,13 +463,11 @@ export default function LiveSignals() {
 
                       <td className="p-5 text-center">
                         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl border font-black text-[10px] uppercase tracking-wider ${
-                          s.isHighProb
-                            ? "bg-yellow-500 border-yellow-400 text-black"
-                            : s.isTop10
-                            ? "bg-green-600 border-green-500 text-white"
-                            : s.signal?.toUpperCase().includes("BUY")
-                            ? "bg-gray-900 border-green-500/30 text-green-400"
-                            : "bg-gray-900 border-red-500/30 text-red-400"
+                          s.isHighProb ? "bg-yellow-500 border-yellow-400 text-black"
+                          : s.isTop10  ? "bg-green-600 border-green-500 text-white"
+                          : s.signal?.toUpperCase().includes("BUY")
+                          ? "bg-gray-900 border-green-500/30 text-green-400"
+                          : "bg-gray-900 border-red-500/30 text-red-400"
                         }`}>
                           {s.isTop10  && <Zap      size={12} className="fill-current" />}
                           {s.isTopVol && <Activity size={12} />}
@@ -429,9 +482,7 @@ export default function LiveSignals() {
                           </span>
                           <div className="w-20 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-1000 ${
-                                s.confidence >= 80 ? "bg-yellow-400" : "bg-blue-500"
-                              }`}
+                              className={`h-full rounded-full transition-all duration-1000 ${s.confidence >= 80 ? "bg-yellow-400" : "bg-blue-500"}`}
                               style={{ width: `${s.confidence}%` }}
                             />
                           </div>
@@ -491,7 +542,7 @@ export default function LiveSignals() {
             </div>
           ))}
         </div>
+
       </div>
     </div>
   );
-}
