@@ -42,7 +42,7 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
   const supabase    = createAdminClient();
   const cacheKey    = `crypto_${pair}`;
 
-  // ── 1. Caches Supabase ──────────────────────────────────────────────────
+  // ── 1. Cache Supabase ──────────────────────────────────────────────────
   try {
     const { data: cached } = await supabase
       .from("market_data_cache")
