@@ -27,6 +27,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/bot24") ||
     pathname.startsWith("/live-signals") ||
     pathname.startsWith("/performance") ||
+    pathname.startsWith("/sigma") ||
     pathname.startsWith("/my-account");
 
   // Rota protegida sem sessão — redireciona para login
@@ -50,6 +51,7 @@ export const config = {
     "/live-signals/:path*",
     "/performance/:path*",
     "/my-account/:path*",
+    "/sigma/:path*",
     "/auth/:path*",
   ],
 };
