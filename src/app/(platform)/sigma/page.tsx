@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 import {
-  Zap, TrendingUp, TrendingDown, Copy, Check,
-  AlertTriangle, Clock, Flame, BarChart2,
+  Zap, Copy, Check,
+  AlertTriangle, Clock, Flame, BarChart2, ShieldAlert,
 } from "lucide-react";
 
 const PAIRS = ["BTCUSDT", "ETHUSDT"];
@@ -37,14 +37,48 @@ function CopyButton({ value }: { value: string | number }) {
   );
 }
 
+// ─── Disclaimer ───────────────────────────────────────────────────────────────
+
+function Disclaimer() {
+  return (
+    <div className="bg-gray-900/60 border border-gray-700 rounded-2xl p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <ShieldAlert className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+        <p className="text-[11px] font-black text-yellow-400 uppercase tracking-widest">
+          Aviso de Risco — Leia antes de operar
+        </p>
+      </div>
+      <p className="text-[11px] text-gray-400 leading-relaxed">
+        O <strong className="text-white">SIGMA BOT</strong> fornece análise técnica baseada em dados
+        de mercado reais (preço, candles, Fear & Greed, funding rate). <strong className="text-white">Não
+        é aconselhamento financeiro.</strong> Criptomoedas são activos altamente voláteis — podes
+        perder todo o capital investido, especialmente com alavancagem.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+        {[
+          "Usa sempre conta demo antes de operar com dinheiro real",
+          "Nunca invistas mais do que podes perder",
+          "O Stop Loss é obrigatório — nunca operes sem ele",
+        ].map((item, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="text-yellow-400 text-[10px] mt-0.5 flex-shrink-0">▸</span>
+            <p className="text-[10px] text-gray-500">{item}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── ResultCard ───────────────────────────────────────────────────────────────
 
 function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
   if (!data) return null;
 
-  const isLong     = data.signal === "LONG";
-  const isNeutral  = data.signal === "NEUTRAL";
-  const fearColor  =
+  const isLong    = data.signal === "LONG";
+  const isNeutral = data.signal === "NEUTRAL";
+
+  const fearColor =
     data.fearGreed >= 75 ? "text-red-400"    :
     data.fearGreed >= 55 ? "text-yellow-400" :
     data.fearGreed <= 25 ? "text-green-400"  :
@@ -59,30 +93,30 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
       <div className="absolute inset-0 bg-gradient-to-br from-[#F7931A]/5 via-transparent to-[#627EEA]/5 pointer-events-none" />
 
       {/* Header do card */}
-<div className="relative flex items-center justify-between flex-wrap gap-3">
-  <div className="flex items-center gap-3">
-    <div className="flex items-center gap-2 bg-[#F7931A]/10 border border-[#F7931A]/30 px-3 py-1.5 rounded-full">
-      <Zap className="w-3 h-3 text-[#F7931A]" />
-      <span className="text-[10px] font-black uppercase tracking-widest text-[#F7931A]">
-        SIGMA BOT
-      </span>
-    </div>
-    <h2 className="text-xl font-bold text-white">{data.pair}</h2>
-  </div>
-  <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
-    isLong    ? "bg-green-500/10 border-green-500/20 text-green-400" :
-    isNeutral ? "bg-gray-800 border-gray-700 text-gray-400" :
-                "bg-red-500/10 border-red-500/20 text-red-400"
-  }`}>
-    {data.signal}
-  </span>
-</div>
+      <div className="relative flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-[#F7931A]/10 border border-[#F7931A]/30 px-3 py-1.5 rounded-full">
+            <Zap className="w-3 h-3 text-[#F7931A]" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-[#F7931A]">
+              SIGMA BOT
+            </span>
+          </div>
+          <h2 className="text-xl font-bold text-white">{data.pair}</h2>
+        </div>
+        <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
+          isLong    ? "bg-green-500/10 border-green-500/20 text-green-400" :
+          isNeutral ? "bg-gray-800 border-gray-700 text-gray-400" :
+                      "bg-red-500/10 border-red-500/20 text-red-400"
+        }`}>
+          {data.signal}
+        </span>
+      </div>
 
       {/* Reasoning */}
       {data.reasoning && (
         <div className="relative bg-[#F7931A]/5 border border-[#F7931A]/20 p-4 rounded-xl">
           <p className="text-[10px] text-[#F7931A]/80 uppercase tracking-wider mb-1 font-bold">
-            Raciocínio SIGMA
+            Raciocinio SIGMA
           </p>
           <p className="text-sm text-gray-300 italic leading-relaxed">{data.reasoning}</p>
         </div>
@@ -91,7 +125,7 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
       {/* Sinal + Confiança + Score */}
       <div className="relative grid grid-cols-3 gap-4">
         {[
-          { label: "Sinal",     value: data.signal,          color: isLong ? "text-green-400" : isNeutral ? "text-gray-400" : "text-red-400" },
+          { label: "Sinal",     value: data.signal,           color: isLong ? "text-green-400" : isNeutral ? "text-gray-400" : "text-red-400" },
           { label: "Confianca", value: `${data.confidence}%`, color: "text-[#F7931A]" },
           { label: "Score",     value: data.score,            color: "text-white" },
         ].map(({ label, value, color }) => (
@@ -119,9 +153,9 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
       {/* Entry, SL, TP com copy */}
       <div className="relative grid grid-cols-3 gap-4">
         {[
-          { label: "Entry Price",  value: data.entry,     color: "text-blue-400" },
-          { label: "Stop Loss",    value: data.stopLoss,  color: "text-red-400" },
-          { label: "Take Profit",  value: data.takeProfit,color: "text-green-400" },
+          { label: "Entry Price", value: data.entry,      color: "text-blue-400" },
+          { label: "Stop Loss",   value: data.stopLoss,   color: "text-red-400" },
+          { label: "Take Profit", value: data.takeProfit, color: "text-green-400" },
         ].map(({ label, value, color }) => (
           <div key={label} className="p-4 rounded-xl bg-gray-800/60 border border-[#F7931A]/10">
             <div className="flex items-center justify-between mb-1">
@@ -135,7 +169,7 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
         ))}
       </div>
 
-      {/* Futures fields — exclusivos do SIGMA */}
+      {/* Futures fields */}
       <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-gray-800/60 border border-[#F7931A]/10">
           <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Alavancagem</p>
@@ -167,9 +201,7 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
             <p className="text-2xl font-bold text-white">{data.positionSize}</p>
             <CopyButton value={data.positionSize} />
           </div>
-          <p className="text-[9px] text-gray-600 mt-0.5">
-            {data.pair.replace("USDT", "")}
-          </p>
+          <p className="text-[9px] text-gray-600 mt-0.5">{data.pair.replace("USDT", "")}</p>
         </div>
       </div>
 
@@ -185,7 +217,7 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
         </div>
       </div>
 
-      {/* Derivatives Intelligence */}
+      {/* Derivatives */}
       <div className="relative grid grid-cols-2 gap-4">
         <div className="p-4 rounded-xl bg-gray-800/60 border border-gray-700">
           <div className="flex items-center gap-2 mb-2">
@@ -209,9 +241,7 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
             <Flame className="w-3 h-3 text-gray-400" />
             <p className="text-gray-400 text-xs uppercase tracking-wider">Fear & Greed</p>
           </div>
-          <p className={`text-xl font-bold ${fearColor}`}>
-            {data.fearGreed}/100
-          </p>
+          <p className={`text-xl font-bold ${fearColor}`}>{data.fearGreed}/100</p>
           <p className="text-[9px] text-gray-600 mt-0.5">{data.fearGreedLabel}</p>
         </div>
       </div>
@@ -281,21 +311,17 @@ export default function SigmaPage() {
     if (isAnalyzing) return;
     setErrorMsg(null);
     setIsAnalyzing(true);
-
     try {
       const res = await fetch("/api/sigma/analyze", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ pair, capital, leverage, risk, traderLevel }),
       });
-
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Erro na analise");
       }
-
-      const data = await res.json();
-      setResult(data);
+      setResult(await res.json());
     } catch (err: any) {
       setErrorMsg(err.message || "Erro ao gerar analise. Tente novamente.");
     } finally {
@@ -311,22 +337,22 @@ export default function SigmaPage() {
       <div className="relative max-w-4xl mx-auto space-y-10 py-10 px-4">
 
         {/* Header */}
-<div className="flex items-center gap-4">
-  <Image src="/sigma.svg" alt="Sigma Bot" width={60} height={60} />
-  <div>
-    <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
-      SIGMA{" "}
-      <span className="relative inline-block">
-        <span className="bg-gradient-to-r from-[#F7931A] via-[#627EEA] to-[#F7931A] bg-clip-text text-transparent animate-gradient-x">
-          BOT
-        </span>
-      </span>
-    </h1>
-    <p className="text-gray-400">
-      Inteligencia de futuros cripto — BTC & ETH — powered by Gemini 2.5 Flash
-    </p>
-  </div>
-</div>
+        <div className="flex items-center gap-4">
+          <Image src="/sigma.svg" alt="Sigma Bot" width={60} height={60} />
+          <div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
+              SIGMA{" "}
+              <span className="relative inline-block">
+                <span className="bg-gradient-to-r from-[#F7931A] via-[#627EEA] to-[#F7931A] bg-clip-text text-transparent animate-gradient-x">
+                  BOT
+                </span>
+              </span>
+            </h1>
+            <p className="text-gray-400">
+              Inteligencia de futuros cripto — BTC & ETH — powered by Gemini 2.5 Flash
+            </p>
+          </div>
+        </div>
 
         {/* Badges */}
         <div className="flex flex-wrap items-center gap-3">
@@ -453,13 +479,17 @@ export default function SigmaPage() {
                 A analisar {pair}...
               </span>
             ) : (
-              `▶ Iniciar Análise ${pair}`
+              `▶ Iniciar Analise ${pair}`
             )}
           </button>
         </div>
 
-        {/* Resultado */}
+        {/* ✅ Disclaimer — fixo abaixo do formulario, sempre visivel */}
+        <Disclaimer />
+
+        {/* Resultado — aparece abaixo do disclaimer quando existe */}
         {result && <SigmaResultCard data={result} capital={capital} />}
+
       </div>
     </div>
   );
