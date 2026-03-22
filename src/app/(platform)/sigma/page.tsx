@@ -59,31 +59,28 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
       <div className="absolute inset-0 bg-gradient-to-br from-[#F7931A]/5 via-transparent to-[#627EEA]/5 pointer-events-none" />
 
       {/* Header */}
-      <div className="relative flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#F7931A]/10 border border-[#F7931A]/30 px-3 py-1.5 rounded-full">
-            <Zap className="w-3 h-3 text-[#F7931A]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#F7931A]">
-              SIGMA BOT
-            </span>
-          </div>
-          <h2 className="text-xl font-bold text-white">{data.pair}</h2>
-        </div>
-
-        <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
-          isLong    ? "bg-green-500/10 border-green-500/20 text-green-400" :
-          isNeutral ? "bg-gray-800 border-gray-700 text-gray-400" :
-                      "bg-red-500/10 border-red-500/20 text-red-400"
-        }`}>
-          {data.signal}
+<div className="flex items-center gap-4">
+  <Image src="/sigma.svg" alt="Sigma Bot" width={60} height={60} />
+  <div>
+    <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
+      SIGMA{" "}
+      <span className="relative inline-block">
+        <span className="bg-gradient-to-r from-[#F7931A] via-[#627EEA] to-[#F7931A] bg-clip-text text-transparent animate-gradient-x">
+          BOT
         </span>
-      </div>
+      </span>
+    </h1>
+    <p className="text-gray-400">
+      Inteligência de futuros cripto — BTC & ETH — powered by Gemini 2.5 Flash
+    </p>
+  </div>
+</div>
 
       {/* Reasoning */}
       {data.reasoning && (
         <div className="relative bg-[#F7931A]/5 border border-[#F7931A]/20 p-4 rounded-xl">
           <p className="text-[10px] text-[#F7931A]/80 uppercase tracking-wider mb-1 font-bold">
-            Raciocinio SIGMA
+            Raciocínio SIGMA
           </p>
           <p className="text-sm text-gray-300 italic leading-relaxed">{data.reasoning}</p>
         </div>
@@ -456,7 +453,7 @@ export default function SigmaPage() {
                 A analisar {pair}...
               </span>
             ) : (
-              `▶ Analisar ${pair}`
+              `▶ Iniciar Análise ${pair}`
             )}
           </button>
         </div>
