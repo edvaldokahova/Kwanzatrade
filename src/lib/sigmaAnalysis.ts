@@ -225,7 +225,7 @@ export async function runSigmaAnalysis(input: SigmaUserInput): Promise<SigmaResu
 
   if (!cryptoData) {
     console.error(`SIGMA: Sem dados de mercado para ${pair}`);
-    return getDefaultSigmaResult(pair, cryptoData?.market.currentPrice ?? 0);
+    return getDefaultSigmaResult(pair, 0);
   }
 
   const currentPrice = cryptoData.market.currentPrice;
