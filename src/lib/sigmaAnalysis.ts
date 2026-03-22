@@ -1,4 +1,4 @@
-import { fetchCryptoData, type CoinGeckoResult }       from "./coinGeckoClient";
+import { fetchCryptoData, type CoinGeckoResult, type CryptoCandle } from "./coinGeckoClient";
 import { fetchDerivativesData, type DerivativesData }  from "./sigmaDerivatives";
 
 export interface SigmaUserInput {
@@ -72,7 +72,7 @@ function calcFutures(
 
 // ─── Candles para texto ───────────────────────────────────────────────────────
 
-function candlesToText(candles: CoinGeckoResult["candles"]): string {
+function candlesToText(candles: CryptoCandle[]): string {
   if (!candles?.length) return "N/A";
   return candles.slice(0, 10).map((c) => {
     const date = new Date(c.time).toISOString().split("T")[0];
