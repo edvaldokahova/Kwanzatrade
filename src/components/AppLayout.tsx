@@ -10,11 +10,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Plataforma tem o próprio layout com Navbar+Sidebar
   const isPlatform =
-    pathname?.startsWith("/dashboard") ||
-    pathname?.startsWith("/bot24") ||
+    pathname?.startsWith("/dashboard")    ||
+    pathname?.startsWith("/bot24")        ||
     pathname?.startsWith("/live-signals") ||
-    pathname?.startsWith("/performance") ||
-    pathname?.startsWith("/my-account");
+    pathname?.startsWith("/performance")  ||
+    pathname?.startsWith("/my-account")   ||
+    pathname?.startsWith("/sigma");
 
   return (
     <div className="flex flex-col min-h-screen">
