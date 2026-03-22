@@ -1,17 +1,17 @@
 /**
- * Dados de derivativos — Bybit Futures (publico, sem API key, sem restricoes geo)
+ * Dados de derivativos — CoinGlass (funding rate, publico, sem restricoes geo)
  * Fear & Greed Index — Alternative.me (publico, sem API key)
  */
 
 export type DerivativesData = {
-  fundingRate:      number;
-  fundingRatePct:   string;
-  fundingSentiment: "longs_dominant" | "shorts_dominant" | "neutral";
-  openInterest:     number;
+  fundingRate:        number;
+  fundingRatePct:     string;
+  fundingSentiment:   "longs_dominant" | "shorts_dominant" | "neutral";
+  openInterest:       number;
   openInterestChange: number;
-  fearGreedValue:   number;
-  fearGreedLabel:   string;
-  fearGreedSignal:  "extreme_buy" | "buy" | "neutral" | "sell" | "extreme_sell";
+  fearGreedValue:     number;
+  fearGreedLabel:     string;
+  fearGreedSignal:    "extreme_buy" | "buy" | "neutral" | "sell" | "extreme_sell";
 };
 
 let derivCache: Record<string, { data: DerivativesData; timestamp: number }> = {};
@@ -19,12 +19,6 @@ let fngCache:   { data: { value: number; label: string }; timestamp: number } | 
 
 const THIRTY_MIN = 30 * 60 * 1000;
 const SIX_HOURS  =  6 * 60 * 60 * 1000;
-
-// ✅ Bybit symbols — sem restricoes geograficas
-const BYBIT_SYMBOLS: Record<string, string> = {
-  BTCUSDT: "BTCUSDT",
-  ETHUSDT: "ETHUSDT",
-};
 
 export async function fetchDerivativesData(pair: string): Promise<DerivativesData | null> {
   const now    = Date.now();
@@ -35,31 +29,40 @@ export async function fetchDerivativesData(pair: string): Promise<DerivativesDat
     return cached.data;
   }
 
-  const symbol = BYBIT_SYMBOLS[pair];
-  if (!symbol) return null;
-
   try {
-    console.log(`Bybit + FNG: A buscar derivativos para ${pair}...`);
+    console.log(`CoinGlass + FNG: A buscar derivativos para ${pair}...`);
 
-    // ✅ Bybit V5 API — funding rate publica, sem restricoes
-    const [fundingRes, fngData] = await Promise.all([
-      fetch(
-        `https://api.bybit.com/v5/market/funding/history?category=linear&symbol=${symbol}&limit=1`,
-        { cache: "no-store" }
-      ),
-      fetchFearGreed(),
-    ]);
+    // ✅ CoinGlass open API — sem restricoes geograficas, sem API key
+    const coin    = pair.replace("USDT", "").toUpperCase(); // BTC ou ETH
+    const fngData = await fetchFearGreed();
 
     let fundingRate = 0;
 
-    if (fundingRes.ok) {
-      const fundingJson = await fundingRes.json();
-      const latestFunding = fundingJson?.result?.list?.[0];
-      if (latestFunding?.fundingRate) {
-        fundingRate = parseFloat(latestFunding.fundingRate);
+    try {
+      const res = await fetch(
+        `https://open-api.coinglass.com/public/v2/funding?symbol=${coin}`,
+        { cache: "no-store" }
+      );
+
+      if (res.ok) {
+        const data      = await res.json();
+        const exchanges: any[] = data?.data ?? [];
+
+        // Procura Binance primeiro, depois Bybit como fallback
+        const entry =
+          exchanges.find((e: any) => e.exchangeName?.toLowerCase().includes("binance")) ??
+          exchanges.find((e: any) => e.exchangeName?.toLowerCase().includes("bybit"))   ??
+          exchanges[0];
+
+        if (entry?.fundingRate != null) {
+          // CoinGlass devolve percentagem (ex: 0.01) — converte para decimal (0.0001)
+          fundingRate = parseFloat(entry.fundingRate) / 100;
+        }
+      } else {
+        console.warn(`CoinGlass HTTP ${res.status} para ${pair} — funding=0`);
       }
-    } else {
-      console.warn(`Bybit funding HTTP ${fundingRes.status} — usando 0`);
+    } catch {
+      console.warn(`CoinGlass indisponivel para ${pair} — funding=0`);
     }
 
     const fundingRatePct = `${fundingRate >= 0 ? "+" : ""}${(fundingRate * 100).toFixed(4)}%`;
@@ -67,21 +70,6 @@ export async function fetchDerivativesData(pair: string): Promise<DerivativesDat
     const fundingSentiment: DerivativesData["fundingSentiment"] =
       fundingRate >  0.0001 ? "longs_dominant"  :
       fundingRate < -0.0001 ? "shorts_dominant" : "neutral";
-
-    // ✅ Bybit Open Interest
-    let openInterest = 0;
-    try {
-      const oiRes  = await fetch(
-        `https://api.bybit.com/v5/market/open-interest?category=linear&symbol=${symbol}&intervalTime=1h&limit=1`,
-        { cache: "no-store" }
-      );
-      if (oiRes.ok) {
-        const oiJson = await oiRes.json();
-        openInterest = parseFloat(oiJson?.result?.list?.[0]?.openInterest ?? "0");
-      }
-    } catch {
-      console.warn("Bybit OI indisponivel — continuando sem OI");
-    }
 
     const fearGreedValue = fngData?.value ?? 50;
     const fearGreedLabel = fngData?.label ?? "Neutral";
@@ -96,7 +84,7 @@ export async function fetchDerivativesData(pair: string): Promise<DerivativesDat
       fundingRate,
       fundingRatePct,
       fundingSentiment,
-      openInterest,
+      openInterest:       0,
       openInterestChange: 0,
       fearGreedValue,
       fearGreedLabel,
