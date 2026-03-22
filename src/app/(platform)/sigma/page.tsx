@@ -58,22 +58,24 @@ function SigmaResultCard({ data, capital }: { data: any; capital: number }) {
     <div className="relative rounded-2xl p-8 space-y-6 backdrop-blur overflow-hidden bg-gray-900/70 border border-[#F7931A]/30">
       <div className="absolute inset-0 bg-gradient-to-br from-[#F7931A]/5 via-transparent to-[#627EEA]/5 pointer-events-none" />
 
-      {/* Header */}
-<div className="flex items-center gap-4">
-  <Image src="/sigma.svg" alt="Sigma Bot" width={60} height={60} />
-  <div>
-    <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
-      SIGMA{" "}
-      <span className="relative inline-block">
-        <span className="bg-gradient-to-r from-[#F7931A] via-[#627EEA] to-[#F7931A] bg-clip-text text-transparent animate-gradient-x">
-          BOT
-        </span>
+      {/* Header do card */}
+<div className="relative flex items-center justify-between flex-wrap gap-3">
+  <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2 bg-[#F7931A]/10 border border-[#F7931A]/30 px-3 py-1.5 rounded-full">
+      <Zap className="w-3 h-3 text-[#F7931A]" />
+      <span className="text-[10px] font-black uppercase tracking-widest text-[#F7931A]">
+        SIGMA BOT
       </span>
-    </h1>
-    <p className="text-gray-400">
-      Inteligência de futuros cripto — BTC & ETH — powered by Gemini 2.5 Flash
-    </p>
+    </div>
+    <h2 className="text-xl font-bold text-white">{data.pair}</h2>
   </div>
+  <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-lg border ${
+    isLong    ? "bg-green-500/10 border-green-500/20 text-green-400" :
+    isNeutral ? "bg-gray-800 border-gray-700 text-gray-400" :
+                "bg-red-500/10 border-red-500/20 text-red-400"
+  }`}>
+    {data.signal}
+  </span>
 </div>
 
       {/* Reasoning */}
@@ -309,24 +311,22 @@ export default function SigmaPage() {
       <div className="relative max-w-4xl mx-auto space-y-10 py-10 px-4">
 
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F7931A] to-[#627EEA] flex items-center justify-center">
-            <Zap className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
-              SIGMA{" "}
-              <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-[#F7931A] via-[#627EEA] to-[#F7931A] bg-clip-text text-transparent animate-gradient-x">
-                  BOT
-                </span>
-              </span>
-            </h1>
-            <p className="text-gray-400">
-              Inteligencia de futuros cripto — BTC & ETH — powered by Gemini 2.5 Flash
-            </p>
-          </div>
-        </div>
+<div className="flex items-center gap-4">
+  <Image src="/sigma.svg" alt="Sigma Bot" width={60} height={60} />
+  <div>
+    <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
+      SIGMA{" "}
+      <span className="relative inline-block">
+        <span className="bg-gradient-to-r from-[#F7931A] via-[#627EEA] to-[#F7931A] bg-clip-text text-transparent animate-gradient-x">
+          BOT
+        </span>
+      </span>
+    </h1>
+    <p className="text-gray-400">
+      Inteligencia de futuros cripto — BTC & ETH — powered by Gemini 2.5 Flash
+    </p>
+  </div>
+</div>
 
         {/* Badges */}
         <div className="flex flex-wrap items-center gap-3">
