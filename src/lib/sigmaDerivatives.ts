@@ -91,7 +91,7 @@ export async function fetchDerivativesData(pair: string): Promise<DerivativesDat
       fundingRatePct,
       fundingSentiment,
       openInterest:       parseFloat(oiRaw?.openInterest ?? "0"),
-      openInterestChange: 0, // simplificado
+      openInterestChange: 0, // simplificados
       fearGreedValue,
       fearGreedLabel,
       fearGreedSignal,
