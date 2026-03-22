@@ -210,7 +210,7 @@ async function callGeminiSigma(
   }
 }
 
-// ─── Export principal ─────────────────────────────────────────────────────────
+// ─── Exports principal ─────────────────────────────────────────────────────────
 
 export async function runSigmaAnalysis(input: SigmaUserInput): Promise<SigmaResult> {
   const { pair, capital, leverage, risk } = input;
