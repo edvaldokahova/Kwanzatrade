@@ -1,7 +1,7 @@
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export type CryptoCandle = {
-  time: number;   // timestamp ms
+  time: number;
   open: number;
   high: number;
   low: number;
@@ -30,7 +30,6 @@ export type CoinGeckoResult = {
   volatilityValue: number;
 } | null;
 
-// coin IDs do CoinGecko
 const COIN_IDS: Record<string, string> = {
   BTCUSDT: "bitcoin",
   ETHUSDT: "ethereum",
@@ -39,8 +38,8 @@ const COIN_IDS: Record<string, string> = {
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
-  const supabase    = createAdminClient();
-  const cacheKey    = `crypto_${pair}`;
+  const supabase = createAdminClient();
+  const cacheKey = `crypto_${pair}`;
 
   // ── 1. Cache Supabase ──────────────────────────────────────────────────
   try {
@@ -63,8 +62,8 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
   }
 
   // ── 2. Fetch ───────────────────────────────────────────────────────────
-  const apiKey  = process.env.COINGECKO_API_KEY;
-  const coinId  = COIN_IDS[pair];
+  const apiKey = process.env.COINGECKO_API_KEY;
+  const coinId = COIN_IDS[pair];
 
   if (!apiKey || !coinId) {
     console.error(`CoinGecko: API key ou coinId em falta para ${pair}`);
@@ -79,7 +78,6 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
   try {
     console.log(`📡 CoinGecko: A buscar dados para ${pair} (${coinId})...`);
 
-    // Fetch paralelo — OHLC 30 dias + market data
     const [ohlcRes, marketRes] = await Promise.all([
       fetch(
         `https://api.coingecko.com/api/v3/coins/${coinId}/ohlc?vs_currency=usd&days=30`,
@@ -105,10 +103,9 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
 
     const m = marketRaw[0];
 
-    // Converte candles
     const candles: CryptoCandle[] = ohlcRaw.map(([time, open, high, low, close]) => ({
       time, open, high, low, close,
-    })).reverse(); // mais recente primeiro
+    })).reverse();
 
     const market: CryptoMarketData = {
       currentPrice:          m.current_price,
@@ -120,7 +117,6 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
       low24h:                m.low_24h,
     };
 
-    // ── Analise tecnica ───────────────────────────────────────────────────
     const last20    = candles.slice(0, 20);
     const lastPrice = candles[0].close;
     const oldPrice  = last20[last20.length - 1].close;
@@ -142,8 +138,8 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
     const support    = Math.min(...last20.map(c => c.low));
     const resistance = Math.max(...last20.map(c => c.high));
 
-    const avgRange       = last20.reduce((s, c) => s + (c.high - c.low), 0) / last20.length;
-    const avgRangePct    = (avgRange / lastPrice) * 100;
+    const avgRange    = last20.reduce((s, c) => s + (c.high - c.low), 0) / last20.length;
+    const avgRangePct = (avgRange / lastPrice) * 100;
     const volatility: "high" | "medium" | "low" =
       avgRangePct > 3 ? "high" : avgRangePct > 1 ? "medium" : "low";
 
@@ -153,8 +149,8 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
     const result: CoinGeckoResult = {
       candles: candles.slice(0, 30),
       market,
-      support:        parseFloat(support.toFixed(2)),
-      resistance:     parseFloat(resistance.toFixed(2)),
+      support:         parseFloat(support.toFixed(2)),
+      resistance:      parseFloat(resistance.toFixed(2)),
       trend,
       trendStrength,
       momentum,
@@ -162,7 +158,6 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
       volatilityValue: parseFloat(avgRange.toFixed(2)),
     };
 
-    // ── Guarda cache ──────────────────────────────────────────────────────
     await supabase
       .from("market_data_cache")
       .upsert(
@@ -179,7 +174,6 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
   } catch (error) {
     console.error(`CoinGecko error para ${pair}:`, error);
 
-    // Fallback: cache expirado
     try {
       const { data: stale } = await supabase
         .from("market_data_cache")
@@ -193,5 +187,63 @@ export async function fetchCryptoData(pair: string): Promise<CoinGeckoResult> {
     } catch {}
 
     return null;
+  }
+}
+
+// ─── Preco actual em tempo real (cache 5 minutos em memoria) ──────────────────
+// Separado do cache de candles — preco fresco a cada 5min sem gastar quota extra
+
+let currentPriceCache: Record<string, { price: number; timestamp: number }> = {};
+const FIVE_MIN_MS = 5 * 60 * 1000;
+
+/**
+ * /simple/price — endpoint mais leve da CoinGecko.
+ * Cache de 5 minutos em memoria — em cripto 1 hora e demasiado para o preco.
+ * Candles ficam em cache 1h (estrutura muda devagar).
+ * Preco fresco a cada 5min (pode mover $500 numa hora).
+ */
+export async function fetchCryptoCurrentPrice(pair: string): Promise<number | null> {
+  const now    = Date.now();
+  const cached = currentPriceCache[pair];
+
+  if (cached && now - cached.timestamp < FIVE_MIN_MS) {
+    const age = Math.round((now - cached.timestamp) / 1000);
+    console.log(`💰 Preco ${pair} (cache ${age}s): $${cached.price.toLocaleString()}`);
+    return cached.price;
+  }
+
+  const apiKey = process.env.COINGECKO_API_KEY;
+  const coinId = COIN_IDS[pair];
+
+  if (!apiKey || !coinId) return null;
+
+  try {
+    console.log(`💰 CoinGecko: A buscar preco actual de ${pair}...`);
+
+    const res = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`,
+      {
+        headers: { "x-cg-demo-api-key": apiKey },
+        cache:   "no-store",
+      }
+    );
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data  = await res.json();
+    const price = data?.[coinId]?.usd;
+
+    if (!price) {
+      console.warn(`CoinGecko simple/price: campo usd nao encontrado para ${coinId}`);
+      return currentPriceCache[pair]?.price ?? null;
+    }
+
+    currentPriceCache[pair] = { price, timestamp: now };
+    console.log(`💰 Preco actual ${pair}: $${price.toLocaleString()} (CoinGecko fresh)`);
+    return price;
+
+  } catch (error) {
+    console.error(`fetchCryptoCurrentPrice error para ${pair}:`, error);
+    return currentPriceCache[pair]?.price ?? null;
   }
 }
