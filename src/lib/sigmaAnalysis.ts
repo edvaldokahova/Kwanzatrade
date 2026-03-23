@@ -1,8 +1,13 @@
-import { fetchCryptoData, type CoinGeckoResult, type CryptoCandle } from "./coinGeckoClient";
-import { fetchDerivativesData, type DerivativesData }  from "./sigmaDerivatives";
+import {
+  fetchCryptoData,
+  fetchCryptoCurrentPrice,
+  type CoinGeckoResult,
+  type CryptoCandle,
+} from "./coinGeckoClient";
+import { fetchDerivativesData, type DerivativesData } from "./sigmaDerivatives";
 
 export interface SigmaUserInput {
-  pair:        string;  // "BTCUSDT" ou "ETHUSDT"
+  pair:        string;
   capital:     number;
   leverage:    number;
   risk:        number;
@@ -10,29 +15,29 @@ export interface SigmaUserInput {
 }
 
 export interface SigmaResult {
-  pair:           string;
-  signal:         "LONG" | "SHORT" | "NEUTRAL";
-  confidence:     number;
-  entry:          number;
-  stopLoss:       number;
-  takeProfit:     number;
-  leverage:       number;
-  liquidation:    number;
-  margin:         number;
-  positionSize:   string;
-  riskReward:     string;
+  pair:            string;
+  signal:          "LONG" | "SHORT" | "NEUTRAL";
+  confidence:      number;
+  entry:           number;
+  stopLoss:        number;
+  takeProfit:      number;
+  leverage:        number;
+  liquidation:     number;
+  margin:          number;
+  positionSize:    string;
+  riskReward:      string;
   profitPotential: string;
-  fundingRate:    string;
-  fearGreed:      number;
-  fearGreedLabel: string;
-  score:          string;
-  reasoning:      string;
-  tradingWindow:  string;
-  riskSuggestion: string;
-  trend:          string;
-  momentum:       number;
-  support:        number;
-  resistance:     number;
+  fundingRate:     string;
+  fearGreed:       number;
+  fearGreedLabel:  string;
+  score:           string;
+  reasoning:       string;
+  tradingWindow:   string;
+  riskSuggestion:  string;
+  trend:           string;
+  momentum:        number;
+  support:         number;
+  resistance:      number;
 }
 
 // ─── Calcula campos de futuros ────────────────────────────────────────────────
@@ -46,7 +51,6 @@ function calcFutures(
   leverage: number,
   risk: number
 ) {
-  const isLong     = signal === "LONG";
   const slDist     = Math.abs(entry - sl);
   const tpDist     = Math.abs(tp - entry);
   const rr         = slDist > 0 ? tpDist / slDist : 0;
@@ -55,8 +59,8 @@ function calcFutures(
   const posSize    = parseFloat(((capital * leverage) / entry).toFixed(6));
   const profit     = riskAmount * Math.max(rr, 0);
 
-  // Liquidation price
-  const liqBuffer  = 0.004; // 0.4% manutencao de margem
+  const liqBuffer  = 0.004;
+  const isLong     = signal === "LONG";
   const liquidation = isLong
     ? parseFloat((entry * (1 - 1 / leverage + liqBuffer)).toFixed(2))
     : parseFloat((entry * (1 + 1 / leverage - liqBuffer)).toFixed(2));
@@ -64,8 +68,8 @@ function calcFutures(
   return {
     margin,
     positionSize:    posSize.toString(),
-    riskReward:      isFinite(rr)      ? rr.toFixed(2)      : "0.00",
-    profitPotential: isFinite(profit)  ? profit.toFixed(2)  : "0.00",
+    riskReward:      isFinite(rr)     ? rr.toFixed(2)     : "0.00",
+    profitPotential: isFinite(profit) ? profit.toFixed(2) : "0.00",
     liquidation,
   };
 }
@@ -90,29 +94,34 @@ function buildSigmaPrompt(
   const p     = crypto!;
   const price = p.market.currentPrice;
 
-  // Entry estrategico baseado em estrutura
-  const isBullishSignal = p.trend === "bullish" && p.momentum > 0 &&
-    (deriv?.fundingSentiment !== "longs_dominant") &&
-    (deriv?.fearGreedSignal !== "extreme_sell");
+  const isBullishSignal =
+    p.trend === "bullish" &&
+    p.momentum > 0 &&
+    deriv?.fundingSentiment !== "longs_dominant" &&
+    deriv?.fearGreedSignal  !== "extreme_sell";
 
   const distToSupport    = Math.abs(price - p.support);
   const distToResistance = Math.abs(p.resistance - price);
 
   const exampleEntry = isBullishSignal
-    ? parseFloat((p.support + distToSupport * 0.2).toFixed(2))
+    ? parseFloat((p.support    + distToSupport    * 0.2).toFixed(2))
     : parseFloat((p.resistance - distToResistance * 0.2).toFixed(2));
 
   const exampleSL = isBullishSignal
-    ? parseFloat((p.support * 0.995).toFixed(2))
+    ? parseFloat((p.support    * 0.995).toFixed(2))
     : parseFloat((p.resistance * 1.005).toFixed(2));
 
   const exampleTP = isBullishSignal
     ? parseFloat((p.resistance * 0.998).toFixed(2))
-    : parseFloat((p.support * 1.002).toFixed(2));
+    : parseFloat((p.support    * 1.002).toFixed(2));
 
   const fundingContext = deriv
     ? `funding_rate=${deriv.fundingRatePct}(${deriv.fundingSentiment}) | fear_greed=${deriv.fearGreedValue}/100(${deriv.fearGreedLabel})`
     : "derivatives_unavailable";
+
+  const session = new Date().getUTCHours() >= 13 && new Date().getUTCHours() < 22
+    ? "New York + London"
+    : "Asian Session";
 
   return [
     "You are an elite crypto futures trader combining Soros reflexivity with James Wynn liquidity hunting.",
@@ -140,10 +149,11 @@ function buildSigmaPrompt(
     "- Fear & Greed > 75 = extreme greed = market overbought = SHORT bias",
     "- Fear & Greed < 25 = extreme fear = market oversold = LONG bias",
     "",
-    "=== PRICE HISTORY (daily candles, most recent first) ===",
+    "=== PRICE HISTORY (candles, most recent first) ===",
     candlesToText(p.candles),
     "",
     "=== TRADER PROFILE ===",
+    // ✅ leverage do utilizador passada correctamente
     `level=${input.traderLevel} | capital=$${input.capital} | max_leverage=${input.leverage}x | risk=${input.risk}%`,
     "",
     "=== DECISION RULES ===",
@@ -151,21 +161,20 @@ function buildSigmaPrompt(
     "2. ENTRY at STRUCTURAL LEVEL — never at current price. Find the key level.",
     "3. STOP LOSS beyond structural invalidation. Crypto moves fast — SL must be real.",
     "4. TAKE PROFIT at next structural level. Minimum R/R = 1:1.5.",
-    "5. LEVERAGE: suggest 5x if confidence<70, 10x if 70-85, 20x only if >85 AND volatility=low.",
+    // ✅ regra de leverage usa o valor do utilizador
+    `5. LEVERAGE: you MUST use exactly ${input.leverage}x as requested by the trader. Do not override.`,
     "6. If no quality setup exists, signal=NEUTRAL. Never force a bad trade.",
     "7. ALL prices must be rounded to 2 decimal places.",
     "",
     "Respond with a single JSON object only. No markdown. No explanation.",
-    `{"signal":"${isBullishSignal ? "LONG" : "SHORT"}","confidence":75,"entry_price":${exampleEntry},"stop_loss":${exampleSL},"take_profit":${exampleTP},"leverage":10,"suggestedTimeframe":"H4","tradingWindow":"${new Date().getUTCHours() >= 13 && new Date().getUTCHours() < 22 ? "New York + London" : "Asian Session"}","riskSuggestion":"Use max ${input.leverage}x — tight SL at structural level","score":"7.5 / 10","reasoning":"Funding rate signals overcrowded longs — structural SELL at resistance with F&G overbought"}`,
+    // ✅ exemplo com leverage do utilizador — nao hardcoded
+    `{"signal":"${isBullishSignal ? "LONG" : "SHORT"}","confidence":75,"entry_price":${exampleEntry},"stop_loss":${exampleSL},"take_profit":${exampleTP},"leverage":${input.leverage},"suggestedTimeframe":"H4","tradingWindow":"${session}","riskSuggestion":"Use max ${input.leverage}x — tight SL at structural level","score":"7.5 / 10","reasoning":"Funding rate signals overcrowded longs — structural SELL at resistance with F&G overbought"}`,
   ].join("\n");
 }
 
 // ─── Chama Gemini ─────────────────────────────────────────────────────────────
 
-async function callGeminiSigma(
-  prompt: string,
-  currentPrice: number
-): Promise<any> {
+async function callGeminiSigma(prompt: string): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
@@ -210,17 +219,18 @@ async function callGeminiSigma(
   }
 }
 
-// ─── Exports principal ─────────────────────────────────────────────────────────
+// ─── Export principal ─────────────────────────────────────────────────────────
 
 export async function runSigmaAnalysis(input: SigmaUserInput): Promise<SigmaResult> {
   const { pair, capital, leverage, risk } = input;
 
   console.log(`SIGMA: Analise iniciada — ${pair} | Capital: $${capital} | Leverage: ${leverage}x`);
 
-  // 1. Fetch paralelo — CoinGecko + Derivatives
-  const [cryptoData, derivData] = await Promise.all([
+  // ✅ Fetch paralelo — candles (cache 1h) + derivativos + preco fresco (cache 5min)
+  const [cryptoData, derivData, freshPrice] = await Promise.all([
     fetchCryptoData(pair),
     fetchDerivativesData(pair),
+    fetchCryptoCurrentPrice(pair),
   ]);
 
   if (!cryptoData) {
@@ -228,26 +238,39 @@ export async function runSigmaAnalysis(input: SigmaUserInput): Promise<SigmaResu
     return getDefaultSigmaResult(pair, 0);
   }
 
-  const currentPrice = cryptoData.market.currentPrice;
+  // ✅ Substitui preco do cache de 1h pelo preco fresco de 5min
+  const currentPrice = freshPrice ?? cryptoData.market.currentPrice;
+  if (freshPrice && freshPrice !== cryptoData.market.currentPrice) {
+    console.log(
+      `💰 Preco actualizado: cache tinha $${cryptoData.market.currentPrice.toLocaleString()}, ` +
+      `fresco e $${freshPrice.toLocaleString()}`
+    );
+    cryptoData.market.currentPrice = freshPrice;
+  }
 
-  // 2. Chama Gemini
-  const prompt  = buildSigmaPrompt(input, cryptoData, derivData);
-  const gemini  = await callGeminiSigma(prompt, currentPrice);
+  // Chama Gemini com preco fresco
+  const prompt = buildSigmaPrompt(input, cryptoData, derivData);
+  const gemini = await callGeminiSigma(prompt);
 
   if (!gemini || !gemini.signal || !gemini.entry_price) {
     console.warn("SIGMA: Gemini falhou — usando fallback");
     return getDefaultSigmaResult(pair, currentPrice);
   }
 
-  // 3. Valida precos — cripto pode ter range maior (5% do preco)
-  const maxDist   = currentPrice * 0.05;
-  const entry     = validateCryptoPrice(gemini.entry_price, currentPrice, maxDist);
-  const sl        = validateCryptoPrice(gemini.stop_loss,   entry,        maxDist);
-  const tp        = validateCryptoPrice(gemini.take_profit, entry,        maxDist * 2);
-  const lev       = Math.min(Math.max(Number(gemini.leverage) || leverage, 1), 20);
-  const signal    = ["LONG", "SHORT", "NEUTRAL"].includes(gemini.signal) ? gemini.signal : "NEUTRAL";
+  // Valida precos — max 5% de distancia do preco actual
+  const maxDist = currentPrice * 0.05;
+  const entry   = validateCryptoPrice(gemini.entry_price, currentPrice, maxDist);
+  const sl      = validateCryptoPrice(gemini.stop_loss,   entry,        maxDist);
+  const tp      = validateCryptoPrice(gemini.take_profit, entry,        maxDist * 2);
 
-  // 4. Calcula campos de futuros
+  // ✅ Leverage: usa o do Gemini mas valida contra o maximo do utilizador
+  const geminiLev = Number(gemini.leverage) || leverage;
+  const lev       = Math.min(Math.max(geminiLev, 1), leverage); // nunca excede o maximo do utilizador
+
+  const signal = ["LONG", "SHORT", "NEUTRAL"].includes(gemini.signal)
+    ? gemini.signal
+    : "NEUTRAL";
+
   const futures = calcFutures(entry, sl, tp, signal, capital, lev, risk);
 
   const result: SigmaResult = {
@@ -263,30 +286,29 @@ export async function runSigmaAnalysis(input: SigmaUserInput): Promise<SigmaResu
     positionSize:    futures.positionSize,
     riskReward:      futures.riskReward,
     profitPotential: futures.profitPotential,
-    fundingRate:     derivData?.fundingRatePct    ?? "N/A",
-    fearGreed:       derivData?.fearGreedValue    ?? 50,
-    fearGreedLabel:  derivData?.fearGreedLabel    ?? "Neutral",
-    score:           gemini.score                 ?? "5.0 / 10",
-    reasoning:       gemini.reasoning             ?? "",
-    tradingWindow:   gemini.tradingWindow         ?? "24/7",
-    riskSuggestion:  gemini.riskSuggestion        ?? "Use gestao de risco conservadora",
+    fundingRate:     derivData?.fundingRatePct ?? "N/A",
+    fearGreed:       derivData?.fearGreedValue ?? 50,
+    fearGreedLabel:  derivData?.fearGreedLabel ?? "Neutral",
+    score:           gemini.score             ?? "5.0 / 10",
+    reasoning:       gemini.reasoning         ?? "",
+    tradingWindow:   gemini.tradingWindow     ?? "24/7",
+    riskSuggestion:  gemini.riskSuggestion    ?? "Use gestao de risco conservadora",
     trend:           cryptoData.trend,
     momentum:        cryptoData.momentum,
     support:         cryptoData.support,
     resistance:      cryptoData.resistance,
   };
 
-  console.log(`✅ SIGMA: ${pair} ${signal} | Entry: $${entry} | Leverage: ${lev}x | RR: 1:${result.riskReward}`);
+  console.log(
+    `✅ SIGMA: ${pair} ${signal} | Entry: $${entry} | ` +
+    `Leverage: ${lev}x (user max: ${leverage}x) | RR: 1:${result.riskReward}`
+  );
   return result;
 }
 
-function validateCryptoPrice(
-  val: any,
-  reference: number,
-  maxDist: number
-): number {
+function validateCryptoPrice(val: any, reference: number, maxDist: number): number {
   const n = parseFloat(String(val));
-  if (isNaN(n) || n <= 0) return parseFloat(reference.toFixed(2));
+  if (isNaN(n) || n <= 0)                return parseFloat(reference.toFixed(2));
   if (Math.abs(n - reference) > maxDist) return parseFloat(reference.toFixed(2));
   return parseFloat(n.toFixed(2));
 }
