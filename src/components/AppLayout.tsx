@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Footer from "@/components/Footer";
 
-// ✅ AppLayout NÃO renderiza Navbar/Sidebar — isso é responsabilidade do PlatformLayout.
+// ✅ AppLayout NÃO renderiza Navbar/Sidebar — isso é responsabilidade da PlatformLayout.
 // AppLayout serve apenas como wrapper global (Footer para páginas públicas).
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
