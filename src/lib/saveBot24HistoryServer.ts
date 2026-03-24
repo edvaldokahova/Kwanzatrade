@@ -4,7 +4,7 @@ import type { Bot24SingleResult } from "./bot24Analysis";
 export type { Bot24SingleResult as Bot24AnalysisResult };
 
 /**
- * Salva análise no bot24_history (server-side, admin client).
+ * Salva análises no bot24_history (server-side, admin client).
  */
 export async function saveBot24HistoryServer(
   result: Bot24SingleResult,
