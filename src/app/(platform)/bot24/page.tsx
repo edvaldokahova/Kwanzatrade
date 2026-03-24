@@ -97,11 +97,13 @@ export default function Bot24Dashboard() {
           <div className="flex items-center gap-4">
             <Image src="/bot24_an.svg" alt="Bot24" width={60} height={60} />
             <div>
-              <h1 className="text-4xl font-black text-white tracking-tight">
-                Bot24 Intelligence
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-left">
+            BOT24 <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
+              INTELLIGENCE
+            </span>
+           </h1>
               <p className="text-gray-500 text-sm mt-0.5">
-                Sistema de análise algorítmica de Forex e Crypto.
+                Sistema de análise algorítmica de Forex.
               </p>
             </div>
           </div>
