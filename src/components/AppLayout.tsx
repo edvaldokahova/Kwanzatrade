@@ -14,8 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     pathname?.startsWith("/bot24")        ||
     pathname?.startsWith("/live-signals") ||
     pathname?.startsWith("/performance")  ||
-    pathname?.startsWith("/my-account")   ||
-    pathname?.startsWith("/sigma");
+    pathname?.startsWith("/my-account");
 
   return (
     <div className="flex flex-col min-h-screen">
