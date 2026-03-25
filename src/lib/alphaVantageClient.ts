@@ -26,44 +26,65 @@ const PRICE_CACHE_TTL = 60 * 60 * 1000; // 1 hora
  * Exemplo de resposta: {"amount":1.0,"base":"EUR","date":"2026-03-19","rates":{"USD":1.1489}}
  */
 export async function fetchCurrentPrice(pair: string): Promise<number | null> {
-  // Verifica cache em memoria
   if (priceCache && Date.now() - priceCache.timestamp < PRICE_CACHE_TTL) {
     const age = Math.round((Date.now() - priceCache.timestamp) / 60_000);
     console.log(`💱 Preco ${pair} (cache ${age}min): ${priceCache.price}`);
     return priceCache.price;
   }
 
+  const base  = pair.slice(0, 3); // EUR
+  const quote = pair.slice(3);    // USD
+
+  // ✅ Fonte 1 — Frankfurter (BCE) — actualiza 1x/dia
   try {
-    console.log(`💱 Frankfurter: A buscar preco actual de ${pair}...`);
-
-    const base  = pair.slice(0, 3); // EUR
-    const quote = pair.slice(3);    // USD
-
+    console.log(`💱 Frankfurter: A buscar preco de ${pair}...`);
     const res = await fetch(
       `https://api.frankfurter.app/latest?from=${base}&to=${quote}`,
-      { cache: "no-store" }
+      { cache: "no-store", signal: AbortSignal.timeout(5000) }
     );
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const data = await res.json();
-
-    if (!data?.rates?.[quote]) {
-      console.warn(`Frankfurter: campo ${quote} nao encontrado:`, JSON.stringify(data).slice(0, 200));
-      return priceCache?.price ?? null;
+    if (res.ok) {
+      const data  = await res.json();
+      const price = data?.rates?.[quote];
+      if (price) {
+        const parsed = parseFloat(parseFloat(price).toFixed(5));
+        priceCache   = { price: parsed, timestamp: Date.now() };
+        console.log(`💱 Preco ${pair}: ${parsed} (Frankfurter/BCE — ${data.date})`);
+        return parsed;
+      }
     }
-
-    const price = parseFloat(data.rates[quote].toFixed(5));
-    priceCache = { price, timestamp: Date.now() };
-
-    console.log(`💱 Preco actual ${pair}: ${price} (Frankfurter/BCE — ${data.date})`);
-    return price;
-
-  } catch (error) {
-    console.error(`Frankfurter error para ${pair}:`, error);
-    // Devolve cache expirado se existir — melhor que null
-    return priceCache?.price ?? null;
+  } catch {
+    console.warn(`Frankfurter indisponivel — a tentar MoneyConvert...`);
   }
+
+  // ✅ Fonte 2 — MoneyConvert — actualiza a cada ~5 minutos, sem API key
+  try {
+    console.log(`💱 MoneyConvert: fallback para ${pair}...`);
+    const res = await fetch(
+      "https://cdn.moneyconvert.net/api/latest.json",
+      { cache: "no-store", signal: AbortSignal.timeout(5000) }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      // Base e USD — para EURUSD: 1 / rates.EUR
+      const baseRate = data?.rates?.[base];
+      if (baseRate && baseRate > 0) {
+        const price  = parseFloat((1 / baseRate).toFixed(5));
+        priceCache   = { price, timestamp: Date.now() };
+        console.log(`💱 Preco ${pair}: ${price} (MoneyConvert fallback)`);
+        return price;
+      }
+    }
+  } catch {
+    console.warn(`MoneyConvert tambem indisponivel para ${pair}`);
+  }
+
+  // ✅ Fonte 3 — cache expirado e melhor que nada
+  if (priceCache?.price) {
+    console.warn(`💱 A usar cache expirado para ${pair}: ${priceCache.price}`);
+    return priceCache.price;
+  }
+
+  return null;
 }
 
 // ─── Dados historicos (candles diarios) ──────────────────────────────────────
