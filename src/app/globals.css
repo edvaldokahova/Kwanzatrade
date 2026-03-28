@@ -81,3 +81,14 @@ body {
   color: #ffffff;                       /* Texto e ícone branco */
   font-weight: 600;                     /* Dá um leve destaque extra */
 }
+
+/* Animação de Fluxo na leading page */
+@keyframes flow {
+  0% { top: -10%; opacity: 0; }
+  50% { opacity: 1; }
+  100% { top: 110%; opacity: 0; }
+}
+
+.animate-flow {
+  animation: flow 3s linear infinite;
+}
