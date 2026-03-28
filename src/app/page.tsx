@@ -150,12 +150,6 @@ export default function Home() {
   <div className="max-w-4xl mx-auto text-center">
 
     {/* IMAGEM */}
-    <img
-      src="/Mockup.png"
-      alt="Mockup KwanzaTrade"
-      className="mx-auto mb-12 w-full max-w-2xl"
-    />
-
     <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-center">
       <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">
         KWANZATRADE?
