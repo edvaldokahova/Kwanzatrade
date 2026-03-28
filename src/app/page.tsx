@@ -115,11 +115,11 @@ export default function Home() {
             </p>
             <div className="flex flex-col md:flex-row items-center justify-center gap-3">
               {[
-                { label: "Dados Reais",    desc: "Alpha Vantage + CoinGecko + Frankfurter", color: "border-blue-500/30 bg-blue-500/5" },
+                { label: "Dados Reais",    desc: "Alpha Vantage + Marketaux + Frankfurter", color: "border-blue-500/30 bg-blue-500/5" },
                 { label: "→",             desc: "",                                          color: "border-transparent bg-transparent text-gray-600 text-2xl" },
                 { label: "Soros + Wynn",  desc: "Framework de traders lendários",           color: "border-purple-500/30 bg-purple-500/5" },
                 { label: "→",             desc: "",                                          color: "border-transparent bg-transparent text-gray-600 text-2xl" },
-                { label: "Gemini 2.5",    desc: "IA mais avançada do Google",               color: "border-[#00FFB2]/30 bg-[#00FFB2]/5" },
+                { label: "Gemini 2.5",    desc: "Uma das mais avançadas do Google",               color: "border-[#00FFB2]/30 bg-[#00FFB2]/5" },
                 { label: "→",             desc: "",                                          color: "border-transparent bg-transparent text-gray-600 text-2xl" },
                 { label: "Tua Análise",   desc: "Entry · SL · TP · Lote em 2 segundos",    color: "border-green-500/30 bg-green-500/5" },
               ].map((step, i) => (
@@ -139,13 +139,13 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-6 mb-16">
 
             {/* Bot24 */}
-            <div className="relative bg-[#111113] border border-gray-800 rounded-2xl p-8 overflow-hidden hover:border-blue-500/30 transition-all duration-300 group">
+            <div className="relative bg-[#111113] border border-gray-800 rounded-2xl p-8 overflow-hidden hover:border-blue-400/40 transition-all duration-300 group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent pointer-events-none" />
               <div className="flex items-center gap-4 mb-6">
                 <Image src="/bot24_an.svg" alt="Bot24" width={48} height={48} />
                 <div>
                   <h3 className="text-xl font-black text-white tracking-tight">BOT24</h3>
-                  <p className="text-[11px] text-blue-400 font-bold uppercase tracking-widest">EUR/USD Forex</p>
+                  <p className="text-[11px] text-blue-400/40 font-bold uppercase tracking-widest">EUR/USD Forex</p>
                 </div>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed mb-6">
@@ -161,43 +161,12 @@ export default function Home() {
                   "Timer de validade da análise por timeframe",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-[12px] text-gray-400">
-                    <Check size={13} className="text-blue-400 flex-shrink-0" />
+                    <Check size={13} className="text-blue-400/40 flex-shrink-0" />
                     {item}
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Sigma Bot */}
-            <div className="relative bg-[#111113] border border-gray-800 rounded-2xl p-8 overflow-hidden hover:border-[#F7931A]/30 transition-all duration-300 group">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#F7931A]/5 via-transparent to-[#627EEA]/5 pointer-events-none" />
-              <div className="flex items-center gap-4 mb-6">
-                <Image src="/sigma.svg" alt="Sigma Bot" width={48} height={48} />
-                <div>
-                  <h3 className="text-xl font-black text-white tracking-tight">SIGMA BOT</h3>
-                  <p className="text-[11px] text-[#F7931A] font-bold uppercase tracking-widest">BTC & ETH Futuros</p>
-                </div>
-              </div>
-              <p className="text-gray-400 text-sm leading-relaxed mb-6">
-                O único bot de futuros cripto com o framework de <strong className="text-white">James Wynn</strong> —
-                caça de liquidações, Fear & Greed Index real e cálculo automático de alavancagem,
-                margem e preço de liquidação.
-              </p>
-              <div className="space-y-2">
-                {[
-                  "Framework James Wynn — Caça a Liquidações",
-                  "Fear & Greed Index em tempo real",
-                  "Alavancagem 5x / 10x / 20x calculada",
-                  "Preço de liquidação calculado automaticamente",
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-[12px] text-gray-400">
-                    <Check size={13} className="text-[#F7931A] flex-shrink-0" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
           {/* 4 pilares */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
