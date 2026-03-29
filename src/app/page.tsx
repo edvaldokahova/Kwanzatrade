@@ -90,7 +90,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ✅ SOBRE — SECÇÃO KWANZATRADE? REDESENHADA */}
+      {/* SOBRE */}
       <section className="border-t border-gray-800 py-24 px-6">
         <div className="max-w-6xl mx-auto">
 
@@ -109,36 +109,63 @@ export default function Home() {
           </div>
 
           {/* Como funciona — pipeline visual */}
-          <div className="mb-20">
-            <p className="text-center text-[11px] text-gray-600 uppercase tracking-widest font-bold mb-8">
+          <div className="relative max-w-2xl mx-auto mt-16">
+            <p className="text-center text-[11px] text-gray-600 uppercase tracking-widest font-bold mb-12">
               Como a magia acontece
             </p>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-3">
+
+            <div className="absolute left-[26px] top-[140px] bottom-10 w-[2px] bg-gray-800/50 hidden md:block">
+              <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-transparent via-blue-400 to-transparent animate-flow" />
+            </div>
+
+            <div className="space-y-8 relative">
               {[
-                { label: "Dados Reais",    desc: "Alpha Vantage + Marketaux + Frankfurter", color: "border-blue-500/30 bg-blue-500/5" },
-                { label: "→",             desc: "",                                          color: "border-transparent bg-transparent text-gray-600 text-2xl" },
-                { label: "Soros + Wynn",  desc: "Framework de traders lendários",           color: "border-purple-500/30 bg-purple-500/5" },
-                { label: "→",             desc: "",                                          color: "border-transparent bg-transparent text-gray-600 text-2xl" },
-                { label: "Gemini 2.5",    desc: "Uma das mais avançadas do Google",               color: "border-[#00FFB2]/30 bg-[#00FFB2]/5" },
-                { label: "→",             desc: "",                                          color: "border-transparent bg-transparent text-gray-600 text-2xl" },
-                { label: "Tua Análise",   desc: "Entry · SL · TP · Lote em 2 segundos",    color: "border-green-500/30 bg-green-500/5" },
+                {
+                  num: "01",
+                  label: "Coleta",
+                  title: "Dados em Tempo Real",
+                  desc: "Conexão direta com Alpha Vantage, Marketaux e Frankfurter para capturar cada tick do EUR/USD.",
+                  color: "border-blue-500/30"
+                },
+                {
+                  num: "02",
+                  label: "Processamento",
+                  title: "Frameworks Lendários",
+                  desc: "Aplicamos as teorias de reflexividade de George Soros para identificar desequilíbrios de liquidez.",
+                  color: "border-purple-500/30"
+                },
+                {
+                  num: "03",
+                  label: "Inteligência",
+                  title: "Cérebro Gemini 2.5",
+                  desc: "A IA processa o sentimento das notícias e o price action em milissegundos para filtrar ruídos.",
+                  color: "border-cyan-500/30"
+                },
+                {
+                  num: "04",
+                  label: "Execução",
+                  title: "Sua Análise Pronta",
+                  desc: "Você recebe Entry, SL, TP e o lote exato calculado para sua banca. Sem hesitação.",
+                  color: "border-green-500/30"
+                },
               ].map((step, i) => (
-                step.desc === "" ? (
-                  <div key={i} className="hidden md:flex text-gray-600 text-2xl font-bold">{step.label}</div>
-                ) : (
-                  <div key={i} className={`flex-1 text-center p-4 rounded-xl border ${step.color}`}>
-                    <p className="text-white font-bold text-sm mb-1">{step.label}</p>
-                    <p className="text-gray-500 text-[10px]">{step.desc}</p>
+                <div key={i} className="flex items-start gap-8 group">
+                  <div className="relative z-10 flex-shrink-0 w-14 h-14 rounded-full border border-gray-700 bg-[#0b0b0c] flex items-center justify-center text-sm font-bold text-gray-400 group-hover:border-blue-500/50 transition-colors duration-500">
+                    {step.num}
+                    <div className="absolute -right-[32px] w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6] hidden md:block" />
                   </div>
-                )
+                  <div className={`flex-1 p-6 rounded-2xl border ${step.color} bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm hover:from-white/[0.05] transition-all duration-300`}>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-blue-400/60 mb-1">{step.label}</p>
+                    <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
+                    <p className="text-gray-400 text-sm leading-relaxed">{step.desc}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Dois bots — cards lado a lado */}
-          <div className="grid md:grid-cols-2 gap-6 mb-16">
-
-            {/* Bot24 */}
+          {/* Bot24 — card */}
+          <div className="mt-16 mb-16">
             <div className="relative bg-[#111113] border border-gray-800 rounded-2xl p-8 overflow-hidden hover:border-blue-400/40 transition-all duration-300 group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent pointer-events-none" />
               <div className="flex items-center gap-4 mb-6">
@@ -167,14 +194,15 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          </div>
 
           {/* 4 pilares */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Brain,      color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/20", label: "IA Institucional",  desc: "Gemini 2.5 Flash treinado com décadas de conhecimento de trading" },
-              { icon: BarChart2,  color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20",   label: "Dados Reais",        desc: "Alpha Vantage, CoinGecko, MarketAux, Frankfurter/BCE" },
-              { icon: Shield,     color: "text-green-400",  bg: "bg-green-400/10 border-green-400/20", label: "Risco Controlado",   desc: "SL obrigatório, lote calculado, alerta de liquidação" },
-              { icon: Clock,      color: "text-[#F7931A]",  bg: "bg-[#F7931A]/10 border-[#F7931A]/20", label: "2 Segundos",         desc: "Da análise ao sinal completo — mais rápido que qualquer humano" },
+              { icon: Brain,     color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/20", label: "IA Institucional", desc: "Gemini 2.5 Flash treinado com décadas de conhecimento de trading" },
+              { icon: BarChart2, color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20",     label: "Dados Reais",      desc: "Alpha Vantage, CoinGecko, MarketAux, Frankfurter/BCE" },
+              { icon: Shield,    color: "text-green-400",  bg: "bg-green-400/10 border-green-400/20",   label: "Risco Controlado", desc: "SL obrigatório, lote calculado, alerta de liquidação" },
+              { icon: Clock,     color: "text-[#F7931A]",  bg: "bg-[#F7931A]/10 border-[#F7931A]/20",   label: "2 Segundos",       desc: "Da análise ao sinal completo — mais rápido que qualquer humano" },
             ].map(({ icon: Icon, color, bg, label, desc }, i) => (
               <div key={i} className={`p-5 rounded-xl border ${bg} text-center`}>
                 <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${bg} mb-3`}>
