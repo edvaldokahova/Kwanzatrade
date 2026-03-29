@@ -114,7 +114,8 @@ export default function Home() {
               Como a magia acontece
             </p>
 
-            <div className="absolute left-[26px] top-[140px] bottom-10 w-[2px] bg-gray-800/50 hidden md:block">
+            {/* Linha vertical — visível em mobile e desktop */}
+            <div className="absolute left-[26px] top-[140px] bottom-10 w-[2px] bg-gray-800/50 overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-transparent via-blue-400 to-transparent animate-flow" />
             </div>
 
@@ -150,9 +151,9 @@ export default function Home() {
                 },
               ].map((step, i) => (
                 <div key={i} className="flex items-start gap-8 group">
+                  {/* Círculo — sem ponto lateral */}
                   <div className="relative z-10 flex-shrink-0 w-14 h-14 rounded-full border border-gray-700 bg-[#0b0b0c] flex items-center justify-center text-sm font-bold text-gray-400 group-hover:border-blue-500/50 transition-colors duration-500">
                     {step.num}
-                    <div className="absolute -right-[32px] w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6] hidden md:block" />
                   </div>
                   <div className={`flex-1 p-6 rounded-2xl border ${step.color} bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm hover:from-white/[0.05] transition-all duration-300`}>
                     <p className="text-[10px] uppercase tracking-widest font-bold text-blue-400/60 mb-1">{step.label}</p>
@@ -217,29 +218,75 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BOT24 */}
+      {/* BOT24 — secção redesenhada */}
       <section className="border-t border-gray-800 py-24 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="mx-auto mb-16 relative max-w-[500px] w-full rounded-2xl overflow-hidden border border-gray-800 shadow-[0_0_40px_rgba(59,130,246,0.25)]">
-            <video src="/signail.mp4" autoPlay loop muted playsInline className="w-full h-auto opacity-90" />
+        <div className="max-w-6xl mx-auto">
+
+          {/* Header centrado */}
+          <div className="text-center mb-16">
+            <span className="inline-block text-[11px] uppercase tracking-widest font-bold text-blue-400/60 mb-6">
+              Análise EUR/USD em Tempo Real
+            </span>
+            <div className="flex justify-center mb-6">
+              <Image src="/bot.png" alt="Bot" width={110} height={110} className="opacity-90" />
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
+              <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24</span>
+            </h2>
+            <p className="text-gray-400 mt-4 max-w-2xl mx-auto">
+              O cérebro por trás das análises. Observa o mercado continuamente e entrega sinais
+              estruturados para traders operarem com mais segurança e lucro.
+            </p>
           </div>
-          <div className="flex justify-center my-12">
-            <Image src="/bot.png" alt="Bot" width={190} height={190} className="opacity-90" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight text-center">
-            <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24</span>
-          </h1>
-          <p className="text-gray-400 mt-4">
-            O cérebro por trás das análises. O BOT24 observa o mercado continuamente
-            e organiza informação relevante para traders operarem com mais segurança e lucro.
-          </p>
-          <div className="grid md:grid-cols-3 gap-8 mt-12">
-            {["Análise Constante do Mercado", "Contexto Baseado em Dados", "Menos Tempo de Análise"].map((text, i) => (
-              <div key={i} className="bg-[#111113] p-8 rounded-xl border border-gray-800 hover:border-blue-400/40 transition-all duration-300 hover:-translate-y-2 shadow-[0_0_25px_rgba(59,130,246,0.15)] hover:shadow-[0_0_35px_rgba(59,130,246,0.25)]">
-                <p className="text-gray-300">{text}</p>
+
+          {/* Stats */}
+          <div className="flex justify-center gap-12 mb-16">
+            {[
+              { value: "< 2s",  label: "Tempo de análise" },
+              { value: "100%",  label: "Gratuito"         },
+              { value: "24/7",  label: "Monitorização"    },
+            ].map((stat, i) => (
+              <div key={i} className="text-center">
+                <p className="text-3xl font-black text-white">{stat.value}</p>
+                <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">{stat.label}</p>
               </div>
             ))}
           </div>
+
+          {/* Video */}
+          <div className="mx-auto mb-16 relative max-w-[500px] w-full rounded-2xl overflow-hidden border border-gray-800 shadow-[0_0_40px_rgba(59,130,246,0.25)]">
+            <video src="/signail.mp4" autoPlay loop muted playsInline className="w-full h-auto opacity-90" />
+          </div>
+
+          {/* Feature cards com ícones */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: BarChart2,
+                title: "Análise Constante",
+                desc: "Monitoriza o EUR/USD continuamente, processando price action e sentimento de mercado em tempo real.",
+              },
+              {
+                icon: Brain,
+                title: "Contexto Inteligente",
+                desc: "Dados de múltiplas fontes — Alpha Vantage, MarketAux e Frankfurter — filtrados pelo Gemini 2.5 Flash.",
+              },
+              {
+                icon: Clock,
+                title: "Resposta em 2 Segundos",
+                desc: "Da análise completa ao sinal com Entry, SL e TP calculados. Mais rápido que qualquer trader humano.",
+              },
+            ].map(({ icon: Icon, title, desc }, i) => (
+              <div key={i} className="bg-[#111113] p-8 rounded-xl border border-gray-800 hover:border-blue-400/40 transition-all duration-300 hover:-translate-y-2 shadow-[0_0_25px_rgba(59,130,246,0.08)] hover:shadow-[0_0_35px_rgba(59,130,246,0.2)]">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-400/10 border border-blue-400/20 mb-4">
+                  <Icon className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-white font-bold mb-2">{title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+
         </div>
       </section>
 
