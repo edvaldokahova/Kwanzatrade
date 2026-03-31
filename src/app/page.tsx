@@ -1,13 +1,34 @@
 "use client";
 
 import Image from "next/image";
-import { Check, X, ArrowRight, MessageCircle, LogIn, User, Brain, Zap, BarChart2, Shield, Clock, TrendingUp } from "lucide-react";
+import { Check, X, ArrowRight, MessageCircle, LogIn, User, Brain, BarChart2, Shield, Clock } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 export default function Home() {
   const [user, setUser] = useState<any>(null);
   const [showNavbar, setShowNavbar] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Pipeline line measurement
+  const pipelineRef = useRef<HTMLDivElement>(null);
+  const [lineStyle, setLineStyle] = useState<{ top: number; height: number }>({ top: 0, height: 0 });
+
+  useEffect(() => {
+    const updateLine = () => {
+      if (!pipelineRef.current) return;
+      const circles = pipelineRef.current.querySelectorAll("[data-circle]");
+      if (circles.length < 2) return;
+      const first = circles[0].getBoundingClientRect();
+      const last  = circles[circles.length - 1].getBoundingClientRect();
+      const container = pipelineRef.current.getBoundingClientRect();
+      const top    = first.bottom - container.top;
+      const height = (last.top - container.top) - top;
+      setLineStyle({ top, height });
+    };
+    updateLine();
+    window.addEventListener("resize", updateLine);
+    return () => window.removeEventListener("resize", updateLine);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,54 +135,66 @@ export default function Home() {
               Como a magia acontece
             </p>
 
-            {/* Linha vertical — visível em mobile e desktop */}
-            <div className="absolute left-[26px] top-[140px] bottom-10 w-[2px] bg-gray-800/50 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-transparent via-blue-400 to-transparent animate-flow" />
-            </div>
+            {/* Container com ref para medir bolinhas */}
+            <div ref={pipelineRef} className="relative">
 
-            <div className="space-y-8 relative">
-              {[
-                {
-                  num: "01",
-                  label: "Coleta",
-                  title: "Dados em Tempo Real",
-                  desc: "Conexão direta com Alpha Vantage, Marketaux e Frankfurter para capturar cada tick do EUR/USD.",
-                  color: "border-blue-500/30"
-                },
-                {
-                  num: "02",
-                  label: "Processamento",
-                  title: "Frameworks Lendários",
-                  desc: "Aplicamos as teorias de reflexividade de George Soros para identificar desequilíbrios de liquidez.",
-                  color: "border-purple-500/30"
-                },
-                {
-                  num: "03",
-                  label: "Inteligência",
-                  title: "Cérebro Gemini 2.5",
-                  desc: "A IA processa o sentimento das notícias e o price action em milissegundos para filtrar ruídos.",
-                  color: "border-cyan-500/30"
-                },
-                {
-                  num: "04",
-                  label: "Execução",
-                  title: "Sua Análise Pronta",
-                  desc: "Você recebe Entry, SL, TP e o lote exato calculado para sua banca. Sem hesitação.",
-                  color: "border-green-500/30"
-                },
-              ].map((step, i) => (
-                <div key={i} className="flex items-start gap-8 group">
-                  {/* Círculo — sem ponto lateral */}
-                  <div className="relative z-10 flex-shrink-0 w-14 h-14 rounded-full border border-gray-700 bg-[#0b0b0c] flex items-center justify-center text-sm font-bold text-gray-400 group-hover:border-blue-500/50 transition-colors duration-500">
-                    {step.num}
-                  </div>
-                  <div className={`flex-1 p-6 rounded-2xl border ${step.color} bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm hover:from-white/[0.05] transition-all duration-300`}>
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-blue-400/60 mb-1">{step.label}</p>
-                    <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">{step.desc}</p>
-                  </div>
+              {/* Linha vertical — posicionada via JS entre bolinha 01 e 04 */}
+              {lineStyle.height > 0 && (
+                <div
+                  className="absolute left-[26px] w-[2px] bg-gray-800/50 overflow-hidden"
+                  style={{ top: lineStyle.top, height: lineStyle.height }}
+                >
+                  <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-transparent via-blue-400 to-transparent animate-flow" />
                 </div>
-              ))}
+              )}
+
+              <div className="space-y-8">
+                {[
+                  {
+                    num: "01",
+                    label: "Coleta",
+                    title: "Dados em Tempo Real",
+                    desc: "Conexão direta com Alpha Vantage, Marketaux e Frankfurter para capturar cada tick do EUR/USD.",
+                    color: "border-blue-500/30"
+                  },
+                  {
+                    num: "02",
+                    label: "Processamento",
+                    title: "Frameworks Lendários",
+                    desc: "Aplicamos as teorias de reflexividade de George Soros para identificar desequilíbrios de liquidez.",
+                    color: "border-purple-500/30"
+                  },
+                  {
+                    num: "03",
+                    label: "Inteligência",
+                    title: "Cérebro Gemini 2.5",
+                    desc: "A IA processa o sentimento das notícias e o price action em milissegundos para filtrar ruídos.",
+                    color: "border-cyan-500/30"
+                  },
+                  {
+                    num: "04",
+                    label: "Execução",
+                    title: "Sua Análise Pronta",
+                    desc: "Você recebe Entry, SL, TP e o lote exato calculado para sua banca. Sem hesitação.",
+                    color: "border-green-500/30"
+                  },
+                ].map((step, i) => (
+                  <div key={i} className="flex items-start gap-8 group">
+                    {/* Bolinha com data-circle para medição */}
+                    <div
+                      data-circle
+                      className="relative z-10 flex-shrink-0 w-14 h-14 rounded-full border border-gray-700 bg-[#0b0b0c] flex items-center justify-center text-sm font-bold text-gray-400 group-hover:border-blue-500/50 transition-colors duration-500"
+                    >
+                      {step.num}
+                    </div>
+                    <div className={`flex-1 p-6 rounded-2xl border ${step.color} bg-gradient-to-br from-white/[0.03] to-transparent backdrop-blur-sm hover:from-white/[0.05] transition-all duration-300`}>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-blue-400/60 mb-1">{step.label}</p>
+                      <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">{step.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -218,11 +251,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BOT24 — secção redesenhada */}
+      {/* BOT24 */}
       <section className="border-t border-gray-800 py-24 px-6">
         <div className="max-w-6xl mx-auto">
-
-          {/* Header centrado */}
           <div className="text-center mb-16">
             <div className="flex justify-center mb-6">
               <Image src="/bot.png" alt="Bot" width={150} height={150} className="opacity-90" />
@@ -235,13 +266,11 @@ export default function Home() {
               estruturados para traders operarem com mais segurança e lucro.
             </p>
           </div>
-
-          {/* Stats */}
           <div className="flex justify-center gap-12 mb-16">
             {[
-              { value: "< 2s",  label: "Tempo de análise" },
-              { value: "100%",  label: "Gratuito"         },
-              { value: "24/7",  label: "Monitorização"    },
+              { value: "< 2s", label: "Tempo de análise" },
+              { value: "100%", label: "Gratuito"         },
+              { value: "24/7", label: "Monitorização"    },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <p className="text-3xl font-black text-white">{stat.value}</p>
@@ -249,13 +278,9 @@ export default function Home() {
               </div>
             ))}
           </div>
-
-          {/* Video */}
           <div className="mx-auto mb-16 relative max-w-[500px] w-full rounded-2xl overflow-hidden border border-gray-800 shadow-[0_0_40px_rgba(59,130,246,0.25)]">
             <video src="/signail.mp4" autoPlay loop muted playsInline className="w-full h-auto opacity-90" />
           </div>
-
-          {/* Feature cards com ícones */}
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
@@ -283,7 +308,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-
         </div>
       </section>
 
