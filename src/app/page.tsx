@@ -201,8 +201,8 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: Brain,     color: "text-purple-400", bg: "bg-purple-400/10 border-purple-400/20", label: "IA Institucional", desc: "Gemini 2.5 Flash treinado com décadas de conhecimento de trading" },
-              { icon: BarChart2, color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20",     label: "Dados Reais",      desc: "Alpha Vantage, CoinGecko, MarketAux, Frankfurter/BCE" },
-              { icon: Shield,    color: "text-green-400",  bg: "bg-green-400/10 border-green-400/20",   label: "Risco Controlado", desc: "SL obrigatório, lote calculado, alerta de liquidação" },
+              { icon: BarChart2, color: "text-blue-400",   bg: "bg-blue-400/10 border-blue-400/20",     label: "Dados Reais",      desc: "Alpha Vantage, MarketAux, Frankfurter/BCE" },
+              { icon: Shield,    color: "text-green-400",  bg: "bg-green-400/10 border-green-400/20",   label: "Risco Controlado", desc: "SL obrigatório, lote calculado, contexto inteligente" },
               { icon: Clock,     color: "text-[#F7931A]",  bg: "bg-[#F7931A]/10 border-[#F7931A]/20",   label: "2 Segundos",       desc: "Da análise ao sinal completo — mais rápido que qualquer humano" },
             ].map(({ icon: Icon, color, bg, label, desc }, i) => (
               <div key={i} className={`p-5 rounded-xl border ${bg} text-center`}>
@@ -224,11 +224,8 @@ export default function Home() {
 
           {/* Header centrado */}
           <div className="text-center mb-16">
-            <span className="inline-block text-[11px] uppercase tracking-widest font-bold text-blue-400/60 mb-6">
-              Análise EUR/USD em Tempo Real
-            </span>
             <div className="flex justify-center mb-6">
-              <Image src="/bot.png" alt="Bot" width={110} height={110} className="opacity-90" />
+              <Image src="/bot.png" alt="Bot" width={150} height={150} className="opacity-90" />
             </div>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
               <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24</span>
