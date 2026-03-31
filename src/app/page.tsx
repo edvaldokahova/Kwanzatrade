@@ -256,7 +256,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <div className="flex justify-center mb-6">
-              <Image src="/bot.png" alt="Bot" width={150} height={150} className="opacity-90" />
+              <Image src="/bot.png" alt="Bot" width={140} height={140} className="opacity-90" />
             </div>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
               <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24</span>
