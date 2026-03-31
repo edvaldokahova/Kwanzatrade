@@ -84,12 +84,10 @@ body {
 
 /* Animação de Fluxo na leading page */
 @keyframes flow {
-  0%   { top: 0%; opacity: 0; }
-  15%  { opacity: 1; }
-  85%  { opacity: 1; }
-  100% { top: calc(100% - 5rem); opacity: 0; }
+  0%   { top: -5rem; }
+  100% { top: 100%;  }
 }
 
 .animate-flow {
-  animation: flow 3s linear infinite;
+  animation: flow 2.8s linear infinite;
 }
