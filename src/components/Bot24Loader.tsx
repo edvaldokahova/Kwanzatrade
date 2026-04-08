@@ -59,8 +59,8 @@ export default function Bot24Loader({ show }: { show: boolean }) {
                 50% { transform: translateY(-5px); }
               }
               @keyframes hexRotate {
-                0% { stroke-dashoffset: 300; }
-                100% { stroke-dashoffset: 0; }
+                0%   { stroke-dashoffset: 0; }
+                100% { stroke-dashoffset: -200; }
               }
               .candle-1 { animation: candleMove 1.5s ease-in-out infinite; }
               .candle-2 { animation: candleMove 1.5s ease-in-out infinite 0.2s; }
