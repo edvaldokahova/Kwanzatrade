@@ -1,81 +1,123 @@
-<svg width="200" height="200" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
   <defs>
     <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00FFB2" />
-      <stop offset="100%" stop-color="#00C2FF" />
+      <stop offset="0%" stop-color="#00FFB2"/>
+      <stop offset="100%" stop-color="#00C2FF"/>
     </linearGradient>
-    
+    <linearGradient id="hexFill" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A1628"/>
+      <stop offset="100%" stop-color="#0D2040"/>
+    </linearGradient>
     <linearGradient id="bullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#00FFB2" />
-      <stop offset="100%" stop-color="#00C28A" />
+      <stop offset="0%" stop-color="#00FFB2"/>
+      <stop offset="100%" stop-color="#00C28A"/>
     </linearGradient>
-
     <linearGradient id="bearGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#FF6B81" />
-      <stop offset="100%" stop-color="#FF2D4A" />
+      <stop offset="0%" stop-color="#FF6B81"/>
+      <stop offset="100%" stop-color="#FF2D4A"/>
     </linearGradient>
-
     <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+      <feGaussianBlur stdDeviation="1.8" result="coloredBlur"/>
       <feMerge>
-        <feMergeNode in="coloredBlur" />
-        <feMergeNode in="SourceGraphic" />
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
-
+    <filter id="glowStrong">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
     <style>
-      @keyframes candleMove {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-8px); }
+      @keyframes hexSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
       }
-      @keyframes hexRotate {
-        0% { stroke-dashoffset: 300; }
-        100% { stroke-dashoffset: 0; }
+      @keyframes hexBreathe {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.82; }
       }
-      @keyframes signalPulse {
-        0% { opacity: 0.3; transform: scale(0.8); }
-        100% { opacity: 1; transform: scale(1.2); }
+      @keyframes candlePulse1 {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.75; }
       }
-      .candle-1 { animation: candleMove 1.5s ease-in-out infinite; transform-origin: center; }
-      .candle-2 { animation: candleMove 1.5s ease-in-out infinite 0.2s; transform-origin: center; }
-      .candle-3 { animation: candleMove 1.5s ease-in-out infinite 0.4s; transform-origin: center; }
-      .hex-border { 
-        stroke-dasharray: 100; 
-        animation: hexRotate 4s linear infinite; 
+      @keyframes candlePulse2 {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.75; }
       }
-      .dot-pulse { 
-        animation: signalPulse 0.8s ease-in-out infinite alternate; 
-        transform-origin: 50px 86px; 
+      @keyframes candlePulse3 {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.75; }
       }
+      @keyframes livePulse {
+        0%, 100% { r: 4px; opacity: 0.9; }
+        50%       { r: 5px; opacity: 1; }
+      }
+      @keyframes ring1 {
+        0%, 100% { r: 7px; opacity: 0.4; }
+        50%       { r: 11px; opacity: 0; }
+      }
+      @keyframes ring2 {
+        0%, 100% { r: 10px; opacity: 0.2; }
+        50%       { r: 15px; opacity: 0; }
+      }
+
+      .hex-main    { animation: hexBreathe 3s ease-in-out infinite; }
+      .hex-inner   { transform-origin: 50px 40px; animation: hexSpin 18s linear infinite; }
+      .candle-1    { animation: candlePulse1 4s ease-in-out infinite 0s; }
+      .candle-2    { animation: candlePulse2 4s ease-in-out infinite 0.6s; }
+      .candle-3    { animation: candlePulse3 4s ease-in-out infinite 1.2s; }
+      .live-dot    { animation: livePulse 2s ease-in-out infinite; }
+      .live-ring1  { animation: ring1 2s ease-in-out infinite; }
+      .live-ring2  { animation: ring2 2s ease-in-out infinite 0.3s; }
     </style>
   </defs>
 
-  <polygon 
+  <!-- Hexagon -->
+  <polygon class="hex-main"
     points="50,5 82,22 82,58 50,75 18,58 18,22"
-    fill="#0A1628"
+    fill="url(#hexFill)"
     stroke="url(#neonGrad)"
-    stroke-width="1.5"
-    class="hex-border"
-    filter="url(#glow)"
-  />
+    stroke-width="2"
+    filter="url(#glow)"/>
 
+  <!-- Inner hex ring — CSS spin, zero hiccup -->
+  <polygon class="hex-inner"
+    points="50,12 76,27 76,53 50,68 24,53 24,27"
+    fill="none"
+    stroke="url(#neonGrad)"
+    stroke-width="0.5"
+    opacity="0.3"/>
+
+  <!-- CANDLE 1 — Bearish (red) -->
   <g class="candle-1">
-    <rect x="34.2" y="21" width="1.6" height="8" rx="0.8" fill="#FF4C6A" />
-    <rect x="31" y="29" width="8" height="18" rx="1" fill="url(#bearGrad)" filter="url(#glow)" />
-    <rect x="34.2" y="47" width="1.6" height="10" rx="0.8" fill="#FF4C6A" />
+    <rect x="34.2" y="21" width="1.6" height="8"  rx="0.8" fill="#FF4C6A"/>
+    <rect x="31"   y="29" width="8"   height="18" rx="1"   fill="url(#bearGrad)" filter="url(#glow)" opacity="0.95"/>
+    <rect x="31"   y="29" width="8"   height="18" rx="1"   fill="none" stroke="#FF2D4A" stroke-width="0.5" opacity="0.6"/>
+    <rect x="34.2" y="47" width="1.6" height="10" rx="0.8" fill="#FF4C6A"/>
   </g>
 
+  <!-- CANDLE 2 — Bullish small (green) -->
   <g class="candle-2">
-    <rect x="49.2" y="23" width="1.6" height="9" rx="0.8" fill="#00FFB2" />
-    <rect x="46" y="32" width="8" height="14" rx="1" fill="url(#bullGrad)" filter="url(#glow)" />
-    <rect x="49.2" y="46" width="1.6" height="10" rx="0.8" fill="#00FFB2" />
+    <rect x="49.2" y="23" width="1.6" height="9"  rx="0.8" fill="#00FFB2"/>
+    <rect x="46"   y="32" width="8"   height="14" rx="1"   fill="url(#bullGrad)" filter="url(#glow)" opacity="0.95"/>
+    <rect x="46"   y="32" width="8"   height="14" rx="1"   fill="none" stroke="#00FFB2" stroke-width="0.5" opacity="0.5"/>
+    <rect x="49.2" y="46" width="1.6" height="10" rx="0.8" fill="#00FFB2"/>
   </g>
 
+  <!-- CANDLE 3 — Bullish strong (green) -->
   <g class="candle-3">
-    <rect x="64.2" y="18" width="1.6" height="8" rx="0.8" fill="#00FFB2" />
-    <rect x="61" y="26" width="8" height="22" rx="1" fill="url(#bullGrad)" filter="url(#glow)" />
-    <rect x="64.2" y="48" width="1.6" height="9" rx="0.8" fill="#00FFB2" />
+    <rect x="64.2" y="18" width="1.6" height="8"  rx="0.8" fill="#00FFB2"/>
+    <rect x="61"   y="26" width="8"   height="22" rx="1"   fill="url(#bullGrad)" filter="url(#glow)" opacity="0.95"/>
+    <rect x="61"   y="26" width="8"   height="22" rx="1"   fill="none" stroke="#00FFB2" stroke-width="0.5" opacity="0.5"/>
+    <rect x="64.2" y="48" width="1.6" height="9"  rx="0.8" fill="#00FFB2"/>
   </g>
 
-  <circle cx="50" cy="86" r="3" fill="#00FFB2" class="dot-pulse" filter="url(#glow)" />
+  <!-- Live signal dot -->
+  <circle class="live-dot"  cx="50" cy="86" r="4"  fill="#00FFB2"             filter="url(#glowStrong)"/>
+  <circle class="live-ring1" cx="50" cy="86" r="7"  fill="none" stroke="#00FFB2" stroke-width="0.8"/>
+  <circle class="live-ring2" cx="50" cy="86" r="10" fill="none" stroke="#00FFB2" stroke-width="0.4"/>
+
 </svg>
