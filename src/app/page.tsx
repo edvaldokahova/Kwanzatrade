@@ -231,7 +231,7 @@ export default function Home() {
       </section>
 
       {/* ─── BOT24 ────────────────────────────────────────── */}
-      <section className="py-32 px-6">
+      <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
 
           <div className="text-center mb-16">
@@ -239,7 +239,7 @@ export default function Home() {
               Conheça o motor
             </p>
             <div className="flex justify-center mb-8">
-              <Image src="/bot.png" alt="Bot" width={120} height={120} className="opacity-85" />
+              <Image src="/bot24.svg" alt="Bot" width={120} height={120} className="opacity-85" />
             </div>
             <h2 className="text-4xl md:text-5xl font-black tracking-tight text-white">
               <span className="bg-gradient-to-r from-gray-200 via-gray-400 to-gray-500 bg-clip-text text-transparent">BOT24</span>
