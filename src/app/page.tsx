@@ -89,9 +89,9 @@ export default function Home() {
           </p>
 
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight max-w-3xl">
-            Pare de perder dinheiro{" "}
+            Pare de Perder Dinheiro{" "}
             <span className="bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent">
-              enquanto analisa.
+              Enquanto Analisa
             </span>
           </h1>
 
