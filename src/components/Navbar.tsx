@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/client";
+import { Zap } from "lucide-react";
 
-// ─── Animação de clique (Feedback Snappy) ──────────────────────────────────
 const animationStyles = `
   @keyframes icon-click {
     0% { transform: scale(1); }
@@ -16,34 +18,11 @@ const animationStyles = `
   }
 `;
 
-// ─── Ícone de Duas Linhas Descentralizadas (SaaS Style) ─────────────────────
 function TwoLinesIcon({ size = 28 }: { size?: number }) {
   return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Barra de cima - Deslocada para a DIREITA */}
-      <rect
-        x="8"
-        y="7.5"
-        width="12"
-        height="3.2"
-        rx="1.6"
-        fill="currentColor"
-      />
-      {/* Barra de baixo - Deslocada para a ESQUERDA (Mesmo tamanho) */}
-      <rect
-        x="4"
-        y="14.5"
-        width="12"
-        height="3.2"
-        rx="1.6"
-        fill="currentColor"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8"  y="7.5"  width="12" height="3.2" rx="1.6" fill="currentColor" />
+      <rect x="4"  y="14.5" width="12" height="3.2" rx="1.6" fill="currentColor" />
     </svg>
   );
 }
@@ -53,20 +32,28 @@ export default function Navbar({
 }: {
   setSidebarOpen: (open: boolean) => void;
 }) {
-  const [visible, setVisible] = useState(true);
-  const [isAnimating, setIsAnimating] = useState(false);
-  
-  const lastScrollY = useRef(0);
-  const ticking = useRef(false);
+  const supabase = useMemo(() => createClient(), []);
 
-  // ── Controle de visibilidade no Scroll ────────────────────────────────────
+  const [visible, setVisible]         = useState(true);
+  const [atTop, setAtTop]             = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Dados do utilizador
+  const [analysesUsed, setAnalysesUsed] = useState<number>(0);
+  const [capital, setCapital]           = useState<number | null>(null);
+  const DAILY_LIMIT = 10;
+
+  const lastScrollY = useRef(0);
+  const ticking     = useRef(false);
+
+  // ── Scroll ────────────────────────────────────────────────────────────────
   useEffect(() => {
     function onScroll() {
       if (ticking.current) return;
       ticking.current = true;
-
       requestAnimationFrame(() => {
         const currentY = window.scrollY;
+        setAtTop(currentY < 10);
         if (currentY < 10) {
           setVisible(true);
         } else if (currentY > lastScrollY.current) {
@@ -78,10 +65,49 @@ export default function Navbar({
         ticking.current = false;
       });
     }
-
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // ── Buscar dados do utilizador ────────────────────────────────────────────
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Capital do trading_profile
+      const { data: profile } = await supabase
+        .from("trading_profiles")
+        .select("capital")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile?.capital) setCapital(profile.capital);
+
+      // Análises usadas hoje
+      const today = new Date().toISOString().split("T")[0];
+      const { data: usage } = await supabase
+        .from("analysis_usage")
+        .select("count")
+        .eq("user_id", user.id)
+        .eq("date", today)
+        .single();
+
+      if (usage?.count) setAnalysesUsed(usage.count);
+    };
+
+    fetchUserData();
+
+    // Subscição a mudanças em tempo real
+    const channel = supabase
+      .channel("navbar-usage")
+      .on("postgres_changes", { event: "*", schema: "public", table: "analysis_usage" }, fetchUserData)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [supabase]);
+
+  const analysesLeft = Math.max(0, DAILY_LIMIT - analysesUsed);
 
   const handleMenuClick = () => {
     setIsAnimating(true);
@@ -95,42 +121,55 @@ export default function Navbar({
       <nav
         className={`
           fixed top-0 left-0 right-0 z-40
-          bg-[#0b0b0c]/80 backdrop-blur-xl
-          transition-transform duration-300 ease-in-out
-          border-none
+          transition-all duration-300 ease-in-out
           ${visible ? "translate-y-0" : "-translate-y-full"}
+          ${atTop
+            ? "bg-transparent border-none shadow-none"
+            : "bg-[#0b0b0c]/80 backdrop-blur-xl border-b border-gray-800/40"
+          }
         `}
-        style={{ borderBottom: 'none', boxShadow: 'none' }}
       >
         <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
-          
-          {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Image
-              src="/kt-icon.png"
-              alt="Logo"
-              width={36}
-              height={36}
-              className="rounded-xl"
-            />
+
+          {/* ── Logo ────────────────────────────────────────────────────── */}
+          <Link href="/dashboard" className="flex items-center">
+            <Image src="/kt-icon.png" alt="Logo" width={36} height={36} className="rounded-xl" />
           </Link>
 
-          {/* Botão Menu - Sem fundo, maior e com a lógica de distância correta */}
-          <button
-            onClick={handleMenuClick}
-            className={`
-              flex items-center justify-center
-              p-2
-              text-white/90
-              hover:text-white
-              transition-colors
-              outline-none
-              ${isAnimating ? "click-animation" : ""}
-            `}
-            aria-label="Abrir menu"
-          >
-            <TwoLinesIcon size={28} />
-          </button>
+          {/* ── Direita: Capital · Análises · Menu ──────────────────────── */}
+          <div className="flex items-center gap-4">
+
+            {/* Capital */}
+            {capital !== null && (
+              <span className="text-white text-sm font-semibold tabular-nums">
+                ${capital.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </span>
+            )}
+
+            {/* Análises restantes */}
+            <div className="flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/25 rounded-lg px-2.5 py-1">
+              <Zap size={13} className="text-emerald-400 fill-emerald-400 flex-shrink-0" />
+              <span className="text-white text-xs font-bold tabular-nums">
+                {analysesLeft}
+                <span className="text-emerald-400/70 font-medium"> / {DAILY_LIMIT}</span>
+              </span>
+            </div>
+
+            {/* Menu */}
+            <button
+              onClick={handleMenuClick}
+              className={`
+                flex items-center justify-center p-2
+                text-white/90 hover:text-white
+                transition-colors outline-none
+                ${isAnimating ? "click-animation" : ""}
+              `}
+              aria-label="Abrir menu"
+            >
+              <TwoLinesIcon size={28} />
+            </button>
+
+          </div>
 
         </div>
       </nav>
