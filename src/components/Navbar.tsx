@@ -27,7 +27,9 @@ return () => {
 
 async function logout() { await supabase.auth.signOut(); window.location.href = "/"; }
 
-return ( <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4"> <nav className={mx-auto max-w-5xl transition-all duration-500 ${scrolled ? "bg-[#0b0b0c]/70" : "bg-[#0b0b0c]/40"} backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 px-4 py-2 flex items-center justify-between} > {/* Left */} <div className="flex items-center gap-2"> <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition active:scale-90" > <AlignLeft size={20} strokeWidth={1.5} /> </button>
+return ( <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4"> <nav className={mx-auto max-w-5xl transition-all duration-500 ${scrolled ? "bg-[#0b0b0c]/70" : "bg-[#0b0b0c]/40"} backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 px-4 py-2 flex items-center justify-between} > 
+
+{/* Left */} <div className="flex items-center gap-2"> <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition active:scale-90" > <AlignLeft size={20} strokeWidth={1.5} /> </button>
 
 <Link href="/dashboard" className="flex items-center gap-2">
         <Image
@@ -77,5 +79,5 @@ return ( <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4"
   </nav>
 </div>
 
-);
+); 
 }
