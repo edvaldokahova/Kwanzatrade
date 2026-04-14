@@ -603,13 +603,21 @@ export default function Bot24Analyze() {
 
   return (
     <div className="relative min-h-screen">
-      <Image
-  src="/hero-b.webp"
-  className="object-cover opacity-5"
-/>
+      {/* Background image */}
+    <Image
+      src="/hero-b.webp"
+      alt="Background"
+      fill
+      priority
+      className="object-cover opacity-5"
+    />
 
-<div className="absolute inset-0 bg-black" />
+    {/* Fundo preto */}
+    <div className="absolute inset-0 bg-black" />
 
+    {/* CONTEÚDO */}
+    <div className="relative max-w-6xl mx-auto space-y-10 py-10 px-4">
+      
         {/* Header */}
         <div className="flex items-center gap-4">
           <Image src="/bot24_an.svg" alt="Bot24" width={60} height={60} />
