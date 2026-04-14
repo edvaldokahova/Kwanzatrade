@@ -55,7 +55,7 @@ export default function Home() {
         showNavbar ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       }`}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Image src="/kwanzatrade-logo.svg" alt="KwanzaTrade" width={180} height={36} className="rounded-lg" />
+          <Image src="/kwanzatrade-logo.svg" alt="KwanzaTrade" width={176} height={32} className="rounded-lg" />
           <div className="flex items-center">
             {user ? (
               <a href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm">
