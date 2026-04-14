@@ -87,7 +87,7 @@ export default function Navbar({
       // Análises usadas hoje
       const today = new Date().toISOString().split("T")[0];
       const { data: usage } = await supabase
-        .from("analysis_usage")
+        .from("get_daily_analysis_count")
         .select("count")
         .eq("user_id", user.id)
         .eq("date", today)
@@ -151,7 +151,6 @@ export default function Navbar({
               <Zap size={13} className="text-emerald-400 fill-emerald-400 flex-shrink-0" />
               <span className="text-white text-xs font-bold tabular-nums">
                 {analysesLeft}
-                <span className="text-emerald-400/70 font-medium"> / {DAILY_LIMIT}</span>
               </span>
             </div>
 
