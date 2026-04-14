@@ -55,7 +55,7 @@ export default function Home() {
         showNavbar ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       }`}>
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <Image src="/kt-icon.png" alt="KwanzaTrade" width={34} height={34} className="rounded-lg" />
+          <Image src="/kwanzatrade-logo.svg" alt="KwanzaTrade" width={34} height={34} className="rounded-lg" />
           <div className="flex items-center">
             {user ? (
               <a href="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition text-sm">
@@ -63,7 +63,7 @@ export default function Home() {
               </a>
             ) : (
               <a href="/auth/login" className="flex items-center gap-2 bg-white hover:bg-gray-100 text-black px-5 py-2 rounded-xl transition font-semibold text-sm">
-                <LogIn size={15} /> Entrar
+                <LogIn size={15} /> Começar
               </a>
             )}
           </div>
