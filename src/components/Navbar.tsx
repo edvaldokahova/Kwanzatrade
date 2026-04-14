@@ -1,10 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { AlignLeft, LogOut, User, LogIn } from "lucide-react";
-import { useEffect, useState, useMemo } from "react";
+import { LogOut, User, LogIn } from "lucide-react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
+
+// ─── Ícone duas barras iguais (igual ao da imagem) ────────────────────────────
+function TwoLinesIcon({ size = 22 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <line x1="4" y1="9"  x2="20" y2="9"  stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="4" y1="15" x2="20" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function Navbar({
   setSidebarOpen,
@@ -12,34 +22,51 @@ export default function Navbar({
   setSidebarOpen: (open: boolean) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const [user, setUser] = useState<any>(null);
-  const [scrolled, setScrolled] = useState(false);
 
+  const [user,    setUser]    = useState<any>(null);
+  const [visible, setVisible] = useState(true);
+
+  const lastScrollY  = useRef(0);
+  const ticking      = useRef(false);
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    // Buscar usuário
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ?? null);
-    });
+    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
 
-    // Listener auth
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Scroll effect
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      subscription.unsubscribe();
-      window.removeEventListener("scroll", handleScroll);
-    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setUser(session?.user ?? null)
+    );
+    return () => subscription.unsubscribe();
   }, [supabase]);
+
+  // ── Scroll — esconde ao descer, aparece ao subir ──────────────────────────
+  useEffect(() => {
+    function onScroll() {
+      if (ticking.current) return;
+      ticking.current = true;
+
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+
+        if (currentY < 10) {
+          // Topo da página — sempre visível
+          setVisible(true);
+        } else if (currentY > lastScrollY.current) {
+          // A descer → esconde
+          setVisible(false);
+        } else {
+          // A subir → mostra
+          setVisible(true);
+        }
+
+        lastScrollY.current = currentY;
+        ticking.current     = false;
+      });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   async function logout() {
     await supabase.auth.signOut();
@@ -47,67 +74,71 @@ export default function Navbar({
   }
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full px-4">
-      <nav
-        className={`mx-auto max-w-5xl transition-all duration-500 ${
-          scrolled ? "bg-[#0b0b0c]/70" : "bg-[#0b0b0c]/40"
-        } backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 px-4 py-2 flex items-center justify-between`}
-      >
-        {/* LEFT */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition active:scale-90"
-          >
-            <AlignLeft size={20} strokeWidth={1.5} />
-          </button>
+    <nav className={`
+      fixed top-0 left-0 right-0 z-40
+      bg-[#0b0b0c]/80 backdrop-blur-xl
+      border-b border-gray-800/80
+      transition-transform duration-300 ease-in-out
+      ${visible ? "translate-y-0" : "-translate-y-full"}
+    `}>
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
 
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Image
-              src="/kt-icon.png"
-              alt="KwanzaTrade"
-              width={28}
-              height={28}
-              className="rounded-lg"
-            />
-            <span className="text-sm font-semibold text-white/80 hidden sm:block">
-              KwanzaTrade
-            </span>
-          </Link>
-        </div>
+        {/* Esquerda — logotipo */}
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <Image
+            src="/kt-icon.png"
+            alt="KwanzaTrade"
+            width={34}
+            height={34}
+            className="rounded-lg"
+          />
+        </Link>
 
-        {/* RIGHT */}
+        {/* Direita — user + menu */}
         <div className="flex items-center gap-2">
+
+          {/* Info do utilizador (compacto) */}
           {user ? (
-            <>
+            <div className="flex items-center gap-1">
               <Link
                 href="/my-account"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition"
+                className="flex items-center gap-1.5 text-gray-400 hover:text-white transition px-2 py-1.5 rounded-lg hover:bg-white/5"
               >
-                <User size={16} />
-                <span className="text-xs hidden sm:block">
+                <User size={15} />
+                <span className="hidden sm:inline text-[11px] font-semibold">
                   {user.email?.split("@")[0] ?? "Conta"}
                 </span>
               </Link>
 
               <button
                 onClick={logout}
-                className="p-2 rounded-xl text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition"
+                className="text-gray-600 hover:text-red-400 transition p-1.5 rounded-lg hover:bg-red-500/5"
+                aria-label="Sair"
               >
-                <LogOut size={16} />
+                <LogOut size={15} />
               </button>
-            </>
+            </div>
           ) : (
             <Link
               href="/auth/login"
-              className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-xl font-semibold text-xs hover:scale-105 transition"
+              className="flex items-center gap-2 bg-white hover:bg-gray-200 text-black px-4 py-2 rounded-xl shadow-lg transition font-bold text-xs mr-1"
             >
-              <LogIn size={16} />
+              <LogIn size={15} />
               Entrar
             </Link>
           )}
+
+          {/* Botão menu — duas barras iguais */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-white/5 transition-all active:scale-95"
+            aria-label="Abrir menu"
+          >
+            <TwoLinesIcon size={22} />
+          </button>
+
         </div>
-      </nav>
-    </div>
+      </div>
+    </nav>
   );
 }
