@@ -4,21 +4,20 @@ import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 
-// ─── Animação CSS para o botão (Pulsação) ─────────────────────────────────
+// ─── Animação de clique (Feedback Snappy) ──────────────────────────────────
 const animationStyles = `
-  @keyframes icon-pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
+  @keyframes icon-click {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1); }
   }
-  .icon-pulse-animation {
-    animation: icon-pulse 0.4s ease-out;
+  .click-animation {
+    animation: icon-click 0.3s ease-out;
   }
 `;
 
-// ─── Ícone de Duas Linhas (Alinhamento Simétrico e Arredondado) ──────────────
-// Baseado na imagem original de referência, mas com linhas de mesma largura e centralizadas.
-function TwoLinesIcon({ size = 26 }: { size?: number }) {
+// ─── Ícone de Duas Linhas Descentralizadas (SaaS Style) ─────────────────────
+function TwoLinesIcon({ size = 28 }: { size?: number }) {
   return (
     <svg 
       width={size} 
@@ -27,22 +26,22 @@ function TwoLinesIcon({ size = 26 }: { size?: number }) {
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Barra de cima - Mesma largura, centralizada */}
+      {/* Barra de cima - Deslocada para a DIREITA */}
       <rect
-        x="5"
-        y="9"
-        width="14"
-        height="2.8"
-        rx="1.4"
+        x="8"
+        y="7.5"
+        width="12"
+        height="3.2"
+        rx="1.6"
         fill="currentColor"
       />
-      {/* Barra de baixo - Mesma largura, centralizada */}
+      {/* Barra de baixo - Deslocada para a ESQUERDA (Mesmo tamanho) */}
       <rect
-        x="5"
-        y="13.5"
-        width="14"
-        height="2.8"
-        rx="1.4"
+        x="4"
+        y="14.5"
+        width="12"
+        height="3.2"
+        rx="1.6"
         fill="currentColor"
       />
     </svg>
@@ -55,11 +54,12 @@ export default function Navbar({
   setSidebarOpen: (open: boolean) => void;
 }) {
   const [visible, setVisible] = useState(true);
-  const [pulse, setPulse] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
-  // ── Scroll — esconde ao descer, aparece ao subir ──────────────────────────
+  // ── Controle de visibilidade no Scroll ────────────────────────────────────
   useEffect(() => {
     function onScroll() {
       if (ticking.current) return;
@@ -67,7 +67,6 @@ export default function Navbar({
 
       requestAnimationFrame(() => {
         const currentY = window.scrollY;
-
         if (currentY < 10) {
           setVisible(true);
         } else if (currentY > lastScrollY.current) {
@@ -75,7 +74,6 @@ export default function Navbar({
         } else {
           setVisible(true);
         }
-
         lastScrollY.current = currentY;
         ticking.current = false;
       });
@@ -85,14 +83,10 @@ export default function Navbar({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ── Função de Clique com Animação ─────────────────────────────────────────
   const handleMenuClick = () => {
-    // Iniciar animação
-    setPulse(true);
-    // Abrir a sidebar
-    setSidebarOpen(true); 
-    // Resetar o estado de animação após o término (0.4s)
-    setTimeout(() => setPulse(false), 400); 
+    setIsAnimating(true);
+    setSidebarOpen(true);
+    setTimeout(() => setIsAnimating(false), 300);
   };
 
   return (
@@ -103,40 +97,39 @@ export default function Navbar({
           fixed top-0 left-0 right-0 z-40
           bg-[#0b0b0c]/80 backdrop-blur-xl
           transition-transform duration-300 ease-in-out
-          border-none outline-none
+          border-none
           ${visible ? "translate-y-0" : "-translate-y-full"}
         `}
-        style={{ borderBottom: 'none' }} // Garantia extra contra linhas residuais
+        style={{ borderBottom: 'none', boxShadow: 'none' }}
       >
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
           
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
             <Image
               src="/kt-icon.png"
-              alt="KwanzaTrade"
-              width={34}
-              height={34}
-              className="rounded-lg"
+              alt="Logo"
+              width={36}
+              height={36}
+              className="rounded-xl"
             />
           </Link>
 
-          {/* Botão Menu modificado - Sem fundo, maior, com animação */}
+          {/* Botão Menu - Sem fundo, maior e com a lógica de distância correta */}
           <button
             onClick={handleMenuClick}
             className={`
               flex items-center justify-center
-              h-12 w-12
-              rounded-full
+              p-2
               text-white/90
               hover:text-white
-              transition-all duration-200
-              active:scale-95
-              ${pulse ? "icon-pulse-animation" : ""}
+              transition-colors
+              outline-none
+              ${isAnimating ? "click-animation" : ""}
             `}
             aria-label="Abrir menu"
           >
-            <TwoLinesIcon size={26} />
+            <TwoLinesIcon size={28} />
           </button>
 
         </div>
