@@ -603,10 +603,12 @@ export default function Bot24Analyze() {
 
   return (
     <div className="relative min-h-screen">
-      <Image src="/hero-b.webp" alt="Background" fill priority className="object-cover opacity-10" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
+      <Image
+  src="/hero-b.webp"
+  className="object-cover opacity-5"
+/>
 
-      <div className="relative max-w-6xl mx-auto space-y-10 py-10 px-4">
+<div className="absolute inset-0 bg-black" />
 
         {/* Header */}
         <div className="flex items-center gap-4">
