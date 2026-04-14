@@ -1,16 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useMemo, useRef } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 
-// ─── Ícone duas barras iguais ────────────────────────────
+// ─── Ícone igual ao da imagem (duas barras grossas e desalinhadas) ───────────
 function TwoLinesIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <line x1="6" y1="9"  x2="18" y2="9"  stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <line x1="6" y1="15" x2="18" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      {/* Barra de cima */}
+      <rect
+        x="5"
+        y="8"
+        width="14"
+        height="3"
+        rx="2"
+        fill="currentColor"
+      />
+      {/* Barra de baixo (ligeiramente mais abaixo que o centro perfeito) */}
+      <rect
+        x="5"
+        y="14"
+        width="14"
+        height="3"
+        rx="2"
+        fill="currentColor"
+      />
     </svg>
   );
 }
@@ -56,7 +71,6 @@ export default function Navbar({
     <nav className={`
       fixed top-0 left-0 right-0 z-40
       bg-[#0b0b0c]/80 backdrop-blur-xl
-      border-b border-gray-800/80
       transition-transform duration-300 ease-in-out
       ${visible ? "translate-y-0" : "-translate-y-full"}
     `}>
@@ -73,7 +87,7 @@ export default function Navbar({
           />
         </Link>
 
-        {/* Botão Menu estilo iOS (igual da imagem) */}
+        {/* Botão Menu estilo SaaS da imagem */}
         <button
           onClick={() => setSidebarOpen(true)}
           className="
@@ -82,7 +96,6 @@ export default function Navbar({
             rounded-full
             bg-white/10
             backdrop-blur-md
-            border border-white/10
             text-white/80
             hover:text-white
             hover:bg-white/20
