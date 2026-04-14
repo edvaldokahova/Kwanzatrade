@@ -4,26 +4,32 @@ import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 
-// ─── Ícone igual ao da imagem (duas barras grossas e desalinhadas) ───────────
-function TwoLinesIcon({ size = 20 }: { size?: number }) {
+// ─── Ícone Fiel à Imagem (Barras grossas, arredondadas e desalinhadas) ───────
+function TwoLinesIcon({ size = 22 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      {/* Barra de cima */}
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Barra de cima: mais curta e posicionada à esquerda */}
       <rect
-        x="5"
-        y="8"
-        width="14"
-        height="3"
-        rx="2"
+        x="4"
+        y="9"
+        width="9"
+        height="2.8"
+        rx="1.4"
         fill="currentColor"
       />
-      {/* Barra de baixo (ligeiramente mais abaixo que o centro perfeito) */}
+      {/* Barra de baixo: mais longa e deslocada para a direita */}
       <rect
-        x="5"
-        y="14"
-        width="14"
-        height="3"
-        rx="2"
+        x="7"
+        y="13.5"
+        width="13"
+        height="2.8"
+        rx="1.4"
         fill="currentColor"
       />
     </svg>
@@ -35,11 +41,9 @@ export default function Navbar({
 }: {
   setSidebarOpen: (open: boolean) => void;
 }) {
-
   const [visible, setVisible] = useState(true);
-
-  const lastScrollY  = useRef(0);
-  const ticking      = useRef(false);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
 
   // ── Scroll — esconde ao descer, aparece ao subir ──────────────────────────
   useEffect(() => {
@@ -59,7 +63,7 @@ export default function Navbar({
         }
 
         lastScrollY.current = currentY;
-        ticking.current     = false;
+        ticking.current = false;
       });
     }
 
@@ -68,14 +72,18 @@ export default function Navbar({
   }, []);
 
   return (
-    <nav className={`
-      fixed top-0 left-0 right-0 z-40
-      bg-[#0b0b0c]/80 backdrop-blur-xl
-      transition-transform duration-300 ease-in-out
-      ${visible ? "translate-y-0" : "-translate-y-full"}
-    `}>
+    <nav
+      className={`
+        fixed top-0 left-0 right-0 z-40
+        bg-[#0b0b0c]/80 backdrop-blur-xl
+        transition-transform duration-300 ease-in-out
+        border-none outline-none
+        ${visible ? "translate-y-0" : "-translate-y-full"}
+      `}
+      style={{ borderBottom: 'none' }} // Garantia extra contra linhas residuais
+    >
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-
+        
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image
@@ -87,24 +95,23 @@ export default function Navbar({
           />
         </Link>
 
-        {/* Botão Menu estilo SaaS da imagem */}
+        {/* Botão Menu conforme a imagem enviada */}
         <button
           onClick={() => setSidebarOpen(true)}
           className="
             flex items-center justify-center
-            h-10 w-10
+            h-11 w-11
             rounded-full
             bg-white/10
-            backdrop-blur-md
-            text-white/80
+            text-white/90
             hover:text-white
-            hover:bg-white/20
+            hover:bg-white/15
             transition-all duration-200
-            active:scale-95
+            active:scale-90
           "
           aria-label="Abrir menu"
         >
-          <TwoLinesIcon size={18} />
+          <TwoLinesIcon size={22} />
         </button>
 
       </div>
