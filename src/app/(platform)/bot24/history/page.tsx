@@ -224,7 +224,7 @@ export default function Bot24HistoryPage() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      <div className="relative w-full max-w-7xl mx-auto py-10 px-4 md:px-8 space-y-6">
+      <div className="relative w-full max-w-6xl mx-auto pt-24 pb-10 px-4 md:px-8 space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8">
