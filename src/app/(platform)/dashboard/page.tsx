@@ -36,7 +36,7 @@ export default function Dashboard() {
   const bot24Disabled = analysesLeft !== null && analysesLeft <= 0;
 
   return (
-    <div className="pt-4 px-6 md:px-10 space-y-8 pb-24 max-w-7xl mx-auto">
+    <div className="px-4 md:px-10 space-y-10 max-w-6xl mx-auto pt-24 pb-10">
       
       {/* HEADER */}
       {/* Adicionei mt-20 logo abaixo para empurrar tudo para baixo */}
