@@ -263,7 +263,7 @@ export default function LiveSignals() {
       <Image src="/hero-b.webp" alt="Background" fill priority className="object-cover opacity-10" />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/85 to-black" />
 
-      <div className="relative z-10 max-w-6xl mx-auto py-10 px-4 space-y-8">
+      <div className="relative z-10 max-w-6xl mx-auto pt-24 pb-10 px-4 space-y-10">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
