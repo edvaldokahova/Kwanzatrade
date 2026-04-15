@@ -94,5 +94,5 @@ body {
 
 /* Compensação para navbar fixed */
 .page-content {
-  padding-top: 64px; /* altura da navbar */
+  padding-top: 16px; /* altura da navbar */
 }
