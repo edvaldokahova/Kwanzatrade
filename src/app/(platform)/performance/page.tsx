@@ -95,7 +95,7 @@ export default function PerformancePage() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      <div className="relative max-w-7xl mx-auto py-10 px-4 space-y-12 pb-20">
+      <div className="relative max-w-6xl mx-auto px-4 space-y-10 pt-24 pb-10">
 
         {/* HEADER */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
