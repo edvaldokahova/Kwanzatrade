@@ -36,7 +36,18 @@ export default function Dashboard() {
   const bot24Disabled = analysesLeft !== null && analysesLeft <= 0;
 
   return (
-    <div className="px-4 md:px-10 space-y-10 max-w-6xl mx-auto pt-24 pb-10">
+    <div className="relative min-h-screen">
+      {/* Background — ✅ overlay separado do conteúdo */}
+      <Image
+        src="/hero-b.webp"
+        alt="Background"
+        fill
+        priority
+        className="object-cover opacity-10"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
+      
+      <div className="px-4 md:px-10 space-y-10 max-w-6xl mx-auto pt-24 pb-10">
       
       {/* HEADER */}
       {/* Adicionei mt-20 logo abaixo para empurrar tudo para baixo */}
