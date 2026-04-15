@@ -90,7 +90,7 @@ export default function Bot24Dashboard() {
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
       {/* Content */}
-      <div className="relative max-w-7xl mx-auto py-10 px-4 space-y-10">
+      <div className="relative max-w-6xl mx-auto pt-24 pb-10 px-4 space-y-10">
 
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
