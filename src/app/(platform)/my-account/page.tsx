@@ -175,7 +175,7 @@ export default function MyAccountPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-6 space-y-8">
+    <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 space-y-10">
 
       {/* HEADER */}
       <div className="flex items-center gap-3">
