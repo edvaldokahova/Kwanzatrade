@@ -91,3 +91,8 @@ body {
 .animate-flow {
   animation: flow 2.8s linear infinite;
 }
+
+/* Compensação para navbar fixed */
+.page-content {
+  padding-top: 16px; /* altura da navbar */
+}
