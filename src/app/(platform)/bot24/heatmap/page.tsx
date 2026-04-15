@@ -160,7 +160,7 @@ export default function ForexHeatmapPremium() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900/80 to-black" />
 
-      <div className="relative max-w-6xl mx-auto py-10 space-y-8 px-4 pb-32">
+      <div className="relative max-w-6xl mx-auto pt-24 pb-10 space-y-10 px-4">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
