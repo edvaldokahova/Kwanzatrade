@@ -616,7 +616,7 @@ export default function Bot24Analyze() {
     <div className="absolute inset-0 bg-black" />
 
     {/* CONTEÚDO */}
-    <div className="relative max-w-6xl mx-auto space-y-10 py-10 px-4">
+    <div className="relative max-w-6xl mx-auto space-y-10 pt-24 pb-10 px-4">
       
         {/* Header */}
         <div className="flex items-center gap-4">
