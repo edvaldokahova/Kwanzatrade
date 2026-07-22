@@ -62,6 +62,8 @@ export default function Footer() {
           </p>
           <p className="text-xs text-gray-700">
             Trading implica risco. Opere com responsabilidade.
+          </p>
+          <p className="text-xs text-gray-700">
             Criado por Edvaldo Eduardo CEO da Avyronex
           </p>
         </div>
